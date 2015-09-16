@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <!--The viewport meta tag is used to improve the presentation and behavior of the samples on iOS devices-->
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no">
+	<title>Feature Datagrid</title>
+	
+    <link rel="stylesheet" href="//js.arcgis.com/3.13/dijit/themes/claro/claro.css">
+    <link rel="stylesheet" href="//js.arcgis.com/3.13/esri/css/esri.css">
+    <link rel="stylesheet" href="//kendo.cdn.telerik.com/2015.2.902/styles/kendo.common-material.min.css" />
+    <link rel="stylesheet" href="//kendo.cdn.telerik.com/2015.2.902/styles/kendo.material.min.css" />	
+    <link rel="stylesheet" href="css/featureGrid.css">
+	<style>
+		html, body, #map {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #coords {
+            position: absolute;
+            right: 15px;
+            bottom: 5px;
+            color: #000;
+            z-index: 50;
+            font-family: Arial;
+            font-size: 14px;
+            text-align: left;
+        }
+		
+		#featureGridWidget {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 50;
+            background: #fff;
+            color: #777;
+            padding: 5px;
+            border: 2px solid #666;
+            -webkit-border-radius: 5px;
+            -moz-border-radius: 5px;
+            border-radius: 5px;
+            font-family: arial;
+            font-size: 0.9em;
+        }
+	</style>
+	<script>
+		var package_path = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
+        var dojoConfig = {
+            parseOnLoad: true,
+            debug: true,
+            packages: [{
+				name: "jquery",
+				location: '//kendo.cdn.telerik.com/2015.2.902/js',
+				main: 'jquery.min'
+			}, {
+				name: 'kendo',
+				location: '//kendo.cdn.telerik.com/2015.2.902/js',
+				main: 'kendo.all.min'
+			}, {
+                name: "apc",
+                location: package_path + '/js/apc'
+            }]
+        }; 
+	</script>
+	<script src="//js.arcgis.com/3.13/"></script>
+	<script>
+		define.amd.jQuery = true;
+
+		var map; 
+
+		require([
+            "esri/config", 
+			"esri/map", 
+			"esri/dijit/Scalebar",
+			"esri/geometry/webMercatorUtils",
+			"dojo/dom", "dijit/registry", 
+			"apc/dijit/FeatureGrid"
+		], function(
+            esriConfig, 
+			Map, Scalebar, WebMercatorUtils,
+			dom, registry, 
+			FeatureGrid
+		) {
+
+			map = new Map("map", {
+                basemap: "topo",
+                center: [-97.70, 38.82], // longitude, latitude
+                zoom: 4
+            });
+
+            map.on("load", function () {
+                //after map loads, connect to listen to mouse move & drag events
+                map.on("mouse-move", showCoordinates);
+                map.on("mouse-drag", showCoordinates);
+            });
+
+            //hide the popup if its outside the map's extent
+            map.on("mouse-drag", function (evt) {
+                if (map.infoWindow.isShowing) {
+                    var loc = map.infoWindow.getSelectedFeature().geometry;
+                    if (!map.extent.contains(loc)) {
+                        map.infoWindow.hide();
+                    }
+                }
+            });
+
+            var scalebar = new Scalebar({
+                map: map,
+                // "dual" displays both miles and kilmometers
+                // "english" is the default, which displays miles
+                // use "metric" for kilometers
+                scalebarUnit: "dual"
+            });
+
+            function showCoordinates(evt) {
+                //the map is in web mercator but display coordinates in geographic (lat, long)
+                var mp = WebMercatorUtils.webMercatorToGeographic(evt.mapPoint);
+                //display mouse coordinates
+                dom.byId("coords").innerHTML = "Lat: " + mp.y.toFixed(3) + "<p>Lon:" + mp.x.toFixed(3);
+            }
+			
+			var featureGrid = new FeatureGrid({
+				map: map
+			}, "featureGridWidget"); 
+			
+			featureGrid.startup(); 
+		});
+	</script>
+	
+</head>
+<body class="claro esri">
+    <div id="map">
+        <div id="featureGridWidget"></div>
+    </div>
+    <span id="coords"></span>
+	<div id="resultPanel"></div>
+</body>
+</html>
