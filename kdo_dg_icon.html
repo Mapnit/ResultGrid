@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>html { font-size: 14px; font-family: Arial, Helvetica, sans-serif; }</style>
+    <title></title>
+    <link rel="stylesheet" href="//kendo.cdn.telerik.com/2015.2.902/styles/kendo.common-material.min.css" />
+    <link rel="stylesheet" href="//kendo.cdn.telerik.com/2015.2.902/styles/kendo.material.min.css" />
+	<style>
+		.cmd-icon-dismiss {
+			background-image: url("kendo/images/dismiss.png")
+		}
+		.cmd-icon-zoomIn {
+			background-image: url("kendo/images/zoomIn.png")
+		}
+		.cmd-icon-hyperlink {
+			background-image: url("kendo/images/hyperlink.png")
+		}
+	</style>
+
+    <script src="//kendo.cdn.telerik.com/2015.2.902/js/jquery.min.js"></script>
+    <script src="//kendo.cdn.telerik.com/2015.2.902/js/kendo.all.min.js"></script>
+</head>
+<body>
+
+	<div id="grid"></div>
+	
+	<script>
+		var myDataSource = new kendo.data.DataSource({
+			data: {
+				"people": [
+					{ "employeeId": 1, "firstName":"John" , "lastName":"Doe" },
+					{ "employeeId": 2, "firstName":"Anna" , "lastName":"Smith" },
+					{ "employeeId": 3, "firstName":"Peter" , "lastName":"Jones" }
+				]
+			},
+			schema : {
+				data: "people"
+			}
+		});
+
+		$("#grid").kendoGrid({
+			dataSource: myDataSource,
+			columns: [
+				{
+					command: [{ 
+						name: "Delete",
+						text:"",
+						class: "ob-icon-only",
+						imageClass: "k-icon cmd-icon-dismiss ob-icon-only",
+						click: function(e) {
+							//some code
+							var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+							console.log("delete this row: " + dataItem["employeeId"]);
+						}
+					}, { 
+						name: "ZoomIn",
+						text:"",
+						class: "ob-icon-only",
+						imageClass: "k-icon cmd-icon-zoomIn ob-icon-only",
+						click: function(e) {
+							//some code
+							console.log("zoom to this row:");
+						}
+					}, { 
+						name: "Hyperlink",
+						text:"",
+						class: "ob-icon-only",
+						imageClass: "k-icon cmd-icon-hyperlink ob-icon-only",
+						click: function(e) {
+							//some code
+							console.log("pop up hyperlinks:");
+						}
+					}], 
+					locked: true, 
+					width: "220px"
+				},
+				{
+					field: "employeeId",
+					title: "Employee ID",
+					hidden: true
+				},
+				{
+					field: "firstName",
+					title: "First Name"
+				},
+				{
+					field: "lastName",
+					title: "Last Name"
+				}
+			],
+		});
+
+		$(".ob-icon-only", "#grid").parent().css("min-width", 0);
+	</script>
+
+</body>
+</html>
