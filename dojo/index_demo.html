@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="//kendo.cdn.telerik.com/2015.2.902/styles/kendo.common-material.min.css" />
     <link rel="stylesheet" href="//kendo.cdn.telerik.com/2015.2.902/styles/kendo.material.min.css" />	
     <link rel="stylesheet" href="css/SearchData.css">
+	<link rel="stylesheet" href="css/QueryMap.css">
     <link rel="stylesheet" href="css/featureGrid.css">
 	<style>
 		html, body, #map {
@@ -46,6 +47,22 @@
             font-family: arial;
             font-size: 0.9em;
         }
+		
+		#queryMapWidget {
+            position: absolute;
+            top: 20px;
+            left: 120px;
+            z-index: 50;
+            background: #fff;
+            color: #777;
+            padding: 5px;
+            border: 2px solid #666;
+            -webkit-border-radius: 5px;
+            -moz-border-radius: 5px;
+            border-radius: 5px;
+            font-family: arial;
+            font-size: 0.9em;
+        }	
 	</style>
 	<script>
 		var package_path = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
@@ -70,23 +87,29 @@
 	<script>
 		define.amd.jQuery = true;
 
-		var map; 
+        var landLeaseUrl = "http://gis/arcgis/rest/services/Land/lease_expiration/MapServer";
         var searchServiceUrl = "http://gis/arcgis/rest/services/Basemap/basemap_query/MapServer";
 
+		var map; 
+
 		require([
+			"dojo/dom", "dijit/registry",  
             "esri/config", 
 			"esri/map", 
 			"esri/dijit/Scalebar",
 			"esri/geometry/webMercatorUtils",
-			"dojo/dom", "dijit/registry",  
-            "apc/dijit/SearchData"
+			"esri/layers/ArcGISDynamicMapServiceLayer", 
+            "apc/dijit/SearchData",
+			"apc/dijit/QueryMap"
 		], function(
+			dom, registry, 
             esriConfig, 
 			Map, Scalebar, WebMercatorUtils,
-			dom, registry, 
-			SearchData
+			ArcGISDynamicMapServiceLayer, 
+			SearchData, QueryMap
 		) {
 
+			esriConfig.defaults.io.corsEnabledServers.push(landLeaseUrl);
             esriConfig.defaults.io.corsEnabledServers.push(searchServiceUrl);
 
 			map = new Map("map", {
@@ -94,6 +117,12 @@
                 center: [-97.70, 38.82], // longitude, latitude
                 zoom: 4
             });
+			
+            var landLeaseLayer = new ArcGISDynamicMapServiceLayer(landLeaseUrl, {
+                "id": "LandLease",
+                "opacity": 0.75
+            });
+            map.addLayer(landLeaseLayer);			
 
             map.on("load", function () {
                 //after map loads, connect to listen to mouse move & drag events
@@ -133,6 +162,12 @@
 			
 			featureGrid.startup(); 
              */
+			 
+            var queryMap = new QueryMap({
+                map: map
+            }, "queryMapWidget"); 
+
+            queryMap.startup();			 
 
             var searchData = new SearchData({
                 map: map, 
@@ -214,6 +249,7 @@
 <body class="claro esri">
     <div id="map">
         <div id="searchDataWidget"></div>
+		<div id="queryMapWidget"></div>
     </div>
     <span id="coords"></span>
 	<div id="resultPanel"></div>
