@@ -1,0 +1,16 @@
+.searchData-options {
+
+}
+
+.searchData-shortcuts {
+
+}
+
+.searchData-statusMessage {
+	position: absolute;
+	right: 5px;
+    top: 50px;
+    color: yellow;
+    background-color: red;
+    font-weight:bold;
+}

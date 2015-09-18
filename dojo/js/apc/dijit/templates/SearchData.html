@@ -1,0 +1,26 @@
+<div>
+	<input type="text" placeholder="Search" data-dojo-attach-point="_searchText" data-dojo-attach-event="onkeyup:_inputChanged" />
+	<button class="${_css.searchButton}" data-dojo-attach-point="_searchButton" data-dojo-attach-event="onclick:_doSearch">Search</button>
+	<hr/>
+	<span data-dojo-attach-point="_status" class="${_css.statusMessage}"></span>
+	<table data-dojo-attach-point="_searchOptions">
+		<tr>
+		<td class="${_css.options}">
+			<fieldset>
+				<legend>Options</legend>
+				<div data-dojo-attach-point="_optionList"></div>
+			</fieldset>
+		</td>
+		<td class="${_css.shortcuts}">
+			<div>
+				<input type="radio" name="optionShortcut" value="all" data-dojo-attach-point="_shortcutAll" data-dojo-attach-event="onchange:_shortcutChanged"/>
+				All
+			</div>
+			<div>
+				<input type="radio" name="optionShortcut" value="none" data-dojo-attach-point="_shortcutNone" data-dojo-attach-event="onchange:_shortcutChanged" />
+				None
+			</div>
+		</td>
+		</tr>
+	</table>
+</div>
