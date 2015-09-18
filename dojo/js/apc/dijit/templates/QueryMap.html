@@ -1,0 +1,19 @@
+<div>
+	<div><input type="radio" name="queryMethod" data-dojo-attach-event="onchange:_queryMethodChanged" value="rectangle" checked/>Click or drag a rectangle</div>
+	<div><input type="radio" name="queryMethod" data-dojo-attach-event="onchange:_queryMethodChanged" value="polygon" />Draw a rectangle</div>
+	<div><input type="radio" name="queryMethod" data-dojo-attach-event="onchange:_queryMethodChanged" value="pointBuffer" />Distance around a point
+		<table class="${_css.bufferOptions}" data-dojo-attach-point="_bufferOptions">
+			<tr>
+				<td>
+					<span>Distance: </span>
+					<input type="text" data-dojo-attach-point="_bufferDistance" size="6" />
+				</td>
+				<td>
+					<div><input type="radio" name="distanceUnit" data-dojo-attach-event="onchange:_distanceUnitChanged" value="foot" checked/>feet</div>
+					<div><input type="radio" name="distanceUnit" data-dojo-attach-event="onchange:_distanceUnitChanged" value="meter" />meters</div>				
+				</td>
+			</tr>
+		</table>
+	</div>
+	<span data-dojo-attach-point="_status" class="${_css.statusMessage}"></span>
+</div>
