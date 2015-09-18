@@ -213,11 +213,13 @@ define([
 								}); 
 							})); 
 							// add to searchParam
-							searchParams.push({
-								"name": tgt["name"], 
-								"queries": tgtQueries
-							});
-							break; 
+                            if (tgtQueries.length > 0) {
+    							searchParams.push({
+    								"name": tgt["name"], 
+    								"queries": tgtQueries
+    							});
+                            }
+    						break; 
 						}
 					}
 				}
