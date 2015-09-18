@@ -14,14 +14,14 @@ define([
     "dojo/dom-style",
     "dojo/ready",
 
+    "apc/extra/FeatureGridManager", // 3rd-party lib
     "dojo/text!apc/dijit/templates/SearchData.html" // template html
-    //"apc/extra/ResultGrid" // 3rd-party lib
 ], function(
 	_WidgetBase,
     Evented, declare, lang, array, 
     parser, _TemplatedMixin,
     on, dom, domConstruct, domClass, domStyle, ready, 
-    dijitTemplate
+    FeatureGridManager, dijitTemplate
 ) {
 
     var searchData = declare("SearchData", [_WidgetBase, _TemplatedMixin, Evented], {
@@ -226,6 +226,9 @@ define([
 			})); 
 
 			// pass searchParams for execution
+			if (searchParams.length > 0) {
+				FeatureGridManager.buildFeatureGrid(searchParams); 
+			}
 		}
 		
     });
