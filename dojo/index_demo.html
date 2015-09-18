@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="//kendo.cdn.telerik.com/2015.2.902/styles/kendo.material.min.css" />	
     <link rel="stylesheet" href="css/SearchData.css">
 	<link rel="stylesheet" href="css/QueryMap.css">
-    <link rel="stylesheet" href="css/featureGrid.css">
+    <link rel="stylesheet" href="css/FeatureGridManager.css">
 	<style>
 		html, body, #map {
             height: 100%;
@@ -122,7 +122,7 @@
                 "id": "LandLease",
                 "opacity": 0.75
             });
-            map.addLayer(landLeaseLayer);			
+            map.addLayer(landLeaseLayer);
 
             map.on("load", function () {
                 //after map loads, connect to listen to mouse move & drag events
@@ -154,20 +154,12 @@
                 //display mouse coordinates
                 dom.byId("coords").innerHTML = "Lat: " + mp.y.toFixed(3) + "<p>Lon:" + mp.x.toFixed(3);
             }
-			
-            /*
-			var featureGrid = new FeatureGrid({
-				map: map
-			}, "featureGridWidget"); 
-			
-			featureGrid.startup(); 
-             */
 			 
             var queryMap = new QueryMap({
                 map: map
             }, "queryMapWidget"); 
 
-            queryMap.startup();			 
+            queryMap.startup();
 
             var searchData = new SearchData({
                 map: map, 
@@ -252,6 +244,14 @@
 		<div id="queryMapWidget"></div>
     </div>
     <span id="coords"></span>
-	<div id="resultPanel"></div>
+	
+	<div id="resultWindow">
+		<div id="resultSplitter" style="height:98%">
+			<div id="layerPanelbar"></div>
+			<div id="datagrid"></div>
+		</div>
+	</div>
+	<span id="panelDock" class="k-button">Show Results</span>
+
 </body>
 </html>
