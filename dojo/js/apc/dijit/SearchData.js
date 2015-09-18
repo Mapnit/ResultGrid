@@ -234,5 +234,4 @@ define([
 
     return searchData;
 
-
 });
