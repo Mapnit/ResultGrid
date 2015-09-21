@@ -87,9 +87,6 @@
 	<script>
 		define.amd.jQuery = true;
 
-        var landLeaseUrl = "http://gis/arcgis/rest/services/Land/lease_expiration/MapServer";
-        var searchServiceUrl = "http://gis/arcgis/rest/services/Basemap/basemap_query/MapServer";
-
 		var map; 
 
 		require([
@@ -109,16 +106,14 @@
 			SearchData, QueryMap
 		) {
 
-			esriConfig.defaults.io.corsEnabledServers.push(landLeaseUrl);
-            esriConfig.defaults.io.corsEnabledServers.push(searchServiceUrl);
-
 			map = new Map("map", {
                 basemap: "topo",
                 center: [-97.70, 38.82], // longitude, latitude
                 zoom: 4
             });
 			
-            var landLeaseLayer = new ArcGISDynamicMapServiceLayer(landLeaseUrl, {
+            var landLeaseLayer = new ArcGISDynamicMapServiceLayer(
+                "http://sampleserver6.arcgisonline.com/arcgis/rest/services/Census/MapServer", {
                 "id": "LandLease",
                 "opacity": 0.75
             });
@@ -164,66 +159,20 @@
             var searchData = new SearchData({
                 map: map, 
                 targets: [{
-                        "name": "Equipment",
-                        "default": true, 
+                        "name": "Census2000",
+                        "default": true,
                         "queries": [{
-                            "name": "Equipment", 
-                            "serviceUrl": "http://gis/arcgis/rest/services/Basemap/basemap_query/MapServer/3", 
-                            "where": "(upper(description) like '{0}%' or equipmentnumber like '%{0}%' or systemxref like '{0}%')"
+                            "name": "Block Points",
+                            "serviceUrl": "http://sampleserver6.arcgisonline.com/arcgis/rest/services/Census/MapServer/0",
+                            "where": "STATE_FIPS = '01' and BLOCK like '%{0}%'"
                         }, {
-                            "name": "Functional Locations", 
-                            "serviceUrl": "http://gis/arcgis/rest/services/Basemap/basemap_query/MapServer/53", 
-                            "where": "(upper(description) like '{0}%' or funcloc like '{0}%' or systemxref like '{0}%')"
-                        }]
-                    }, {
-                        "name": "Land",
-                        "default": true, 
-                        "queries": [{
-                            "name": "Active Contracts", 
-                            "serviceUrl": "http://gis/arcgis/rest/services/Basemap/basemap_query/MapServer/9", 
-                            "where": "(LESSEE_GRANTEE like '{0}%' or AGMT_NAME like '{0}%')",
-                            "numericWhere": "(ARRG_KEY = {0} or AGMT_NUM = '{0}')"
+                            "name": "Block Groups",
+                            "serviceUrl": "http://sampleserver6.arcgisonline.com/arcgis/rest/services/Census/MapServer/1",
+                            "where": "STATE_FIPS = '01' and TRACT like '%{0}%'"
                         }, {
-                            "name": "Inactive Contracts", 
-                            "serviceUrl": "http://gis/arcgis/rest/services/Basemap/basemap_query/MapServer/51", 
-                            "where": "(LESSEE_GRANTEE like '{0}%' or AGMT_NAME like '{0}%')",
-                            "numericWhere": "(ARRG_KEY = {0} or AGMT_NUM = '{0}')"
-                        }]
-                    }, {
-                        "name": "Landgrid",
-                        "default": false, 
-                        "queries": []
-                    }, {
-                        "name": "Pipeline",
-                        "default": false, 
-                        "queries": null
-                    }, {
-                        "name": "Wells",
-                        "default": true, 
-                        "queries": [{
-                            "name": "APC Wells", 
-                            "serviceUrl": "http://gis/arcgis/rest/services/Basemap/basemap_query/MapServer/0", 
-                            "where": "(well_no like '{0}%' or cmpl_name like '{0}%' or well_name like '{0}%' or api_uwi_no like '{0}' or upper(pad_group_name) like '{0}%' or upper(pod_group_name) like '{0}%' or route_description like '{0}%')"
-                        }, {
-                            "name": "APC Producing Wells", 
-                            "serviceUrl": "http://gis/arcgis/rest/services/Basemap/basemap_query/MapServer/1", 
-                            "where": "(well_num like '{0}%' or cmpl_name like '{0}%' or api_num like '{0}' or pumper_name like '{0}%' or forman_name like '{0}%')"
-                        }, {
-                            "name": "Industry Wells", 
-                            "serviceUrl": "http://gis/arcgis/rest/services/Basemap/basemap_query/MapServer/2", 
-                            "where": "(uwi like '{0}%' or wellbore_id like '{0}%' or WINS like '{0}' or auwi like '{0}' or current_well_name like '{0}%' or alt_well_name like '{0}%' or current_operator_name like '{0}%')"
-                        }]
-                    }, {
-                        "name": "Geophysics/Seismic",
-                        "default": false,
-                        "queries": [{
-                            "name": "2D Seismic INTL APC", 
-                            "serviceUrl": "http://gis/arcgis/rest/services/Basemap/basemap_query/MapServer/18", 
-                            "where": "(line_name like '{0}%' or prospect_name like '{0}%' or alias_ids like '{0}%')"
-                        }, {
-                            "name": "2D Seismic Domestic APC", 
-                            "serviceUrl": "http://gis/arcgis/rest/services/Basemap/basemap_query/MapServer/7", 
-                            "where": "(line_name like '{0}%' or prospect_name like '{0}%' or alias_ids like '{0}%')"
+                            "name": "Counties",
+                            "serviceUrl": "http://sampleserver6.arcgisonline.com/arcgis/rest/services/Census/MapServer/2",
+                            "where": "STATE_FIPS = '01' and CNTY_FIPS like '%{0}%'"
                         }]
                     }, {
                         "name": "Others",
@@ -245,6 +194,7 @@
     </div>
     <span id="coords"></span>
 	
+	<!--
 	<div id="resultWindow">
 		<div id="resultSplitter" style="height:98%">
 			<div id="layerPanelbar"></div>
@@ -252,6 +202,7 @@
 		</div>
 	</div>
 	<span id="panelDock" class="k-button">Show Results</span>
+	-->
 
 </body>
 </html>
