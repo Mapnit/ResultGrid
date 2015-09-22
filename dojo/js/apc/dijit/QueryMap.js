@@ -133,6 +133,7 @@ define([
 			// remove the graphic layer from map 
 			if (this._queryLayer) {
 				this.map.removeLayer(this._queryLayer);
+				this._queryLayer = null; 
 			}
 			// 
         }, 

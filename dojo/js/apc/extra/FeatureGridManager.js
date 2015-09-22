@@ -1,23 +1,82 @@
 define([
-	"dojo/_base/declare",
+	"dojo/_base/declare", 
+	"dojo/topic", 
 	"dojo/promise/all", 
-	"esri/tasks/QueryTask", "esri/tasks/query", "esri/tasks/StatisticDefinition",
+	
+	"esri/tasks/QueryTask", 
+	"esri/tasks/query", 
+	"esri/tasks/StatisticDefinition",
+    "esri/geometry/Point",
+    "esri/geometry/Polyline",
+    "esri/geometry/Polygon",
+    "esri/geometry/Extent",
+	"esri/geometry/webMercatorUtils", 
+    "esri/layers/GraphicsLayer", 
+    "esri/graphic",	
+	"esri/renderers/SimpleRenderer", 
+	"esri/Color", 
+	"esri/symbols/SimpleMarkerSymbol", 
+    "esri/symbols/SimpleFillSymbol", 
+	"esri/symbols/SimpleLineSymbol",	
+	
 	"jquery", "kendo" 
 ], function(
-	declare, all, 
-	QueryTask, Query, StatisticDefinition
+	declare, topic, all, 
+	QueryTask, Query, StatisticDefinition, 
+	Point, Polyline, Polygon, Extent, webMercatorUtils, GraphicsLayer, Graphic,
+	SimpleRenderer, Color, SimpleMarkerSymbol, SimpleFillSymbol, SimpleLineSymbol
 ) {	
 	var fgm = declare("FeatureGridManager", null, {}); 
 	
 	/* ------------------ */
 	/* Private Variables  */
 	/* ------------------ */
+
+	fgm.gridOptions = {
+		pageSize: 1000, 
+		map: null, 
+		symbols: {
+			"point": {
+				"type": "esriSMS",
+				"style": "esriSMSCircle",
+				"color": [0,0,255,255],
+				"size": 6,
+				"angle": 0,
+				"xoffset": 0,
+				"yoffset": 0,
+				"outline": {
+					"color": [0,0,255,255],
+					"width": 2
+				}
+			}, 
+			"line": {
+				"type": "esriSLS",
+				"style": "esriSLSDash",
+				"color": [0,0,255,255],
+				"width": 2
+			},
+			"polygon": {
+				"type": "esriSFS",
+				"style": "esriSFSSolid",
+				"color": [0,0,0,75],
+				"outline": {
+					"type": "esriSLS",
+					"style": "esriSLS",
+					"color": [0,0,255,255],
+					"width": 2
+				}
+			}
+		} 
+	}; 
 	
 	fgm.depthSeparator = "-"; 
 	fgm.column_oid = "OBJECTID";
 	fgm.searchParams = []; 
 	fgm.resultCache = {}; 
 	fgm.selectedPanel = null; 
+	
+	fgm._fgLayerId = "fgm_graphicsLayer";
+    fgm._fgLayer = null; 
 	
 	fgm.actionColumn = {
 		command: [{ 
@@ -54,14 +113,25 @@ define([
 	/* --------------------- */
 	/* Private UI Functions  */
 	/* --------------------- */
-			
-	fgm.buildFeatureGrid = function(searchParams) {
+
+	fgm.buildFeatureGrid = function(searchParams, gridOptions) {
 		fgm.searchParams = searchParams; 
+		fgm._mixInOptions(gridOptions);
 		
 		// remove it if any
 		fgm._removeFeatureGrid(); 
 
-		// add the basic html elements
+		// prepare the graphic layer
+		if (!fgm._fgLayer) {
+			fgm._fgLayer = new GraphicsLayer({id: fgm._fgLayerId}); 
+			if (fgm.gridOptions.map.getLayer(fgm._fgLayerId)) {
+				fgm._fgLayer.clear(); 
+			} else {
+				fgm.gridOptions.map.addLayer(fgm._fgLayer);
+			}
+		}
+		
+		// add the html skeleton
 		var splitterDiv = $('<div id="fgm-resultSplitter" style="height:98%">'); 
 		splitterDiv.append('<div id="fgm-layerPanelbar"></div>');
 		splitterDiv.append('<div id="fgm-datagrid"></div>');
@@ -78,6 +148,8 @@ define([
 		// build UI widgets
 		fgm._buildResultWindow(); 
 		fgm._buildResultPanels();
+		
+		topic.publish("featureGrid/ready", "fgm ready"); 
 	}
 	
 	fgm._buildResultWindow = function() {
@@ -127,6 +199,13 @@ define([
 	
 	fgm._removeFeatureGrid = function() {
 		
+		// remove the graphic layer from map 
+		if (fgm._fgLayer) {
+			fgm.gridOptions.map.removeLayer(fgm._fgLayer);
+			fgm._fgLayer = null; 
+		}
+		
+		// remove the html skeleton
 		var panelDock = $("#fgm-panelDock"); 
 		if(panelDock) {
 			panelDock.unbind("click"); 
@@ -206,7 +285,7 @@ define([
 			pageable: {
 				//refresh: true,
 				//pageSizes: true,
-				pageSize: 20, 
+				pageSize: fgm.gridOptions["pageSize"], 
 				buttonCount: 5
 			},
 			columns: resultColumns
@@ -225,7 +304,7 @@ define([
 			//dgElement.remove();
 		}
 	}
-
+	
 	/* ----------------------- */
 	/* Private Event Handlers  */
 	/* ----------------------- */	
@@ -243,24 +322,37 @@ define([
 	}
 	
 	fgm.onSelectResultPanel = function(evt) {
-		var usrDataName = $(evt.item).attr("udata-name"); 
-		if (usrDataName && (usrDataName.length > 0)) {
-			if (fgm.selectedPanel !== usrDataName) {
-				console.log("Panel Selection Changed: " + usrDataName);
-				fgm.selectedPanel = usrDataName; 
-				if(fgm.resultCache[usrDataName]) {
-					var rc = fgm.resultCache[usrDataName]; 
-					fgm._executeQueryForData(rc["query"]); 
+		// remove the current datagrid
+		fgm._removeResultGrid(); 
+
+		var queryName = $(evt.item).attr("udata-name"); 
+		if (queryName && (queryName.length > 0)) {
+			if (fgm.selectedPanel !== queryName) {
+				console.log("Panel Selection Changed: " + queryName);
+				fgm.selectedPanel = queryName;
+				
+				var qry = fgm._readFromCache(queryName, "query"); 
+				if(qry) {
+					// cache the name of currentQuery
+					fgm._writeIntoCache("currentQuery", queryName); 
+					// clear the cache for any result of currentQuery
+					fgm._writeIntoCache(queryName, null); 
+					// reset the cache for query of currentQuery
+					fgm._writeIntoCache(queryName, qry, "query"); 
+					// execute the query for data
+					fgm._executeQueryForData(qry); 
+				} else {
+					console.log("error: no query for " + queryName); 
 				}
 				/*
-				var selectedPos = usrDataName.split(fgm.depthSeparator); 
+				var selectedPos = queryName.split(fgm.depthSeparator); 
 				for(var i=0,l=fgm.searchParams.length; i<l; i++) {
 					var item = fgm.searchParams[i]; 
 					if (item["name"] === selectedPos[0]) {
 						for(var q=0,ql=item["queries"].length; q<ql; q++) {
 							var qry = item["queries"][q]; 
 							if (qry["name"] === selectedPos[1]) {
-								fgm._executeQueryForData(qry); 								
+								fgm._executeQueryForData(qry);
 								break; 
 							}
 						}
@@ -272,9 +364,34 @@ define([
 		}
 	}
 	
+	fgm.gotoPage = function(pageIdx) {
+		
+		var queryName = fgm._readFromCache("currentQuery");
+		if (queryName) {
+			var OIDStartIdx = pageIdx * fgm.gridOptions["pageSize"]; 
+			var qry = fgm._readFromCache(queryName, "query");
+			var OIDArray = fgm._readFromCache(queryName, "OIDs");
+			if (qry && OIDArray) {
+				var OIDEndIdx = OIDStartIdx + fgm.gridOptions["pageSize"]; 
+				var OIDsForPage = OIDArray.slice(OIDStartIdx, OIDEndIdx); 
+				fgm._executeQueryForData(qry, OIDArray); 
+				return true; 
+			}
+		}
+		return false; 
+	}
+	
 	/* -------------------------- */
 	/* Private Utility Functions  */
 	/* -------------------------- */
+	
+	fgm._mixInOptions = function(usrOptions) {
+		if (usrOptions) {
+			for(var k in usrOptions) {
+				fgm.gridOptions[k] = usrOptions[k]; 
+			}
+		}
+	}
 	
     fgm._normalize = function(name) {
 		if (name) {
@@ -284,20 +401,32 @@ define([
 		}
 	}
 	
-	fgm._writeIntoCache = function(queryName, key, value) {
-		if (!fgm.resultCache[queryName]) {
-			fgm.resultCache[queryName] = {}; 
+	fgm._writeIntoCache = function(queryName, value, key) {
+		if (key) {
+			if (!fgm.resultCache[queryName]) {
+				fgm.resultCache[queryName] = {}; 
+			}
+			fgm.resultCache[queryName][key] = value;
+		} else {
+			fgm.resultCache[queryName] = value;
 		}
-		fgm.resultCache[queryName][key] = value;
 	}
 	
 	fgm._readFromCache = function(queryName, key) {
 		if (fgm.resultCache[queryName]) {
-			return fgm.resultCache[queryName][key];
+			if (key) {
+				return fgm.resultCache[queryName][key];
+			} else {
+				return fgm.resultCache[queryName]; 
+			}			
 		}
 		return null; 
 	}	
 	
+	/* ------------------------ */
+	/* Private Query Functions  */
+	/* ------------------------ */
+
 	fgm._executeQueryForOID = function() {
 		
 		var promiseDict = {}; 
@@ -309,7 +438,7 @@ define([
 				var queryName = item["name"]+fgm.depthSeparator+qry["name"]; 
 				
 				// cache the query results
-				fgm._writeIntoCache(queryName, "query", qry);
+				fgm._writeIntoCache(queryName, qry, "query");
 				
 				var query = new Query();
 				query.where = qry["where"];
@@ -345,7 +474,7 @@ define([
 			}
 			
 			// cache the query results
-			fgm._writeIntoCache(queryName, "OIDs", OIDResults[queryName]); 
+			fgm._writeIntoCache(queryName, OIDResults[queryName], "OIDs"); 
 		}
 	}
 	
@@ -422,24 +551,21 @@ define([
 		}
 	}
 	
-	fgm._executeQueryForDataByOID = function(serviceUrl, OIDs) {
+	fgm._executeQueryForData = function(qry, OIDs) {
 
 		var query = new Query();
-		query.objectIds = OIDs; 
+		if (OIDs && OIDs.length > 0) {
+			console.log("query by OIDs on " + qry["serviceUrl"]); 
+			query.objectIds = OIDs; 
+		} else {
+			console.log("query [" + qry["where"] + "] on " + qry["serviceUrl"]); 
+			query.where = qry["where"];
+			query.geometry = qry["geometry"]; 
+		}
 		query.returnGeometry = true;
-		query.outFields = ["*"];
-		
-		var queryTask = new QueryTask(qry["serviceUrl"]); 
-		queryTask.execute(query, fgm._prepareDataResults);
-	}
-	
-	fgm._executeQueryForData = function(qry) {
-		console.log("query [" + qry["where"] + "] on " + qry["serviceUrl"]); 
-
-		var query = new Query();
-		query.where = qry["where"];
-		query.geometry = qry["geometry"]; 
-		query.returnGeometry = true;
+		if (fgm.gridOptions.map) {
+			query.outSpatialReference = fgm.gridOptions.map.spatialReference; 
+		}
 		query.outFields = ["*"];
 		
 		var queryTask = new QueryTask(qry["serviceUrl"]); 
@@ -447,7 +573,6 @@ define([
 	}
 	
 	fgm._prepareDataResults = function(results) {
-		fgm._removeResultGrid(); 
 		
 		console.log("show results"); 
 		var resultFields = []; 
@@ -473,7 +598,76 @@ define([
 		}
 		
 		fgm._buildResultGrid(resultItems, dgColumns); 
+		
+		fgm._displayDataOnMap(results); 
 	}
 	
+	/* ---------------------- */
+	/* Private Map Functions  */
+	/* ---------------------- */
+	
+	fgm._displayDataOnMap = function(results) {
+		console.log("_displayDataOnMap: ");
+		
+		if (!fgm.gridOptions.map) {
+			console.log("no map available"); 
+			return; 
+		} 
+		
+		fgm._fgLayer.clear(); 
+		
+		if (! results) {
+			console.log("empty results"); 
+			return; 
+		}
+		
+		var symbol; 
+		switch(results.geometryType) {
+			case "esriGeometryPoint":
+				symbol = new SimpleMarkerSymbol(fgm.gridOptions.symbols["point"]);
+				break; 
+			case "esriGeometryPolyline":
+				symbol = new SimpleLineSymbol(fgm.gridOptions.symbols["line"]); 
+				break; 
+			case "esriGeometryPolygon":
+				symbol = new SimpleFillSymbol(fgm.gridOptions.symbols["polygon"]); 
+				break; 
+		}
+		
+		var layerExtent = null; 		
+		$(results.features).each(function(idx) {
+			var feature = this, 
+				geometry = feature.geometry,
+				geometryExtent = feature.geometry.getExtent();
+			
+			if (geometryExtent) {
+				if (!layerExtent) {
+					layerExtent = new Extent(geometryExtent.toJson());
+				} else {
+					layerExtent = layerExtent.union(geometryExtent);
+				}
+			} else {
+				if (!layerExtent) {
+					layerExtent = new Extent(geometry.x, geometry.y, geometry.x, geometry.y, geometry.spatialReference);
+				} else if (!layerExtent.contains(geometry)) {
+					if (layerExtent.xmax < geometry.x)
+						layerExtent.xmax = geometry.x;
+					if (layerExtent.ymax < geometry.y)
+						layerExtent.ymax = geometry.y;
+					if (layerExtent.xmin > geometry.x)
+						layerExtent.xmin = geometry.x;
+					if (layerExtent.ymin > geometry.y)
+						layerExtent.ymin = geometry.y;
+				}
+			}
+					
+			fgm._fgLayer.add(new Graphic(geometry, symbol)); 
+			
+		}); 
+		
+		fgm.gridOptions.map.setExtent(layerExtent, true);
+		
+	}
+
 	return fgm; 
 }); 

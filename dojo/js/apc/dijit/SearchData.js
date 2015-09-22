@@ -1,5 +1,6 @@
 define([
 	"dijit/_WidgetBase",
+	"dojo/topic",
 	"dojo/Evented",
 	"dojo/_base/declare",
 	"dojo/_base/lang",
@@ -18,7 +19,7 @@ define([
     "dojo/text!apc/dijit/templates/SearchData.html" // template html
 ], function(
 	_WidgetBase,
-    Evented, declare, lang, array, 
+    topic, Evented, declare, lang, array, 
     parser, _TemplatedMixin,
     on, dom, domConstruct, domClass, domStyle, ready, 
     FeatureGridManager, dijitTemplate
@@ -60,6 +61,7 @@ define([
 		_optionHtmlTmpl: '<div><input id="search-opt-${id}" type="checkbox" name="searchTarget" value="${value}" ${checked}/>${title}</div>', 
 
 		_optionCheckboxes: [], 
+		_topicSubscribers: [], 
 
         /* ---------------------- */
         /* Public Class Functions */
@@ -124,6 +126,11 @@ define([
 		        	}
 		        }
         	}));
+			// subscribe the datagrid topics 
+			this._topicSubscribers.push(topic.subscribe("featureGrid/ready", function(evt) {
+				console.log("received: " + evt); 
+			})); 
+			//
             this._visible();
             this.set("loaded", true);
             this.emit("load", {});
@@ -227,7 +234,7 @@ define([
 
 			// pass searchParams for execution
 			if (searchParams.length > 0) {
-				FeatureGridManager.buildFeatureGrid(searchParams); 
+				FeatureGridManager.buildFeatureGrid(searchParams, {map: this.map}); 
 			}
 		}
 		
