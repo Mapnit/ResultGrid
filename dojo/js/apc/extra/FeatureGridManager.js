@@ -103,6 +103,9 @@ define([
 	fgm.column_oid = "OBJECTID";
 	fgm.searchParams = []; 
 	fgm.resultCache = {}; 
+	
+	fgm._currentPage = -1; 
+	fgm._currentQuery = null; 
 	fgm.selectedPanel = null; 
 	fgm.selectedRowOID = null;
 	
@@ -390,8 +393,9 @@ define([
 				
 				var qry = fgm._readFromCache(queryName, "query"); 
 				if(qry) {
-					// cache the name of currentQuery
-					fgm._writeIntoCache("currentQuery", queryName); 
+					// keep track of currentQuery
+					fgm._currentQuery = queryName; 
+					fgm._currentPage = 0; 
 					// clear the cache for any result of currentQuery
 					fgm._writeIntoCache(queryName, null); 
 					// reset the cache for query of currentQuery
@@ -433,9 +437,30 @@ define([
 		}
 	}
 	
+	fgm.prevPage = function() {
+		if (fgm._currentPage - 1 >= 0) {
+			fgm.gotoPage(--fgm._currentPage); 
+			return true; 
+		}
+		return false; 
+	}
+	
+	fgm.nextPage = function() {
+		var queryName = fgm._currentQuery;
+		if (queryName) {
+			var rowCount = fgm._readFromCache(queryName, "rowCount")
+			var maxRowIndex = fgm._currentPage * fgm.gridOptions["pageSize"]; 
+			if  (rowCount > maxRowIndex) {
+				fgm.gotoPage(++fgm._currentPage); 
+				return true; 
+			} 
+		}
+		return false; 
+	}
+	
 	fgm.gotoPage = function(pageIdx) {
 		
-		var queryName = fgm._readFromCache("currentQuery");
+		var queryName = fgm._currentQuery;
 		if (queryName) {
 			var OIDStartIdx = pageIdx * fgm.gridOptions["pageSize"]; 
 			var qry = fgm._readFromCache(queryName, "query");
@@ -542,6 +567,7 @@ define([
 			
 			// cache the query results
 			fgm._writeIntoCache(queryName, OIDResults[queryName], "OIDs"); 
+			fgm._writeIntoCache(queryName, OIDResults[queryName].length, "rowCount"); 
 		}
 	}
 	
@@ -628,6 +654,7 @@ define([
 			query.geometry = qry["geometry"]; 
 		}
 		query.returnGeometry = true;
+		
 		if (fgm.gridOptions.map) {
 			query.outSpatialReference = fgm.gridOptions.map.spatialReference; 
 		}
@@ -640,7 +667,7 @@ define([
 	fgm._prepareDataResults = function(results) {		
 		
 		// cache the query results
-		var queryName = fgm._readFromCache("currentQuery"); 
+		var queryName = fgm._currentQuery; 
 		fgm._writeIntoCache(queryName, results, "data");
 		
 		// prepare results
@@ -671,9 +698,9 @@ define([
 		fgm._displayDataOnMap(results); 
 	}
 	
-	/* ---------------------- */
-	/* Private Map Functions  */
-	/* ---------------------- */
+	/* ---------------------------------- */
+	/* Private Map-Interaction Functions  */
+	/* ---------------------------------- */
 	
 	fgm._displayDataOnMap = function(results) {
 		console.log("_displayDataOnMap: ");
@@ -702,9 +729,14 @@ define([
 				symbol = new SimpleFillSymbol(fgm.gridOptions.symbols["polygon"]); 
 				break; 
 		}
+
+		// limit the number of features to the page size
+		var startIndex = fgm._currentPage * fgm.gridOptions["pageSize"]; 
+		var endIndex = Math.min(fgm.gridOptions["pageSize"], results.features.length - startIndex); 
 		
-		var layerExtent = null; 		
-		$(results.features).each(function(idx, feature) {
+		var layerExtent = null; 
+		for(var f=startIndex; f<endIndex; f++) {
+			var feature = results.features[f]; 
 			var attributes = feature.attributes, 
 				geometry = feature.geometry,
 				geometryExtent = feature.geometry.getExtent();
@@ -732,7 +764,7 @@ define([
 
 			fgm._fgLayer.add(new Graphic(geometry, symbol, attributes)); 
 			
-		}); 
+		}; 
 		
 		fgm.gridOptions.map.setExtent(layerExtent, true);
 		
@@ -746,7 +778,7 @@ define([
 			}
 		}
 		
-		var queryName = fgm._readFromCache("currentQuery");
+		var queryName = fgm._currentQuery;
 		var results = fgm._readFromCache(queryName, "data"); 
 		
 		var resultCount = results.features.length;
@@ -818,7 +850,7 @@ define([
 		}
 		
 		// remove from the cached results
-		var queryName = fgm._readFromCache("currentQuery");
+		var queryName = fgm._currentQuery;
 		var results = fgm._readFromCache(queryName, "data");
 		var resultCount = results.features.length;		
 		for(var f=0; f<resultCount; f++) {
@@ -831,7 +863,7 @@ define([
 	}
 	
 	fgm._zoomToFeature = function(OID, highlighted) {
-		var queryName = fgm._readFromCache("currentQuery");
+		var queryName = fgm._currentQuery;
 		var results = fgm._readFromCache(queryName, "data"); 
 		
 		var resultCount = results.features.length;
