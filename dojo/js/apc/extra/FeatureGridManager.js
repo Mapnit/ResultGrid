@@ -13,8 +13,6 @@ define([
 	"esri/geometry/webMercatorUtils", 
     "esri/layers/GraphicsLayer", 
     "esri/graphic",	
-	"esri/renderers/SimpleRenderer", 
-	"esri/Color", 
 	"esri/symbols/SimpleMarkerSymbol", 
     "esri/symbols/SimpleFillSymbol", 
 	"esri/symbols/SimpleLineSymbol",	
@@ -24,7 +22,7 @@ define([
 	declare, topic, all, 
 	QueryTask, Query, StatisticDefinition, 
 	Point, Polyline, Polygon, Extent, webMercatorUtils, GraphicsLayer, Graphic,
-	SimpleRenderer, Color, SimpleMarkerSymbol, SimpleFillSymbol, SimpleLineSymbol
+	SimpleMarkerSymbol, SimpleFillSymbol, SimpleLineSymbol
 ) {	
 	var fgm = declare("FeatureGridManager", null, {}); 
 	
@@ -34,8 +32,8 @@ define([
 
 	fgm.gridOptions = {
 		pageSize: 1000, 
-		map: null, 
-		symbols: {
+		map: null, 		
+		highlightSymbols: {
 			"point": {
 				"type": "esriSMS",
 				"style": "esriSMSCircle",
@@ -53,7 +51,7 @@ define([
 				"type": "esriSLS",
 				"style": "esriSLSDash",
 				"color": [0,0,255,255],
-				"width": 2
+				"width": 1
 			},
 			"polygon": {
 				"type": "esriSFS",
@@ -63,10 +61,42 @@ define([
 					"type": "esriSLS",
 					"style": "esriSLS",
 					"color": [0,0,255,255],
+					"width": 1
+				}
+			}
+		}, 
+		symbols: {
+			"point": {
+				"type": "esriSMS",
+				"style": "esriSMSCircle",
+				"color": [255,255,0,255],
+				"size": 6,
+				"angle": 0,
+				"xoffset": 0,
+				"yoffset": 0,
+				"outline": {
+					"color": [255,255,0,255],
+					"width": 2
+				}
+			}, 
+			"line": {
+				"type": "esriSLS",
+				"style": "esriSLSDash",
+				"color": [255,255,0,255],
+				"width": 2
+			},
+			"polygon": {
+				"type": "esriSFS",
+				"style": "esriSFSSolid",
+				"color": [0,0,0,75],
+				"outline": {
+					"type": "esriSLS",
+					"style": "esriSLS",
+					"color": [255,255,0,255],
 					"width": 2
 				}
 			}
-		} 
+		}
 	}; 
 	
 	fgm.depthSeparator = "-"; 
@@ -74,9 +104,13 @@ define([
 	fgm.searchParams = []; 
 	fgm.resultCache = {}; 
 	fgm.selectedPanel = null; 
+	fgm.selectedRowOID = null;
 	
-	fgm._fgLayerId = "fgm_graphicsLayer";
+	fgm._fgLayerId = "fgm_dataLayer";
     fgm._fgLayer = null; 
+	
+	fgm._fhlgLayerId = "fgm_highlightLayer";
+    fgm._fhlgLayer = null; 
 	
 	fgm.actionColumn = {
 		command: [{ 
@@ -84,27 +118,30 @@ define([
 			text:"",
 			class: "ob-icon-only",
 			imageClass: "k-icon cmd-icon-dismiss ob-icon-only",
-			click: function(e) {
-				var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+			click: function(evt) {
+				var dataItem = this.dataItem($(evt.currentTarget).closest("tr"));
 				console.log("delete this row: " + dataItem[fgm.column_oid]);
+				fgm._removeFeature(dataItem[fgm.column_oid]); 
 			}
 		}, { 
 			name: "ZoomIn",
 			text:"",
 			class: "ob-icon-only",
 			imageClass: "k-icon cmd-icon-zoomIn ob-icon-only",
-			click: function(e) {
-				var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+			click: function(evt) {
+				var dataItem = this.dataItem($(evt.currentTarget).closest("tr"));
 				console.log("zoom to this row: " + dataItem[fgm.column_oid]);
+				fgm._zoomToFeature(dataItem[fgm.column_oid]); 
 			}
 		}, { 
 			name: "Hyperlink",
 			text:"",
 			class: "ob-icon-only",
 			imageClass: "k-icon cmd-icon-hyperlink ob-icon-only",
-			click: function(e) {
-				var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+			click: function(evt) {
+				var dataItem = this.dataItem($(evt.currentTarget).closest("tr"));
 				console.log("pop up hyperlinks: " + dataItem[fgm.column_oid]);
+				fgm._popupMenuForFeature(dataItem[fgm.column_oid]); 
 			}
 		}],
 		width: 155
@@ -121,14 +158,23 @@ define([
 		// remove it if any
 		fgm._removeFeatureGrid(); 
 
-		// prepare the graphic layer
+		// prepare the graphic layers
 		if (!fgm._fgLayer) {
 			fgm._fgLayer = new GraphicsLayer({id: fgm._fgLayerId}); 
-			if (fgm.gridOptions.map.getLayer(fgm._fgLayerId)) {
-				fgm._fgLayer.clear(); 
-			} else {
-				fgm.gridOptions.map.addLayer(fgm._fgLayer);
-			}
+		}
+		if (fgm.gridOptions.map.getLayer(fgm._fgLayerId)) {
+			fgm._fgLayer.clear(); 
+		} else {
+			fgm.gridOptions.map.addLayer(fgm._fgLayer);
+		}
+		
+		if (!fgm._fhlgLayer) {
+			fgm._fhlgLayer = new GraphicsLayer({id: fgm._fhlgLayerId}); 
+		}		
+		if (fgm.gridOptions.map.getLayer(fgm._fhlgLayerId)) {
+			fgm._fhlgLayer.clear(); 
+		} else {
+			fgm.gridOptions.map.addLayer(fgm._fhlgLayer);
 		}
 		
 		// add the html skeleton
@@ -173,8 +219,8 @@ define([
 				title: "Query Results",
 				actions: [
 					//"Pin",
-					//"Minimize",
-					//"Maximize",
+					"Minimize",
+					"Maximize",
 					"Close"
 				],
 				close: onClose,
@@ -200,10 +246,12 @@ define([
 	fgm._removeFeatureGrid = function() {
 		
 		// remove the graphic layer from map 
-		if (fgm._fgLayer) {
-			fgm.gridOptions.map.removeLayer(fgm._fgLayer);
-			fgm._fgLayer = null; 
-		}
+		$([fgm._fgLayer, fgm._fhlgLayer]).each(function(idx, gLayer) {
+			if (gLayer) {
+				fgm.gridOptions.map.removeLayer(gLayer);
+				gLayer = null; 
+			}
+		}); 
 		
 		// remove the html skeleton
 		var panelDock = $("#fgm-panelDock"); 
@@ -248,8 +296,7 @@ define([
 		var layerPane = $("#fgm-layerPanelbar");
 		var prevGrpName; 
 		var grpElement, listElement; 
-		$(fgm.searchParams).each(function(idx) {
-			var item = this; 
+		$(fgm.searchParams).each(function(idx, item) {
 			if (prevGrpName !== item["name"]) {
 				prevGrpName = item["name"]; 
 				grpElement = $("<li>" + item["name"] + "</li>");
@@ -257,8 +304,7 @@ define([
 				layerPane.append(grpElement.append(listElement));
 			}
 			if (listElement) {
-				$(item["queries"]).each(function(idx) {
-					var qry = this; 
+				$(item["queries"]).each(function(idx, qry) {
 					var normalizedQueryName = fgm._normalize(qry["name"]); 
 					listElement.append(
 						$("<li></li>").attr("id", fgm._normalize(item["name"]) + fgm.depthSeparator + fgm._normalize(qry["name"]))
@@ -277,10 +323,13 @@ define([
 	
 	fgm._buildResultGrid = function(resultData, resultColumns) {
 		var dg = $("#fgm-datagrid").kendoGrid({
-			dataSource: resultData,
 			height: 450,
+			dataSource: resultData,
+			columns: resultColumns, 
 			groupable: true,
+			filterable: true,
 			resizable: true, 
+			selectable: "row", 
 			sortable: true,
 			pageable: {
 				//refresh: true,
@@ -288,13 +337,21 @@ define([
 				pageSize: fgm.gridOptions["pageSize"], 
 				buttonCount: 5
 			},
-			columns: resultColumns
+			change: fgm.onRowSelect
 		});	
 
 		return dg; 
 	}
 	
 	fgm._removeResultGrid = function() {
+		// clear the graphic layer from map 
+		$([fgm._fgLayer, fgm._fhlgLayer]).each(function(idx, gLayer) {
+			if (gLayer) {
+				gLayer.clear();  
+			}
+		}); 
+		
+		// destroy the datagrid 
 		var dgElement = $("#fgm-datagrid"); 
 		if (dgElement) {
 			if ( dgElement.data("kendoGrid")) {
@@ -364,6 +421,18 @@ define([
 		}
 	}
 	
+	fgm.onRowSelect = function(evt) {
+		var dg = this; 
+		var rowData = dg.dataItem(dg.select()); 
+		var rowOID = rowData[fgm.column_oid]; 
+		
+		if (fgm.selectedRowOID !== rowOID) {
+			console.log("onRowSelect: " + rowOID); 
+			
+			fgm._highlightFeature(rowOID, true); 
+		}
+	}
+	
 	fgm.gotoPage = function(pageIdx) {
 		
 		var queryName = fgm._readFromCache("currentQuery");
@@ -430,10 +499,8 @@ define([
 	fgm._executeQueryForOID = function() {
 		
 		var promiseDict = {}; 
-		$(fgm.searchParams).each(function(idx) {
-			var item = this; 
-			$(item["queries"]).each(function(idx) {
-				var qry = this;
+		$(fgm.searchParams).each(function(idx, item) {
+			$(item["queries"]).each(function(idx, qry) {
 				console.log("query [" + qry["where"] + "] on " + qry["serviceUrl"]); 
 				var queryName = item["name"]+fgm.depthSeparator+qry["name"]; 
 				
@@ -496,10 +563,8 @@ define([
 		statsCntDef.outStatisticFieldName = "cntOID";
 		
 		var promiseDict = {}; 
-		$(fgm.searchParams).each(function(idx) {
-			var item = this; 
-			$(item["queries"]).each(function(idx) {
-				var qry = this;
+		$(fgm.searchParams).each(function(idx, item) {
+			$(item["queries"]).each(function(idx, qry) {
 				console.log("query [" + qry["where"] + "] on " + qry["serviceUrl"]); 
 				var queryName = item["name"]+fgm.depthSeparator+qry["name"]; 
 				
@@ -573,9 +638,9 @@ define([
 	}
 	
 	fgm._prepareDataResults = function(results) {		
-		console.log("show results"); 
 		
 		// cache the query results
+		var queryName = fgm._readFromCache("currentQuery"); 
 		fgm._writeIntoCache(queryName, results, "data");
 		
 		// prepare results
@@ -639,8 +704,8 @@ define([
 		}
 		
 		var layerExtent = null; 		
-		$(results.features).each(function(idx) {
-			var feature = this, 
+		$(results.features).each(function(idx, feature) {
+			var attributes = feature.attributes, 
 				geometry = feature.geometry,
 				geometryExtent = feature.geometry.getExtent();
 			
@@ -664,8 +729,8 @@ define([
 						layerExtent.ymin = geometry.y;
 				}
 			}
-					
-			fgm._fgLayer.add(new Graphic(geometry, symbol)); 
+
+			fgm._fgLayer.add(new Graphic(geometry, symbol, attributes)); 
 			
 		}); 
 		
@@ -673,5 +738,140 @@ define([
 		
 	}
 
+	fgm._highlightFeature = function(OID, clearFirst) {
+		
+		if (clearFirst === true) {
+			if (fgm._fhlgLayer) {
+				fgm._fhlgLayer.clear(); 
+			}
+		}
+		
+		var queryName = fgm._readFromCache("currentQuery");
+		var results = fgm._readFromCache(queryName, "data"); 
+		
+		var resultCount = results.features.length;
+		for(var f=0; f<resultCount; f++) {
+			if (OID === results.features[f].attributes[fgm.column_oid]) {
+				var attributes = results.features[f].attributes, 
+					geometry = results.features[f].geometry,
+					geometryExtent = results.features[f].geometry.getExtent(); 
+
+				var symbol; 
+				switch(results.geometryType) {
+					case "esriGeometryPoint":
+						symbol = new SimpleMarkerSymbol(fgm.gridOptions.highlightSymbols["point"]);
+						break; 
+					case "esriGeometryPolyline":
+						symbol = new SimpleLineSymbol(fgm.gridOptions.highlightSymbols["line"]); 
+						break; 
+					case "esriGeometryPolygon":
+						symbol = new SimpleFillSymbol(fgm.gridOptions.highlightSymbols["polygon"]); 
+						break; 
+				}
+				
+				fgm._fhlgLayer.add(new Graphic(geometry, symbol, attributes)); 
+				
+				break; 
+			}
+		}
+		
+	}
+	
+	fgm._removeFeature = function(OID) {
+		
+		var dg = $("#fgm-datagrid").data("kendoGrid"); 
+		var rawData = dg.dataSource.data();
+		var length = rawData.length;
+
+		// iterate and remove the item
+		var item;
+		for(var f=0; f<length; f++){
+			item = rawData[f];
+			if (OID === item[fgm.column_oid]){
+				dg.dataSource.remove(item);
+				break; 
+			}
+		}
+		//dg.dataSource.read(); 
+		//dg.refresh(); 
+		
+		// remove from the highlight graphic layer
+		var graphicCount = fgm._fhlgLayer.graphics.length; 
+		for(var f=0; f<graphicCount; f++) {
+			if (OID === fgm._fhlgLayer.graphics[f].attributes[fgm.column_oid]) {
+				// remove from the graphic layer 
+				var graphic = fgm._fhlgLayer.graphics[f]; 
+				fgm._fhlgLayer.remove(graphic); 
+				break;
+			}
+		}
+
+		// remove from the graphic layer
+		graphicCount = fgm._fgLayer.graphics.length; 
+		for(var f=0; f<graphicCount; f++) {
+			if (OID === fgm._fgLayer.graphics[f].attributes[fgm.column_oid]) {
+				// remove from the graphic layer 
+				var graphic = fgm._fgLayer.graphics[f]; 
+				fgm._fgLayer.remove(graphic); 
+				break;
+			}
+		}
+		
+		// remove from the cached results
+		var queryName = fgm._readFromCache("currentQuery");
+		var results = fgm._readFromCache(queryName, "data");
+		var resultCount = results.features.length;		
+		for(var f=0; f<resultCount; f++) {
+			if (OID === results.features[f].attributes[fgm.column_oid]) {
+				results.features.splice(f, 1);
+				break;
+			}
+		}
+		
+	}
+	
+	fgm._zoomToFeature = function(OID, highlighted) {
+		var queryName = fgm._readFromCache("currentQuery");
+		var results = fgm._readFromCache(queryName, "data"); 
+		
+		var resultCount = results.features.length;
+		for(var f=0; f<resultCount; f++) {
+			if (OID === results.features[f].attributes[fgm.column_oid]) {
+				var attributes = results.features[f].attributes, 
+					geometry = results.features[f].geometry,
+					geometryExtent = results.features[f].geometry.getExtent(); 
+
+				if (highlighted === true) {
+					var symbol; 
+					switch(results.geometryType) {
+						case "esriGeometryPoint":
+							symbol = new SimpleMarkerSymbol(fgm.gridOptions.highlightSymbols["point"]);
+							break; 
+						case "esriGeometryPolyline":
+							symbol = new SimpleLineSymbol(fgm.gridOptions.highlightSymbols["line"]); 
+							break; 
+						case "esriGeometryPolygon":
+							symbol = new SimpleFillSymbol(fgm.gridOptions.highlightSymbols["polygon"]); 
+							break; 
+					}
+					
+					fgm._fhlgLayer.add(new Graphic(geometry, symbol, attributes)); 					
+				}
+				
+				if (!geometryExtent) { 
+					geometryExtent = new Extent(geometry.x, geometry.y, geometry.x, geometry.y, geometry.spatialReference);
+				}
+				
+				fgm.gridOptions.map.setExtent(geometryExtent, true);
+				
+				break; 
+			}
+		}
+	}
+	
+	fgm._popupMenuForFeature = function(OID) {
+
+	}
+	
 	return fgm; 
 }); 
