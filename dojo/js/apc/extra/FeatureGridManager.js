@@ -547,7 +547,7 @@ define([
 			}
 			
 			// cache the query results
-			fgm._cacheResult(queryName, "stats", OIDResults[queryName]); 			
+			fgm._writeIntoCache(queryName, OIDResults[queryName], "stats");
 		}
 	}
 	
@@ -572,9 +572,13 @@ define([
 		queryTask.execute(query, fgm._prepareDataResults);
 	}
 	
-	fgm._prepareDataResults = function(results) {
-		
+	fgm._prepareDataResults = function(results) {		
 		console.log("show results"); 
+		
+		// cache the query results
+		fgm._writeIntoCache(queryName, results, "data");
+		
+		// prepare results
 		var resultFields = []; 
 		var fieldCount = Math.min(results.fields.length, 10); 
 		for(var i=0; i<fieldCount; i++) {
