@@ -9,10 +9,6 @@
 	cursor: pointer;
 }
 
-#fgm-gridContainer {
-	overflow: hidden; 
-}
-
 /* datagrid action column icon - START */
 .cmd-icon-dismiss {
 	background-image: url("../images/dismiss.png");
