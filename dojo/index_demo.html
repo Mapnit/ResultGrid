@@ -168,7 +168,8 @@
                         }, {
                             "name": "Block Groups",
                             "serviceUrl": "http://sampleserver6.arcgisonline.com/arcgis/rest/services/Census/MapServer/1",
-                            "where": "STATE_FIPS = '01' and TRACT like '%{0}%'"
+                            "where": "STATE_FIPS = '01' and TRACT like '%{0}%'",
+							"numericWhere": "HOUSEHOLDS > {0}"
                         }, {
                             "name": "Counties",
                             "serviceUrl": "http://sampleserver6.arcgisonline.com/arcgis/rest/services/Census/MapServer/2",
