@@ -552,15 +552,16 @@ define([
 			var elementId = fgm._normalize(panelId[0]) + fgm.depthSeparator + fgm._normalize(panelId[1]); 
 			var queryPanelElement = $("#"+elementId); 
 
-			if (OIDResults[queryName].length === 0) {
+			if (! OIDResults[queryName] || OIDResults[queryName].length === 0) {
 				if (queryPanelElement.data("kendoGrid")) {
 					queryPanelElement.data("kendoGrid").destroy();
 				}
 				queryPanelElement.empty(); 
 				queryPanelElement.remove();
 				
-			} else {
+				OIDResults[queryName]= []; 
 				
+			} else {				
 				var itemElement = queryPanelElement.children("span"); 
 				itemElement.html(itemElement.html() + " (" + OIDResults[queryName].length + ")");
 			}
@@ -735,7 +736,10 @@ define([
 		var queryName = fgm._currentQuery;		
 		var rowCount = fgm._readFromCache(queryName, "rowCount");
 		if (rowCount === 0) {
-			//TODO: no data 
+			//TODO: no more data 
+			var results = fgm._readFromCache(queryName, "data");
+			results.features = []; 
+			fgm._replaceDataInResultGrid(results); 
 		} else {
 			var OIDStartIdx = pageIdx * fgm.gridOptions.pageSize; 
 			if (OIDStartIdx < rowCount-1) {
@@ -750,7 +754,9 @@ define([
 				}
 			} else {
 				//TODO: go to the last page instead
-			}			
+				var lastPageIdx = fgm._dataPager.totalPages - 1; 
+				fgm._queryForDataByPage(lastPageIdx); 
+			}
 		}
 	}	
 	
@@ -887,7 +893,7 @@ define([
 		
 		// reduce the count in the panel title
 		var qry = fgm._readFromCache(queryName, "query");
-		fgm.selectedPanel.children().text(qry["name"] + " (" + OIDArray.length + ")");
+		fgm.selectedPanel.children("span").text(qry["name"] + " (" + OIDArray.length + ")");
 
 		// remove the item from data pager 
 		/*
