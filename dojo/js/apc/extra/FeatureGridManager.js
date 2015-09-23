@@ -387,19 +387,15 @@ define([
 
 		var queryName = $(evt.item).attr("udata-name"); 
 		if (queryName && (queryName.length > 0)) {
-			if (fgm.selectedPanel !== queryName) {
+			if (fgm._currentQuery !== queryName) {
 				console.log("Panel Selection Changed: " + queryName);
-				fgm.selectedPanel = queryName;
+				fgm.selectedPanel = $(evt.item); 
 				
 				var qry = fgm._readFromCache(queryName, "query"); 
 				if(qry) {
 					// keep track of currentQuery
 					fgm._currentQuery = queryName; 
 					fgm._currentPage = 0; 
-					// clear the cache for any result of currentQuery
-					fgm._writeIntoCache(queryName, null); 
-					// reset the cache for query of currentQuery
-					fgm._writeIntoCache(queryName, qry, "query"); 
 					// execute the query for data
 					fgm._executeQueryForData(qry); 
 				} else {
@@ -529,7 +525,7 @@ define([
 				console.log("query [" + qry["where"] + "] on " + qry["serviceUrl"]); 
 				var queryName = item["name"]+fgm.depthSeparator+qry["name"]; 
 				
-				// cache the query results
+				// cache query
 				fgm._writeIntoCache(queryName, qry, "query");
 				
 				var query = new Query();
@@ -849,7 +845,7 @@ define([
 			}
 		}
 		
-		// remove from the cached results
+		// remove from the cached data result
 		var queryName = fgm._currentQuery;
 		var results = fgm._readFromCache(queryName, "data");
 		var resultCount = results.features.length;		
@@ -859,6 +855,22 @@ define([
 				break;
 			}
 		}
+		
+		// remove from the cached OID result
+		var OIDArray = fgm._readFromCache(queryName, "OIDs");
+		for(var f=0; f<OIDArray.length; f++) {
+			if (OID === OIDArray[f]) {
+				OIDArray.splice(f, 1);
+				break;
+			}
+		}
+		
+		// change the row count
+		fgm._writeIntoCache(queryName, OIDArray.length, "rowCount"); 
+		
+		// reduce the count in the panel title
+		var qry = fgm._readFromCache(queryName, "query");
+		fgm.selectedPanel.children().text(qry["name"] + " (" + OIDArray.length + ")");
 		
 	}
 	
