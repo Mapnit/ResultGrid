@@ -31,7 +31,7 @@ define([
 	/* ------------------ */
 
 	fgm.gridOptions = {
-		pageSize: 1000, 
+		pageSize: 100, //1000, 
 		map: null, 		
 		highlightSymbols: {
 			"point": {
@@ -102,8 +102,12 @@ define([
 	fgm.depthSeparator = "-"; 
 	fgm.column_oid = "OBJECTID";
 	fgm.searchParams = []; 
-	fgm.resultCache = {}; 
 	
+	fgm._resultWindow = null;
+	fgm._datagrid = null; 
+	fgm._dataPager = null; 
+
+	fgm.resultCache = {}; 
 	fgm._currentPage = -1; 
 	fgm._currentQuery = null; 
 	fgm.selectedPanel = null; 
@@ -183,7 +187,10 @@ define([
 		// add the html skeleton
 		var splitterDiv = $('<div id="fgm-resultSplitter" style="height:98%">'); 
 		splitterDiv.append('<div id="fgm-layerPanelbar"></div>');
-		splitterDiv.append('<div id="fgm-datagrid"></div>');
+		var gridContainerDiv = $('<div id="fgm-gridContainer"></div>')
+		gridContainerDiv.append('<div id="fgm-datagrid"></div>');
+		gridContainerDiv.append('<div id="fgm-datapager"></div>');
+		splitterDiv.append(gridContainerDiv); 
 		
 		var winDiv = $('<div id="fgm-resultWindow"></div>'); 
 		winDiv.append(splitterDiv);
@@ -232,8 +239,8 @@ define([
 				visible: false
 			});
 			
-			var resultWinKendo = $("#fgm-resultWindow").data("kendoWindow");
-			resultWinKendo.center().open(); 
+			fgm._resultWindow = $("#fgm-resultWindow").data("kendoWindow");
+			fgm._resultWindow.center().open(); 
 		}
 		
 		resultSplitter.kendoSplitter({
@@ -264,6 +271,7 @@ define([
 		}
 		
 		fgm._removeResultGrid(); 
+		fgm._removeResultPager(); 
 		
 		var kdoElement = $("#fgm-layerPanelbar"); 
 		if (kdoElement) {
@@ -288,12 +296,14 @@ define([
 			}
 			kdoElement.empty();	
 		}
+		
+		fgm._resultWindow = null; 
 	}
 	
 	fgm._buildResultPanels = function() {
 		// initiate the async query
-		//fgm._executeQueryForStats(); 
-		fgm._executeQueryForOID(); 
+		//fgm._queryForStats(); 
+		fgm._queryForOID(); 
 		
 		// build the panelbar UI
 		var layerPane = $("#fgm-layerPanelbar");
@@ -325,8 +335,13 @@ define([
 	}
 	
 	fgm._buildResultGrid = function(resultData, resultColumns) {
+		var gridContainerDiv = $("#fgm-gridContainer"); 
+		
 		var dg = $("#fgm-datagrid").kendoGrid({
-			height: 450,
+			//width: gridContainerDiv.width() - 30, 
+			height: gridContainerDiv.height() - 50, 
+			//width: 818,
+			//height: 470,	height: 405, 
 			dataSource: resultData,
 			columns: resultColumns, 
 			groupable: true,
@@ -334,16 +349,11 @@ define([
 			resizable: true, 
 			selectable: "row", 
 			sortable: true,
-			pageable: {
-				//refresh: true,
-				//pageSizes: true,
-				pageSize: fgm.gridOptions["pageSize"], 
-				buttonCount: 5
-			},
+			pageable: false,
 			change: fgm.onRowSelect
 		});	
 
-		return dg; 
+		fgm._datagrid = $("#fgm-datagrid").data("kendoGrid"); 
 	}
 	
 	fgm._removeResultGrid = function() {
@@ -363,6 +373,44 @@ define([
 			dgElement.empty(); 
 			//dgElement.remove();
 		}
+		
+		fgm._datagrid = null; 
+	}
+	
+	fgm._buildResultPager = function(OIDArray) {		
+		var gridContainerDiv = $("#fgm-gridContainer"); 
+		
+		var dataSource = new kendo.data.DataSource({
+			data: OIDArray, 
+			pageSize: fgm.gridOptions.pageSize
+		});
+		dataSource.read();
+		
+		var pg = $("#fgm-datapager").kendoPager({
+			//width: 818,
+			//width: gridContainerDiv.width() - 30, 
+			height: 65,
+			dataSource: dataSource, 
+			//refresh: true,
+			//pageSizes: true,
+			buttonCount: 3, 
+			input: true, 
+			//info: false,
+			change: fgm.onPageChanged
+		}); 
+				
+		fgm._dataPager = $("#fgm-datapager").data("kendoPager"); 
+	}
+	
+	fgm._removeResultPager = function() {
+		var pgElement = $("#fgm-datapager"); 
+		if (pgElement) {
+			if ( pgElement.data("kendoPager")) {
+				pgElement.data("kendoPager").destroy();
+			}
+			pgElement.empty(); 
+			//pgElement.remove();
+		}
 	}
 	
 	/* ----------------------- */
@@ -372,7 +420,8 @@ define([
 	fgm.resizePanes = function (evt) {
 		$('#fgm-resultSplitter').trigger("resize");
 
-		var newGridHeight = evt.height - 55;
+		//var newGridHeight = evt.height - 30;
+		var newGridHeight = evt.height - 78;
 		//console.log("resize datagrid height = " + newGridHeight);
 		var gridElement = $("#fgm-datagrid");
 		gridElement.height(newGridHeight);
@@ -384,6 +433,7 @@ define([
 	fgm.onSelectResultPanel = function(evt) {
 		// remove the current datagrid
 		fgm._removeResultGrid(); 
+		fgm._removeResultPager(); 
 
 		var queryName = $(evt.item).attr("udata-name"); 
 		if (queryName && (queryName.length > 0)) {
@@ -397,26 +447,13 @@ define([
 					fgm._currentQuery = queryName; 
 					fgm._currentPage = 0; 
 					// execute the query for data
-					fgm._executeQueryForData(qry); 
+					fgm._queryForData(qry); 
+					// build the pager 
+					var OIDArray = fgm._readFromCache(queryName, "OIDs"); 
+					fgm._buildResultPager(OIDArray); 
 				} else {
 					console.log("error: no query for " + queryName); 
 				}
-				/*
-				var selectedPos = queryName.split(fgm.depthSeparator); 
-				for(var i=0,l=fgm.searchParams.length; i<l; i++) {
-					var item = fgm.searchParams[i]; 
-					if (item["name"] === selectedPos[0]) {
-						for(var q=0,ql=item["queries"].length; q<ql; q++) {
-							var qry = item["queries"][q]; 
-							if (qry["name"] === selectedPos[1]) {
-								fgm._executeQueryForData(qry);
-								break; 
-							}
-						}
-						break; 
-					}
-				}
-				 */
 			}
 		}
 	}
@@ -433,42 +470,9 @@ define([
 		}
 	}
 	
-	fgm.prevPage = function() {
-		if (fgm._currentPage - 1 >= 0) {
-			fgm.gotoPage(--fgm._currentPage); 
-			return true; 
-		}
-		return false; 
-	}
-	
-	fgm.nextPage = function() {
-		var queryName = fgm._currentQuery;
-		if (queryName) {
-			var rowCount = fgm._readFromCache(queryName, "rowCount")
-			var maxRowIndex = fgm._currentPage * fgm.gridOptions["pageSize"]; 
-			if  (rowCount > maxRowIndex) {
-				fgm.gotoPage(++fgm._currentPage); 
-				return true; 
-			} 
-		}
-		return false; 
-	}
-	
-	fgm.gotoPage = function(pageIdx) {
-		
-		var queryName = fgm._currentQuery;
-		if (queryName) {
-			var OIDStartIdx = pageIdx * fgm.gridOptions["pageSize"]; 
-			var qry = fgm._readFromCache(queryName, "query");
-			var OIDArray = fgm._readFromCache(queryName, "OIDs");
-			if (qry && OIDArray) {
-				var OIDEndIdx = OIDStartIdx + fgm.gridOptions["pageSize"]; 
-				var OIDsForPage = OIDArray.slice(OIDStartIdx, OIDEndIdx); 
-				fgm._executeQueryForData(qry, OIDArray); 
-				return true; 
-			}
-		}
-		return false; 
+	fgm.onPageChanged = function(evt) {
+		console.log("onPageChanged: " + evt); 
+		fgm._queryForDataByPage(evt.index - 1); 
 	}
 	
 	/* -------------------------- */
@@ -517,7 +521,7 @@ define([
 	/* Private Query Functions  */
 	/* ------------------------ */
 
-	fgm._executeQueryForOID = function() {
+	fgm._queryForOID = function() {
 		
 		var promiseDict = {}; 
 		$(fgm.searchParams).each(function(idx, item) {
@@ -567,7 +571,7 @@ define([
 		}
 	}
 	
-	fgm._executeQueryForStats = function() {
+	fgm._queryForStats = function() {
 
 		var statsMaxDef = new StatisticDefinition(); 
 		statsMaxDef.statisticType = "max";
@@ -596,11 +600,7 @@ define([
 				query.returnGeometry = false;
 				query.outStatistics = [statsMaxDef, statsMinDef, statsCntDef];
 		
-				var queryTask = new QueryTask(qry["serviceUrl"]); 
-				/*
-				queryTask.execute(query, fgm._prepareStatsResults);
-				 */
-				 
+				var queryTask = new QueryTask(qry["serviceUrl"]); 			 
 				promiseDict[queryName] = queryTask.execute(query); 
 			});
 		}); 
@@ -638,10 +638,15 @@ define([
 		}
 	}
 	
-	fgm._executeQueryForData = function(qry, OIDs) {
+	fgm._queryForData = function(qry, OIDs) {
+
+		var byOID = (OIDs && OIDs.length > 0); 
 
 		var query = new Query();
-		if (OIDs && OIDs.length > 0) {
+		query.returnGeometry = true;
+		query.outFields = ["*"];
+
+		if (byOID === true) {
 			console.log("query by OIDs on " + qry["serviceUrl"]); 
 			query.objectIds = OIDs; 
 		} else {
@@ -649,25 +654,29 @@ define([
 			query.where = qry["where"];
 			query.geometry = qry["geometry"]; 
 		}
-		query.returnGeometry = true;
 		
 		if (fgm.gridOptions.map) {
 			query.outSpatialReference = fgm.gridOptions.map.spatialReference; 
 		}
-		query.outFields = ["*"];
 		
 		var queryTask = new QueryTask(qry["serviceUrl"]); 
-		queryTask.execute(query, fgm._prepareDataResults);
+		if (byOID === true) {
+			queryTask.execute(query, fgm._replaceDataInResultGrid);
+		} else {
+			queryTask.execute(query, fgm._prepareDataResults);
+		}		
 	}
 	
 	fgm._prepareDataResults = function(results) {		
 		
-		// cache the query results
+		// cache the query results (limited by fgm.gridOptions.pageSize)
 		var queryName = fgm._currentQuery; 
+		results.features = results.features.slice(0, fgm.gridOptions.pageSize); 
 		fgm._writeIntoCache(queryName, results, "data");
 		
 		// prepare results
 		var resultFields = []; 
+		//DEV: dev only 
 		var fieldCount = Math.min(results.fields.length, 10); 
 		for(var i=0; i<fieldCount; i++) {
 			var resultField = results.fields[i]; 
@@ -694,6 +703,57 @@ define([
 		fgm._displayDataOnMap(results); 
 	}
 	
+	fgm._replaceDataInResultGrid = function(results) {
+		
+		// cache the query results (limited by fgm.gridOptions.pageSize)
+		var queryName = fgm._currentQuery; 
+		results.features = results.features.slice(0, fgm.gridOptions.pageSize); 
+		fgm._writeIntoCache(queryName, results, "data");
+
+		var resultCount = results.features.length;
+		fgm._writeIntoCache(queryName, results.features.length, "rowCount");
+
+		// load data into grid
+		var resultItems = [];
+		for (var i = 0; i < resultCount; i++) {
+			resultItems.push(results.features[i].attributes);
+		}
+		
+		var dataSource = new kendo.data.DataSource({
+			data: resultItems, 
+			pageSize: fgm.gridOptions.pageSize
+		});
+		dataSource.read(); 
+		
+		fgm._datagrid.dataSource = dataSource; 		
+		fgm._datagrid.refresh();
+		
+		fgm._displayDataOnMap(results);
+	}
+	
+	fgm._queryForDataByPage = function(pageIdx /*zero-based*/) {		
+		var queryName = fgm._currentQuery;		
+		var rowCount = fgm._readFromCache(queryName, "rowCount");
+		if (rowCount === 0) {
+			//TODO: no data 
+		} else {
+			var OIDStartIdx = pageIdx * fgm.gridOptions.pageSize; 
+			if (OIDStartIdx < rowCount-1) {
+				var qry = fgm._readFromCache(queryName, "query");
+				var OIDArray = fgm._readFromCache(queryName, "OIDs");
+				if (qry && OIDArray) {
+					var OIDEndIdx = Math.min(OIDStartIdx + fgm.gridOptions.pageSize, rowCount); 
+					var OIDsForPage = OIDArray.slice(OIDStartIdx, OIDEndIdx); 
+					fgm._queryForData(qry, OIDsForPage); 
+
+					fgm._currentPage = pageIdx; 					
+				}
+			} else {
+				//TODO: go to the last page instead
+			}			
+		}
+	}	
+	
 	/* ---------------------------------- */
 	/* Private Map-Interaction Functions  */
 	/* ---------------------------------- */
@@ -706,9 +766,10 @@ define([
 			return; 
 		} 
 		
+		fgm._fhlgLayer.clear(); 
 		fgm._fgLayer.clear(); 
 		
-		if (! results) {
+		if (! results || results.features.length === 0) {
 			console.log("empty results"); 
 			return; 
 		}
@@ -726,12 +787,8 @@ define([
 				break; 
 		}
 
-		// limit the number of features to the page size
-		var startIndex = fgm._currentPage * fgm.gridOptions["pageSize"]; 
-		var endIndex = Math.min(fgm.gridOptions["pageSize"], results.features.length - startIndex); 
-		
 		var layerExtent = null; 
-		for(var f=startIndex; f<endIndex; f++) {
+		for(var f=0; f<results.features.length; f++) {
 			var feature = results.features[f]; 
 			var attributes = feature.attributes, 
 				geometry = feature.geometry,
@@ -808,23 +865,79 @@ define([
 		
 	}
 	
+	/*
+	 * to remove one triggers data reloading
+	 */
 	fgm._removeFeature = function(OID) {
+			
+		var queryName = fgm._currentQuery;
 		
-		var dg = $("#fgm-datagrid").data("kendoGrid"); 
-		var rawData = dg.dataSource.data();
-		var length = rawData.length;
+		// remove from the cached OID result
+		var OIDArray = fgm._readFromCache(queryName, "OIDs");
+		var f; 
+		for(f=0; f<OIDArray.length; f++) {
+			if (OID === OIDArray[f]) {
+				OIDArray.splice(f, 1);
+				break;
+			}
+		}
+		
+		// change the row count
+		fgm._writeIntoCache(queryName, OIDArray.length, "rowCount"); 
+		
+		// reduce the count in the panel title
+		var qry = fgm._readFromCache(queryName, "query");
+		fgm.selectedPanel.children().text(qry["name"] + " (" + OIDArray.length + ")");
 
-		// iterate and remove the item
-		var item;
+		// remove the item from data pager 
+		/*
+		var dataSource = new kendo.data.DataSource({
+			data: OIDArray, 
+			pageSize: fgm.gridOptions.pageSize
+		});
+		dataSource.read();
+		
+		fgm._dataPager.dataSource = dataSource; 
+		fgm._dataPager.refresh(); 
+		 */
+		
+		//TODO: (why does it remove two???)
+		var dataSource = fgm._dataPager.dataSource;
+		var dataItem = dataSource.at(f); 
+		dataSource.remove(dataItem); 
+		dataSource.sync(); 
+		
+		// reload the features for the current page 
+		fgm._queryForDataByPage(fgm._currentPage); 
+	}
+	
+	
+	fgm._removeFeature2 = function(OID) {
+		
+		// remove the item from data grid
+		var ds = fgm._datagrid.dataSource;
+		var rawData = ds.data();
+		var item, length = rawData.length;
 		for(var f=0; f<length; f++){
 			item = rawData[f];
 			if (OID === item[fgm.column_oid]){
-				dg.dataSource.remove(item);
+				ds.remove(item);
 				break; 
 			}
 		}
-		//dg.dataSource.read(); 
-		//dg.refresh(); 
+		//fgm._datagrid.dataSource.read(); 
+		//fgm._datagrid.refresh(); 
+		
+		// remove the item from data pager
+		ds = fgm._dataPager.dataSource;
+		rawData = ds.data();
+		length = rawData.length;
+		for(var f=0; f<length; f++){
+			if (OID === rawData[f]){
+				ds.remove(item);
+				break; 
+			}
+		}		
 		
 		// remove from the highlight graphic layer
 		var graphicCount = fgm._fhlgLayer.graphics.length; 
