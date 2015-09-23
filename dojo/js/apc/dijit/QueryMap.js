@@ -236,6 +236,9 @@ define([
         	})); 
 
         	// pass searchParams for execution
+			if (searchParams.length > 0) {
+				FeatureGridManager.buildFeatureGrid(searchParams, {map: this.map}); 
+			}
 
         },
 
