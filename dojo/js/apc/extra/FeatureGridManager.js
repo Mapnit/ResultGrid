@@ -764,6 +764,9 @@ define([
 		
 		fgm.gridOptions.map.setExtent(layerExtent, true);
 		
+		// cache the extent of features on the current page
+		fgm._writeIntoCache(fgm._currentQuery, layerExtent, "extent"); 
+		
 	}
 
 	fgm._highlightFeature = function(OID, clearFirst) {
