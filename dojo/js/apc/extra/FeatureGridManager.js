@@ -1085,7 +1085,7 @@ define([
 				var attributes = results.features[f].attributes; 
 				$(results.fields).each(function(idx, field) {
 					var attrValue = attributes[field.name]; 
-					if (attrValue && attrValue.test && attrValue.test(/^http:\/\//i) === true) {
+					if ((/^http\:\/\/.+$/i).test(attrValue) === true) {
 						fgm._cxtMenuItems.push({
 							text: field.alias, 
 							cssClass: "fgm-cxtmenu-hyperlink",
