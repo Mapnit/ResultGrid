@@ -105,13 +105,14 @@ define([
 	
 	fgm._resultWindow = null;
 	fgm._datagrid = null; 
-	fgm._dataPager = null; 
+	fgm._dataPager = null;
 
 	fgm.resultCache = {}; 
 	fgm._currentPage = -1; 
 	fgm._currentQuery = null; 
 	fgm.selectedPanel = null; 
 	fgm.selectedRowOID = null;
+	fgm._cxtMenuItems = []; 
 	
 	fgm._fgLayerId = "fgm_dataLayer";
     fgm._fgLayer = null; 
@@ -148,7 +149,8 @@ define([
 			click: function(evt) {
 				var dataItem = this.dataItem($(evt.currentTarget).closest("tr"));
 				console.log("pop up hyperlinks: " + dataItem[fgm.column_oid]);
-				fgm._popupMenuForFeature(dataItem[fgm.column_oid]); 
+				fgm._popupMenuForFeature(dataItem[fgm.column_oid], 
+					evt.currentTarget, {left:evt.clientX, top:evt.clientY}); 
 			}
 		}],
 		width: 135
@@ -473,6 +475,25 @@ define([
 	fgm.onPageChanged = function(evt) {
 		console.log("onPageChanged: " + evt); 
 		fgm._queryForDataByPage(evt.index - 1); 
+	}
+	
+	fgm.onHyperlinkCxtMenuSelect = function(evt) {
+		console.log("Hyperlink CxtMenu Selected: " + evt.item.textContent);
+		if (fgm._cxtMenuItems) {
+			for(var m=0,l=fgm._cxtMenuItems.length; m<l; m++) {
+				if (evt.item.textContent === fgm._cxtMenuItems[m].text) {
+					if (fgm._cxtMenuItems[m].hyperlink) {
+						console.log("open url: " + fgm._cxtMenuItems[m].hyperlink); 
+						window.open(fgm._cxtMenuItems[m].hyperlink); 
+					}
+					break; 
+				}
+			}
+		}
+	}
+	
+	fgm.onHyperlinkCxtMenuClose = function(evt) {
+		console.log("Hyperlink CxtMenu Closed");
 	}
 	
 	/* -------------------------- */
@@ -1004,8 +1025,8 @@ define([
 		for(var f=0; f<resultCount; f++) {
 			if (OID === results.features[f].attributes[fgm.column_oid]) {
 				var attributes = results.features[f].attributes, 
-					geometry = results.features[f].geometry,
-					geometryExtent = results.features[f].geometry.getExtent(); 
+					geometry = results.features[f].geometry;
+				var geometryExtent = geometry.getExtent(); 
 
 				if (highlighted === true) {
 					var symbol; 
@@ -1021,7 +1042,7 @@ define([
 							break; 
 					}
 					
-					fgm._fhlgLayer.add(new Graphic(geometry, symbol, attributes)); 					
+					fgm._fhlgLayer.add(new Graphic(geometry, symbol, attributes));
 				}
 				
 				if (!geometryExtent) { 
@@ -1035,8 +1056,71 @@ define([
 		}
 	}
 	
-	fgm._popupMenuForFeature = function(OID) {
+	fgm._popupMenuForFeature = function(OID, anchorElement, anchorPos) {
+		
+		// remove the eixsting  context menu
+		var cxtMenuElement = $("#fgm-hyperlinkMenu"); 
+		var cxtMenu;
+		if (cxtMenuElement.length === 0) {
+			// add a new element
+			$("body").append('<div id="fgm-hyperlinkMenu"></div>');
+			cxtMenuElement = $("#fgm-hyperlinkMenu"); 
+		} else {
+			// remove the existing element
+			cxtMenu = cxtMenuElement.data("kendoContextMenu");
+			if (cxtMenu) {
+				cxtMenu.destroy(); 
+			}
+			cxtMenuElement.empty(); 
+		}
 
+		// build new context menu
+		fgm._cxtMenuItems = []; 
+
+		var queryName = fgm._currentQuery;
+		var results = fgm._readFromCache(queryName, "data");
+		var resultCount = results.features.length;		
+		for(var f=0; f<resultCount; f++) {
+			if (OID === results.features[f].attributes[fgm.column_oid]) {
+				var attributes = results.features[f].attributes; 
+				$(results.fields).each(function(idx, field) {
+					var attrValue = attributes[field.name]; 
+					if (attrValue && attrValue.test && attrValue.test(/^http:\/\//i) === true) {
+						fgm._cxtMenuItems.push({
+							text: field.alias, 
+							cssClass: "fgm-cxtmenu-hyperlink",
+							hyperlink: attrValue
+						}); 
+					}
+				}); 
+				break; 
+			}
+		}
+		
+		if (fgm._cxtMenuItems.length === 0) {
+			fgm._cxtMenuItems.push({
+				text: "no hyperlink",
+				cssClass: "fgm-cxtmenu-nohyperlink"
+			}); 
+		}
+		
+		cxtMenuElement.kendoContextMenu({
+			//showOn: "click",
+			//orientation: "vertical",
+			target: anchorElement,
+			dataSource: fgm._cxtMenuItems,
+			select: fgm.onHyperlinkCxtMenuSelect,
+			close: fgm.onHyperlinkCxtMenuClose
+		});
+		
+		if (!anchorPos) {
+			// align contextMenu to anchor element
+			anchorPos = $(anchorElement).offset();
+			anchorPos.top += $(anchorElement).height(); 
+		}
+		// open the ContextMenu at the given anchor position
+		cxtMenu = cxtMenuElement.data("kendoContextMenu");
+		cxtMenu.open(anchorPos.left, anchorPos.top);
 	}
 	
 	return fgm; 

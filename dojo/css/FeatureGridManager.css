@@ -13,6 +13,15 @@
 	overflow: hidden; 
 }
 
+.fgm-cxtmenu-nohyperlink {
+	font-style: italic;
+	color: #dddddd;
+}
+
+.fgm-cxtmenu-hyperlink {
+	font-style: bold;
+}
+
 /* datagrid action column icon - START */
 .cmd-icon-dismiss {
 	background-image: url("../images/dismiss.png");
