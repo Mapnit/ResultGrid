@@ -151,7 +151,7 @@ define([
 				fgm._popupMenuForFeature(dataItem[fgm.column_oid]); 
 			}
 		}],
-		width: 155
+		width: 135
 	}; 
 	
 	/* --------------------- */
