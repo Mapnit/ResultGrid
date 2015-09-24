@@ -187,7 +187,7 @@ define([
 		}
 		
 		// add the html skeleton
-		var splitterDiv = $('<div id="fgm-resultSplitter" style="height:98%">'); 
+		var splitterDiv = $('<div id="fgm-resultSplitter" style="height:98%"></div>'); 
 		splitterDiv.append('<div id="fgm-layerPanelbar"></div>');
 		var gridContainerDiv = $('<div id="fgm-gridContainer"></div>')
 		gridContainerDiv.append('<div id="fgm-datagrid"></div>');
