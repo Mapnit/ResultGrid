@@ -793,10 +793,8 @@ define([
 		results.features = results.features.slice(0, fgm.gridOptions.pageSize); 
 		fgm._writeIntoCache(queryName, results, "data");
 
-		var resultCount = results.features.length;
-		fgm._writeIntoCache(queryName, results.features.length, "rowCount");
-
 		// load data into grid
+		var resultCount = results.features.length;
 		var resultItems = [];
 		for (var i = 0; i < resultCount; i++) {
 			resultItems.push(results.features[i].attributes);
@@ -996,20 +994,8 @@ define([
 		// reduce the count in the panel title
 		var qry = fgm._readFromCache(queryName, "query");
 		fgm.selectedPanel.children("span").text(qry["name"] + " (" + OIDArray.length + ")");
-
-		// remove the item from data pager 
-		/*
-		var dataSource = new kendo.data.DataSource({
-			data: OIDArray, 
-			pageSize: fgm.gridOptions.pageSize
-		});
-		dataSource.read();
 		
-		fgm._dataPager.dataSource = dataSource; 
-		fgm._dataPager.refresh(); 
-		 */
-		
-		//TODO: (why does it remove two???)
+		// remove it from the pager datasource
 		var dataSource = fgm._dataPager.dataSource;
 		var dataItem = dataSource.at(f); 
 		dataSource.remove(dataItem); 
@@ -1018,86 +1004,7 @@ define([
 		// reload the features for the current page 
 		fgm._queryForDataByPage(fgm._currentPage); 
 	}
-	
-	
-	fgm._removeFeature2 = function(OID) {
 		
-		// remove the item from data grid
-		var ds = fgm._datagrid.dataSource;
-		var rawData = ds.data();
-		var item, length = rawData.length;
-		for(var f=0; f<length; f++){
-			item = rawData[f];
-			if (OID === item[fgm.column_oid]){
-				ds.remove(item);
-				break; 
-			}
-		}
-		//fgm._datagrid.dataSource.read(); 
-		//fgm._datagrid.refresh(); 
-		
-		// remove the item from data pager
-		ds = fgm._dataPager.dataSource;
-		rawData = ds.data();
-		length = rawData.length;
-		for(var f=0; f<length; f++){
-			if (OID === rawData[f]){
-				ds.remove(item);
-				break; 
-			}
-		}		
-		
-		// remove from the highlight graphic layer
-		var graphicCount = fgm._fhlgLayer.graphics.length; 
-		for(var f=0; f<graphicCount; f++) {
-			if (OID === fgm._fhlgLayer.graphics[f].attributes[fgm.column_oid]) {
-				// remove from the graphic layer 
-				var graphic = fgm._fhlgLayer.graphics[f]; 
-				fgm._fhlgLayer.remove(graphic); 
-				break;
-			}
-		}
-
-		// remove from the graphic layer
-		graphicCount = fgm._fgLayer.graphics.length; 
-		for(var f=0; f<graphicCount; f++) {
-			if (OID === fgm._fgLayer.graphics[f].attributes[fgm.column_oid]) {
-				// remove from the graphic layer 
-				var graphic = fgm._fgLayer.graphics[f]; 
-				fgm._fgLayer.remove(graphic); 
-				break;
-			}
-		}
-		
-		// remove from the cached data result
-		var queryName = fgm._currentQuery;
-		var results = fgm._readFromCache(queryName, "data");
-		var resultCount = results.features.length;		
-		for(var f=0; f<resultCount; f++) {
-			if (OID === results.features[f].attributes[fgm.column_oid]) {
-				results.features.splice(f, 1);
-				break;
-			}
-		}
-		
-		// remove from the cached OID result
-		var OIDArray = fgm._readFromCache(queryName, "OIDs");
-		for(var f=0; f<OIDArray.length; f++) {
-			if (OID === OIDArray[f]) {
-				OIDArray.splice(f, 1);
-				break;
-			}
-		}
-		
-		// change the row count
-		fgm._writeIntoCache(queryName, OIDArray.length, "rowCount"); 
-		
-		// reduce the count in the panel title
-		var qry = fgm._readFromCache(queryName, "query");
-		fgm.selectedPanel.children().text(qry["name"] + " (" + OIDArray.length + ")");
-		
-	}
-	
 	fgm._zoomToFeature = function(OID, highlighted) {
 		var queryName = fgm._currentQuery;
 		var results = fgm._readFromCache(queryName, "data"); 
