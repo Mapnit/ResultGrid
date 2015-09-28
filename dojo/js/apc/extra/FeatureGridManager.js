@@ -193,8 +193,11 @@ define([
 		
 		// add the html skeleton
 		var splitterDiv = $('<div id="fgm-resultSplitter" style="height:98%"></div>'); 
-		splitterDiv.append('<div id="fgm-layerPanelbar"></div>');
-		var gridContainerDiv = $('<div id="fgm-gridContainer"></div>')
+		var panelContainerDiv = $('<div id="fgm-panelContainer"></div>');
+		panelContainerDiv.append('<div id="fgm-layerToolbar"></div>');
+		panelContainerDiv.append('<div id="fgm-layerPanelbar"></div>');
+		splitterDiv.append(panelContainerDiv); 
+		var gridContainerDiv = $('<div id="fgm-gridContainer"></div>');
 		gridContainerDiv.append('<div id="fgm-datagrid"></div>');
 		gridContainerDiv.append('<div id="fgm-datapager"></div>');
 		splitterDiv.append(gridContainerDiv); 
@@ -210,6 +213,7 @@ define([
 		
 		// build UI widgets
 		fgm._buildResultWindow(); 
+		fgm._buildResultTools();
 		fgm._buildResultPanels();
 		
 		topic.publish("featureGrid/ready", "fgm ready"); 
@@ -281,6 +285,11 @@ define([
 		fgm._removeResultGrid(); 
 		fgm._removeResultPager(); 
 		
+		var toolbar = $("#fgm-layerToolbar");
+		if(toolbar) {
+			toolbar.remove(); 
+		}
+		
 		var kdoElement = $("#fgm-layerPanelbar"); 
 		if (kdoElement) {
 			if (kdoElement.data("kendoPanelBar")) {
@@ -308,6 +317,20 @@ define([
 		fgm._resultWindow = null; 
 		
 		topic.publish("featureGrid/destroyed", "fgm destroyed"); 
+	}
+	
+	fgm._buildResultTools = function() {
+		var toolbar = $("#fgm-layerToolbar");
+		
+		toolbar.append(
+			$("<span></span>").addClass("fgm-layerTool-zoomIn").click(fgm._zoomToFeaturesInPage)
+		); 
+		toolbar.append(
+			$("<span></span>").addClass("fgm-layerTool-excel").click(fgm._exportAsExcel)
+		); 
+		toolbar.append(
+			$("<span></span>").addClass("fgm-layerTool-tdb").click(fgm._launchToast)
+		); 
 	}
 	
 	fgm._buildResultPanels = function() {
@@ -860,6 +883,26 @@ define([
 		fgm._writeIntoCache(fgm._currentQuery, layerExtent, "extent"); 
 		
 	}
+	
+	fgm._zoomToFeaturesInPage = function() {
+		if (!fgm.gridOptions.map) {
+			console.log("no map available"); 
+			return; 
+		} 
+
+		if (!fgm._currentQuery) {
+			console.log("no query is available"); 
+			return; 
+		}
+			
+		var layerExtent = fgm._readFromCache(fgm._currentQuery, "extent"); 
+		if (!layerExtent) {
+			console.log("no extent is available"); 
+			return; 
+		}
+		
+		fgm.gridOptions.map.setExtent(layerExtent, true);
+	}
 
 	fgm._highlightFeature = function(OID, clearFirst) {
 		
@@ -1137,6 +1180,11 @@ define([
 	
 	fgm._exportAsExcel = function() {
 		if (fgm.gridOptions.extRequestUrls && fgm.gridOptions.extRequestUrls["excel"]){
+			var queryName = fgm._currentQuery; 
+			if (!queryName) {
+				console.log("no query is available"); 
+			}
+			
 			var qry = fgm._readFromCache(queryName, "query"); 
 			var OIDArray = fgm._readFromCache(queryName, "OIDs"); 
 			var results = fgm._readFromCache(queryName, "data"); 
@@ -1172,8 +1220,14 @@ define([
 
 	fgm._launchToast = function() {
 		if (fgm.gridOptions.extRequestUrls && fgm.gridOptions.extRequestUrls["excel"]){
+			var queryName = fgm._currentQuery; 
+			if (!queryName) {
+				console.log("no query is available"); 
+			}
+			
 			var qry = fgm._readFromCache(queryName, "query"); 
 			var OIDArray = fgm._readFromCache(queryName, "OIDs"); 
+			var results = fgm._readFromCache(queryName, "data"); 
 			
 			// parse for layerId
 			var urlParts = qry["serviceUrl"].split("/"); 

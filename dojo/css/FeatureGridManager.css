@@ -13,6 +13,36 @@
 	overflow: hidden; 
 }
 
+.fgm-layerTool-zoomIn {
+	background-image: url("../images/zoomIn.png");
+	background-repeat: no-repeat;
+	display: inline-block; 
+	width: 24px;
+	height: 24px; 
+	padding-left: 5px;
+	cursor: pointer;
+}
+
+.fgm-layerTool-excel {
+	background-image: url("../images/excel.png");
+	background-repeat: no-repeat;
+	display: inline-block; 
+	width: 24px;
+	height: 24px; 
+	padding-left: 5px;
+	cursor: pointer;
+}
+
+.fgm-layerTool-tdb {
+	background-image: url("../images/tdb.png");
+	background-repeat: no-repeat;
+	display: inline-block; 
+	width: 24px;
+	height: 24px; 
+	padding-left: 5px;
+	cursor: pointer;
+}
+
 .fgm-cxtmenu-nohyperlink {
 	font-style: italic;
 	color: #dddddd;
