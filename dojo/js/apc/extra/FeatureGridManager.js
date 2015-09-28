@@ -2,6 +2,7 @@ define([
 	"dojo/_base/declare", 
 	"dojo/topic", 
 	"dojo/promise/all", 
+	"dojo/request/xhr",
 	
 	"esri/tasks/QueryTask", 
 	"esri/tasks/query", 
@@ -19,7 +20,7 @@ define([
 	
 	"jquery", "kendo" 
 ], function(
-	declare, topic, all, 
+	declare, topic, all, xhr, 
 	QueryTask, Query, StatisticDefinition, 
 	Point, Polyline, Polygon, Extent, webMercatorUtils, GraphicsLayer, Graphic,
 	SimpleMarkerSymbol, SimpleFillSymbol, SimpleLineSymbol
@@ -32,7 +33,7 @@ define([
 
 	fgm.gridOptions = {
 		pageSize: 100, //1000, 
-		map: null, 		
+		map: null, 
 		highlightSymbols: {
 			"point": {
 				"type": "esriSMS",
@@ -221,7 +222,9 @@ define([
 					});
 
 		var onClose = function(evt) {
-			panelDock.show();
+			//When closing, remove the FeatureGrid completely rather than dock it. 
+			//panelDock.show();
+			fgm._removeFeatureGrid();
 		}
 
 		if (!resultWin.data("kendoWindow")) {
@@ -300,6 +303,8 @@ define([
 		}
 		
 		fgm._resultWindow = null; 
+		
+		topic.publish("featureGrid/destroyed", "fgm destroyed"); 
 	}
 	
 	fgm._buildResultPanels = function() {
@@ -568,7 +573,7 @@ define([
 	
 	fgm._prepareOIDResults = function(OIDResults) {
 		for(var queryName in OIDResults) {
-			console.log("statistics for " + queryName); 
+			console.log("OIDs for " + queryName); 
 			var panelId = queryName.split(fgm.depthSeparator); 
 			var elementId = fgm._normalize(panelId[0]) + fgm.depthSeparator + fgm._normalize(panelId[1]); 
 			var queryPanelElement = $("#"+elementId); 
@@ -1122,6 +1127,7 @@ define([
 		cxtMenu = cxtMenuElement.data("kendoContextMenu");
 		cxtMenu.open(anchorPos.left, anchorPos.top);
 	}
+		
 	
 	return fgm; 
 }); 
