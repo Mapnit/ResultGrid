@@ -340,12 +340,15 @@ define([
 		
 		// build the panelbar UI
 		var layerPane = $("#fgm-layerPanelbar");
-		var prevGrpName; 
+		var groupIds = [], prevGrpName; 
 		var grpElement, listElement; 
 		$(fgm.searchParams).each(function(idx, item) {
 			if (prevGrpName !== item["name"]) {
+				groupIds.push("#"+fgm._normalize(item["name"])); 
 				prevGrpName = item["name"]; 
-				grpElement = $("<li>" + item["name"] + "</li>");
+				grpElement = $("<li></li>").attr("id", fgm._normalize(item["name"]))
+										   .attr("udata-grpname", item["name"])
+										   .html(item["name"]);
 				listElement = $("<ul></ul>"); 
 				layerPane.append(grpElement.append(listElement));
 			}
@@ -354,7 +357,7 @@ define([
 					var normalizedQueryName = fgm._normalize(qry["name"]); 
 					listElement.append(
 						$("<li></li>").attr("id", fgm._normalize(item["name"]) + fgm.depthSeparator + fgm._normalize(qry["name"]))
-									  .attr("udata-name", item["name"]+fgm.depthSeparator+qry["name"])
+									  .attr("udata-qryname", item["name"]+fgm.depthSeparator+qry["name"])
 									  .html(qry["name"])
 					);
 				}); 
@@ -365,6 +368,12 @@ define([
 			expandMode: "multiple",
 			select: fgm.onSelectResultPanel
 		});
+		
+		var panelBar = $("#fgm-layerPanelbar").data("kendoPanelBar");
+		$(groupIds).each(function(idx, grpId) {
+			panelBar.expand($(grpId), false); 
+		}); 
+
 	}
 	
 	fgm._buildResultGrid = function(resultData, resultColumns) {
@@ -464,15 +473,16 @@ define([
 	}
 	
 	fgm.onSelectResultPanel = function(evt) {
-		// remove the current datagrid
-		fgm._removeResultGrid(); 
-		fgm._removeResultPager(); 
 
-		var queryName = $(evt.item).attr("udata-name"); 
+		var queryName = $(evt.item).attr("udata-qryname"); 
 		if (queryName && (queryName.length > 0)) {
 			if (fgm._currentQuery !== queryName) {
 				console.log("Panel Selection Changed: " + queryName);
 				fgm.selectedPanel = $(evt.item); 
+
+				// remove the current datagrid
+				fgm._removeResultGrid(); 
+				fgm._removeResultPager(); 
 				
 				var qry = fgm._readFromCache(queryName, "query"); 
 				if(qry) {
@@ -487,6 +497,15 @@ define([
 				} else {
 					console.log("error: no query for " + queryName); 
 				}
+			}
+		} else {
+			evt.preventDefault(); 
+			//evt.stopPropagation();
+			
+			//set the selected panel 
+			if (fgm.selectedPanel) {
+				var panelBar = $("#fgm-layerPanelbar").data("kendoPanelBar"); 
+				panelBar.select(fgm.selectedPanel); 
 			}
 		}
 	}
@@ -611,9 +630,8 @@ define([
 				queryPanelElement.empty(); 
 				queryPanelElement.remove();
 				
-				OIDResults[queryName]= []; 
-				
-			} else {				
+				OIDResults[queryName]= [];
+			} else {
 				var itemElement = queryPanelElement.children("span"); 
 				itemElement.html(itemElement.html() + " (" + OIDResults[queryName].length + ")");
 			}
@@ -1256,7 +1274,6 @@ define([
 			});
 		}
 	}
-	
 	
 	return fgm; 
 }); 
