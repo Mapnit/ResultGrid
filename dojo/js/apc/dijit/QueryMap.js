@@ -1,5 +1,6 @@
 define([
 	"dijit/_WidgetBase",
+	"dojo/topic",
 	"dojo/Evented",
 	"dojo/_base/declare",
 	"dojo/_base/lang",
@@ -17,22 +18,19 @@ define([
 	"esri/toolbars/draw", 
     "esri/layers/GraphicsLayer", 
 	"esri/graphic",
-    "esri/geometry/Circle",
 
-	"esri/Color",
     "esri/symbols/SimpleMarkerSymbol",
     "esri/symbols/SimpleLineSymbol", 
     "esri/symbols/SimpleFillSymbol", 
-    "esri/renderers/SimpleRenderer",
 
     "dojo/text!apc/dijit/templates/QueryMap.html" // template html
 ], function(
 	_WidgetBase,
-    Evented, declare, lang, array, 
+    topic, Evented, declare, lang, array, 
     parser, _TemplatedMixin,
     on, dom, domConstruct, domClass, domStyle, ready, 
-    Draw, GraphicsLayer, Graphic, Circle, Color, 
-    SimpleMarkerSymbol, SimpleLineSymbol, SimpleFillSymbol, SimpleRenderer, 
+    Draw, GraphicsLayer, Graphic, 
+    SimpleMarkerSymbol, SimpleLineSymbol, SimpleFillSymbol, 
     dijitTemplate
 ) {
 
@@ -96,6 +94,9 @@ define([
 		// graphic layer for query
         _queryLayerId: "queryMap_graphicsLayer",
         _queryLayer: null, 
+		
+		// datagrid subscribers
+		_topicSubscribers: [],
 
         /* ---------------------- */
         /* Public Class Functions */
@@ -139,6 +140,7 @@ define([
 			this._resetQueryDrawing();
 			// remove the graphic layer from map 
 			if (this._queryLayer) {
+				this._queryLayer.clear();
 				this.map.removeLayer(this._queryLayer);
 				this._queryLayer = null; 
 			}
@@ -160,7 +162,18 @@ define([
 			this._drawToolbar.setFillSymbol(new SimpleFillSymbol(this.symbols["fill"]));
         	// init the query drawing
         	this._prepareQueryDrawing(); 
-        	// 
+			// subscribe the datagrid topics 
+			this._topicSubscribers.push(topic.subscribe("featureGrid/ready", function(evt) {
+				console.log("received: " + evt); 
+			})); 
+			this._topicSubscribers.push(topic.subscribe("featureGrid/destroyed", lang.hitch(this, function(evt) {
+				console.log("received: " + evt); 
+				// remove all graphics
+				if (this._queryLayer) {
+					this._queryLayer.clear(); 
+				}				
+			}))); 
+			//			
             this._visible();
             this.set("loaded", true);
             this.emit("load", {});

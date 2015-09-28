@@ -61,6 +61,7 @@ define([
 		_optionHtmlTmpl: '<div><input id="search-opt-${id}" type="checkbox" name="searchTarget" value="${value}" ${checked}/>${title}</div>', 
 
 		_optionCheckboxes: [], 
+		// datagrid subscribers
 		_topicSubscribers: [], 
 
         /* ---------------------- */
@@ -128,6 +129,9 @@ define([
         	}));
 			// subscribe the datagrid topics 
 			this._topicSubscribers.push(topic.subscribe("featureGrid/ready", function(evt) {
+				console.log("received: " + evt); 
+			})); 
+			this._topicSubscribers.push(topic.subscribe("featureGrid/destroyed", function(evt) {
 				console.log("received: " + evt); 
 			})); 
 			//
