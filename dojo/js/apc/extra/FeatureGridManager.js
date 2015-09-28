@@ -376,9 +376,11 @@ define([
 
 	}
 	
-	fgm._buildResultGrid = function(resultData, resultColumns) {
-		var gridContainerDiv = $("#fgm-gridContainer"); 
-		
+	fgm._buildResultGrid = function(resultData, resultColumns) {		
+		// remove if it exists
+		fgm._removeResultGrid();
+		// build a new one
+		var gridContainerDiv = $("#fgm-gridContainer"); 		
 		var dg = $("#fgm-datagrid").kendoGrid({
 			//width: gridContainerDiv.width() - 30, 
 			height: gridContainerDiv.height() - 50, 
@@ -420,19 +422,29 @@ define([
 	}
 	
 	fgm._buildResultPager = function(OIDArray) {		
-		var gridContainerDiv = $("#fgm-gridContainer"); 
+		
+		var OIDModeledColumns = [{
+			"field": "oid"
+		}];
+		
+		var OIDModeledArray = []; 
+		$(OIDArray).each(function(idx, item) {
+			OIDModeledArray.push({"oid": item}); 
+		});
 		
 		var dataSource = new kendo.data.DataSource({
-			data: OIDArray, 
+			data: OIDModeledArray, 			
 			pageSize: fgm.gridOptions.pageSize
 		});
 		dataSource.read();
 		
+		var gridContainerDiv = $("#fgm-gridContainer"); 
 		var pg = $("#fgm-datapager").kendoPager({
 			//width: 818,
 			//width: gridContainerDiv.width() - 30, 
 			height: 65,
 			dataSource: dataSource, 
+			columns: OIDModeledColumns, 
 			//refresh: true,
 			//pageSizes: true,
 			buttonCount: 3, 
@@ -812,7 +824,7 @@ define([
 			fgm._replaceDataInResultGrid(results); 
 		} else {
 			var OIDStartIdx = pageIdx * fgm.gridOptions.pageSize; 
-			if (OIDStartIdx < rowCount-1) {
+			if (OIDStartIdx < rowCount) {
 				var qry = fgm._readFromCache(queryName, "query");
 				var OIDArray = fgm._readFromCache(queryName, "OIDs");
 				if (qry && OIDArray) {
@@ -824,7 +836,7 @@ define([
 				}
 			} else {
 				//TODO: go to the last page instead
-				var lastPageIdx = fgm._dataPager.totalPages - 1; 
+				var lastPageIdx = fgm._dataPager.totalPages() - 1; 
 				fgm._queryForDataByPage(lastPageIdx); 
 			}
 		}
