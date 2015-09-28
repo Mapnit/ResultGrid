@@ -97,6 +97,10 @@ define([
 					"width": 2
 				}
 			}
+		}, 
+		extRequestUrls: {
+			"tdb": "http://gis.anadarko.com/WebServices/connect/tdb",
+			"excel": "http://gis.anadarko.com/WebServices/connect/excel"
 		}
 	}; 
 	
@@ -222,7 +226,6 @@ define([
 					});
 
 		var onClose = function(evt) {
-			//When closing, remove the FeatureGrid completely rather than dock it. 
 			//panelDock.show();
 			fgm._removeFeatureGrid();
 		}
@@ -1127,7 +1130,79 @@ define([
 		cxtMenu = cxtMenuElement.data("kendoContextMenu");
 		cxtMenu.open(anchorPos.left, anchorPos.top);
 	}
-		
+	
+	/* ----------------------------------- */
+	/* Private external request Functions  */
+	/* ----------------------------------- */
+	
+	fgm._exportAsExcel = function() {
+		if (fgm.gridOptions.extRequestUrls && fgm.gridOptions.extRequestUrls["excel"]){
+			var qry = fgm._readFromCache(queryName, "query"); 
+			var OIDArray = fgm._readFromCache(queryName, "OIDs"); 
+			var results = fgm._readFromCache(queryName, "data"); 
+			
+			// parse for layerId
+			var urlParts = qry["serviceUrl"].split("/"); 
+			// pack field names
+			var fieldNames = []; 
+			$(results.fields).each(function(idx, field) {
+				fieldNames.push(field.name); 
+			}); 
+			// construct request
+			var extRequest = {
+				LayerName: qry["name"], 
+				LayerId: urlParts[urlParts.length-1],
+				FeatureServiceUrl: qry["serviceUrl"],
+				Fields: fieldNames,
+				OidField: fgm.column_oid,
+				OIDs: OIDArray
+			}; 
+			// send request
+			xhr(fgm.gridOptions.extRequestUrls["excel"], {
+				method: "POST", 
+				handleAs: "json",
+				data: extRequest
+			}).then(function(data){
+				//TODO: service needs to return URL instead of actual content
+			}, function(err){
+				console.log("Error in exportAsExcel"); 
+			});
+		}
+	}
+
+	fgm._launchToast = function() {
+		if (fgm.gridOptions.extRequestUrls && fgm.gridOptions.extRequestUrls["excel"]){
+			var qry = fgm._readFromCache(queryName, "query"); 
+			var OIDArray = fgm._readFromCache(queryName, "OIDs"); 
+			
+			// parse for layerId
+			var urlParts = qry["serviceUrl"].split("/"); 
+			// pack field names
+			var fieldNames = []; 
+			$(results.fields).each(function(idx, field) {
+				fieldNames.push(field.name); 
+			}); 
+			// construct request
+			var extRequest = {
+				LayerId: urlParts[urlParts.length-1],
+				FeatureServiceUrl: qry["serviceUrl"],
+				IdField: "WELL_NO", /*DEV: hard coded*/
+				OidField: fgm.column_oid,
+				OIDs: OIDArray
+			}; 
+			// send request
+			xhr(fgm.gridOptions.extRequestUrls["tdb"], {
+				method: "POST", 
+				handleAs: "json",
+				data: extRequest
+			}).then(function(data){
+				window.open(data.url); 
+			}, function(err){
+				console.log("Error in launchToast"); 
+			});
+		}
+	}
+	
 	
 	return fgm; 
 }); 
