@@ -267,6 +267,14 @@ define([
 	
 	fgm._removeFeatureGrid = function() {
 		
+		// reset all state variables
+		fgm.resultCache = {}; 
+		fgm._currentPage = -1; 
+		fgm._currentQuery = null; 
+		fgm.selectedPanel = null; 
+		fgm.selectedRowOID = null;
+		fgm._cxtMenuItems = []; 
+		
 		// remove the graphic layer from map 
 		$([fgm._fgLayer, fgm._fhlgLayer]).each(function(idx, gLayer) {
 			if (gLayer) {
