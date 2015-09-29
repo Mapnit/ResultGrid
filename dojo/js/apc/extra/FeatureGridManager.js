@@ -497,14 +497,17 @@ define([
 				fgm._removeResultPager(); 
 				
 				var qry = fgm._readFromCache(queryName, "query"); 
-				if(qry) {
-					// keep track of currentQuery
-					fgm._currentQuery = queryName; 
-					fgm._currentPage = 0; 
-					// execute the query for data
-					fgm._queryForData(qry); 
+				var OIDArray = fgm._readFromCache(queryName, "OIDs"); 
+				
+				// keep track of currentQuery
+				fgm._currentQuery = queryName; 
+				fgm._currentPage = 0; 				
+				
+				if (qry && OIDArray) {
+					// request data by OIDs
+					var OIDsForPage = OIDArray.slice(0, Math.min(OIDArray.length, fgm.gridOptions.pageSize));
+					fgm._queryForDataByOIDs(qry, OIDsForPage, false); 
 					// build the pager 
-					var OIDArray = fgm._readFromCache(queryName, "OIDs"); 
 					fgm._buildResultPager(OIDArray); 
 				} else {
 					console.log("error: no query for " + queryName); 
@@ -721,29 +724,42 @@ define([
 		}
 	}
 	
-	fgm._queryForData = function(qry, OIDs) {
+	fgm._queryForDataByWhere = function(qry, replaceDataOnly) {
 
-		var byOID = (OIDs && OIDs.length > 0); 
+		console.log("query [" + qry["where"] + "] on " + qry["serviceUrl"]); 
 
 		var query = new Query();
 		query.returnGeometry = true;
 		query.outFields = ["*"];
+		query.where = qry["where"];
+		query.geometry = qry["geometry"]; 
 
-		if (byOID === true) {
-			console.log("query by OIDs on " + qry["serviceUrl"]); 
-			query.objectIds = OIDs; 
-		} else {
-			console.log("query [" + qry["where"] + "] on " + qry["serviceUrl"]); 
-			query.where = qry["where"];
-			query.geometry = qry["geometry"]; 
-		}
-		
 		if (fgm.gridOptions.map) {
 			query.outSpatialReference = fgm.gridOptions.map.spatialReference; 
 		}
 		
 		var queryTask = new QueryTask(qry["serviceUrl"]); 
-		if (byOID === true) {
+		if (replaceDataOnly === true) {
+			queryTask.execute(query, fgm._replaceDataInResultGrid);
+		} else {
+			queryTask.execute(query, fgm._prepareDataResults);
+		}		
+	}
+	
+	fgm._queryForDataByOIDs = function(qry, OIDs, replaceDataOnly) {
+		console.log("query by OIDs on " + qry["serviceUrl"]); 
+		
+		var query = new Query();
+		query.returnGeometry = true;
+		query.outFields = ["*"];
+		query.objectIds = OIDs; 
+
+		if (fgm.gridOptions.map) {
+			query.outSpatialReference = fgm.gridOptions.map.spatialReference; 
+		}
+		
+		var queryTask = new QueryTask(qry["serviceUrl"]); 
+		if (replaceDataOnly === true) {
 			queryTask.execute(query, fgm._replaceDataInResultGrid);
 		} else {
 			queryTask.execute(query, fgm._prepareDataResults);
@@ -827,10 +843,10 @@ define([
 				var OIDArray = fgm._readFromCache(queryName, "OIDs");
 				if (qry && OIDArray) {
 					var OIDEndIdx = Math.min(OIDStartIdx + fgm.gridOptions.pageSize, rowCount); 
-					var OIDsForPage = OIDArray.slice(OIDStartIdx, OIDEndIdx); 
-					fgm._queryForData(qry, OIDsForPage); 
+					var OIDsForPage = OIDArray.slice(OIDStartIdx, OIDEndIdx);
+					fgm._queryForDataByOIDs(qry, OIDsForPage, true /*replaceDataOnly*/); 
 
-					fgm._currentPage = pageIdx; 					
+					fgm._currentPage = pageIdx;
 				}
 			} else {
 				//TODO: go to the last page instead
