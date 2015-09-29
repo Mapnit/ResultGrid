@@ -202,6 +202,7 @@ define([
 				this.showMessage("empty search input"); 
 				return; 
 			}
+			searchInput = searchInput.toUpperCase();
 			console.log("doSearch: " + searchInput); 
 
 			var isInputNumeric = /^\d+$/.test(searchInput); 
