@@ -614,6 +614,10 @@ define([
 	/* ------------------------ */
 	/* Private Query Functions  */
 	/* ------------------------ */
+	
+	fgm._queryFailed = function(err) {
+		console.log("query Failed: " + err); 
+	}
 
 	fgm._queryForOID = function() {
 		
@@ -636,14 +640,22 @@ define([
 			});
 		}); 
 		
-		all(promiseDict).then(fgm._prepareOIDResults);
+		all(promiseDict).then(fgm._prepareOIDResults, fgm._queryFailed);
 	}
 	
 	fgm._prepareOIDResults = function(OIDResults) {
+		var isGroupEmpty = {}, allGroupsEmpty = true; 
 		for(var queryName in OIDResults) {
 			console.log("OIDs for " + queryName); 
-			var panelId = queryName.split(fgm.depthSeparator); 
-			var elementId = fgm._normalize(panelId[0]) + fgm.depthSeparator + fgm._normalize(panelId[1]); 
+			var panelId = queryName.split(fgm.depthSeparator),
+				groupId = fgm._normalize(panelId[0]),
+				itemId = fgm._normalize(panelId[1]); 			
+			
+			if (! isGroupEmpty[groupId]) {
+				isGroupEmpty[groupId] = true; 
+			}
+			
+			var elementId = groupId + fgm.depthSeparator + itemId; 
 			var queryPanelElement = $("#"+elementId); 
 
 			if (! OIDResults[queryName] || OIDResults[queryName].length === 0) {
@@ -655,6 +667,7 @@ define([
 				
 				OIDResults[queryName]= [];
 			} else {
+				isGroupEmpty[groupId] = false; 
 				var itemElement = queryPanelElement.children("span"); 
 				itemElement.html(itemElement.html() + " (" + OIDResults[queryName].length + ")");
 			}
@@ -662,6 +675,24 @@ define([
 			// cache the query results
 			fgm._writeIntoCache(queryName, OIDResults[queryName], "OIDs"); 
 			fgm._writeIntoCache(queryName, OIDResults[queryName].length, "rowCount"); 
+		}
+		
+		for(var groupId in isGroupEmpty) {
+			// remove any empty group panel 
+			if (isGroupEmpty[groupId] === true) {
+				var groupElement = $("#"+groupId); 
+				if (groupElement) {
+					groupElement.empty(); 
+					groupElement.remove();
+				}
+			} else {
+				allGroupsEmpty = false;  
+			}
+		}
+		
+		if (allGroupsEmpty === true) {
+			fgm._removeFeatureGrid(); 
+			alert("no data found");
 		}
 	}
 	
@@ -778,7 +809,7 @@ define([
 		var queryName = fgm._currentQuery;		
 		var rowCount = fgm._readFromCache(queryName, "rowCount");
 		if (rowCount === 0) {
-			//TODO: no more data 
+			// no more data so empty the datagrid
 			var results = fgm._readFromCache(queryName, "data");
 			results.features = []; 
 			fgm._replaceDataInResultGrid(results); 
@@ -795,7 +826,7 @@ define([
 					fgm._currentPage = pageIdx;
 				}
 			} else {
-				//TODO: go to the last page instead
+				// go to the last page instead
 				var lastPageIdx = fgm._dataPager.totalPages() - 1; 
 				fgm._queryForDataByPage(lastPageIdx); 
 			}
@@ -869,7 +900,7 @@ define([
 	/* ---------------------------------- */
 	
 	fgm._displayDataOnMap = function(results) {
-		console.log("_displayDataOnMap: ");
+		console.log("display Data On Map");
 		
 		if (!fgm.gridOptions.map) {
 			console.log("no map available"); 
