@@ -766,7 +766,35 @@ define([
 		}		
 	}
 	
-	fgm._prepareDataResults = function(results) {		
+	fgm._queryForDataByPage = function(pageIdx /*zero-based*/) {
+		var queryName = fgm._currentQuery;		
+		var rowCount = fgm._readFromCache(queryName, "rowCount");
+		if (rowCount === 0) {
+			//TODO: no more data 
+			var results = fgm._readFromCache(queryName, "data");
+			results.features = []; 
+			fgm._replaceDataInResultGrid(results); 
+		} else {
+			var OIDStartIdx = pageIdx * fgm.gridOptions.pageSize; 
+			if (OIDStartIdx < rowCount) {
+				var qry = fgm._readFromCache(queryName, "query");
+				var OIDArray = fgm._readFromCache(queryName, "OIDs");
+				if (qry && OIDArray) {
+					var OIDEndIdx = Math.min(OIDStartIdx + fgm.gridOptions.pageSize, rowCount); 
+					var OIDsForPage = OIDArray.slice(OIDStartIdx, OIDEndIdx);
+					fgm._queryForDataByOIDs(qry, OIDsForPage, true /*replaceDataOnly*/); 
+
+					fgm._currentPage = pageIdx;
+				}
+			} else {
+				//TODO: go to the last page instead
+				var lastPageIdx = fgm._dataPager.totalPages() - 1; 
+				fgm._queryForDataByPage(lastPageIdx); 
+			}
+		}
+	}	
+	
+	fgm._prepareDataResults = function(results) {
 		
 		// cache the query results (limited by fgm.gridOptions.pageSize)
 		var queryName = fgm._currentQuery; 
@@ -827,34 +855,6 @@ define([
 		
 		fgm._displayDataOnMap(results);
 	}
-	
-	fgm._queryForDataByPage = function(pageIdx /*zero-based*/) {		
-		var queryName = fgm._currentQuery;		
-		var rowCount = fgm._readFromCache(queryName, "rowCount");
-		if (rowCount === 0) {
-			//TODO: no more data 
-			var results = fgm._readFromCache(queryName, "data");
-			results.features = []; 
-			fgm._replaceDataInResultGrid(results); 
-		} else {
-			var OIDStartIdx = pageIdx * fgm.gridOptions.pageSize; 
-			if (OIDStartIdx < rowCount) {
-				var qry = fgm._readFromCache(queryName, "query");
-				var OIDArray = fgm._readFromCache(queryName, "OIDs");
-				if (qry && OIDArray) {
-					var OIDEndIdx = Math.min(OIDStartIdx + fgm.gridOptions.pageSize, rowCount); 
-					var OIDsForPage = OIDArray.slice(OIDStartIdx, OIDEndIdx);
-					fgm._queryForDataByOIDs(qry, OIDsForPage, true /*replaceDataOnly*/); 
-
-					fgm._currentPage = pageIdx;
-				}
-			} else {
-				//TODO: go to the last page instead
-				var lastPageIdx = fgm._dataPager.totalPages() - 1; 
-				fgm._queryForDataByPage(lastPageIdx); 
-			}
-		}
-	}	
 	
 	/* ---------------------------------- */
 	/* Private Map-Interaction Functions  */
@@ -987,9 +987,6 @@ define([
 		
 	}
 	
-	/*
-	 * to remove one triggers data reloading
-	 */
 	fgm._removeFeature = function(OID) {
 			
 		var queryName = fgm._currentQuery;
