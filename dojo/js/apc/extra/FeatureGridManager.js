@@ -973,7 +973,7 @@ define([
 			}
 			resultFields.push({
 				"field": resultField["name"],
-				"alias": resultField["title"], 
+				"title": resultField["alias"], 
 				"hidden": isIDColumn
 			});
 		}
