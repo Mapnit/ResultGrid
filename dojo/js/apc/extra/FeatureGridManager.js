@@ -718,7 +718,7 @@ define([
 		$(fgm._queryllelArray).each(function(idx, q) {
 			if (q.isDone() === true) {
 				// cache the query results 
-				//DEV: could be more than once but the same content
+				// - one result could be cached more than once but the same content
 				var queryName = q.getQueryName(); 
 				var results = q.getResults(); 
 				fgm._writeIntoCache(queryName, results, "OIDs"); 
@@ -996,8 +996,7 @@ define([
 		
 		// prepare results
 		var resultFields = []; 
-		//DEV: dev only 
-		var fieldCount = Math.min(results.fields.length, 10); 
+		var fieldCount = results.fields.length; 
 		for(var i=0; i<fieldCount; i++) {
 			var resultField = results.fields[i]; 
 			var isIDColumn = (resultField["type"] === "esriFieldTypeOID");
@@ -1387,7 +1386,9 @@ define([
 			var extRequest = {
 				LayerId: urlParts[urlParts.length-1],
 				FeatureServiceUrl: qry["serviceUrl"],
-				IdField: "WELL_NO", /*DEV: hard coded*/
+				//TODO: to retrieve it from the layer description. 
+				// - ex: Copyright Text:  tdb.field=WELL_NO 
+				IdField: "WELL_NO",
 				OidField: fgm.column_oid,
 				OIDs: OIDArray
 			}; 
