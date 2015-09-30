@@ -102,6 +102,7 @@ define([
 
 	fgm.gridOptions = {
 		pageSize: 100, //1000, 
+		columnWidth: 100, /*px*/
 		map: null, 
 		highlightSymbols: {
 			"point": {
@@ -1026,7 +1027,8 @@ define([
 			resultFields.push({
 				"field": resultField["name"],
 				"title": resultField["alias"], 
-				"hidden": isIDColumn
+				"hidden": isIDColumn, 
+				"width": fgm.gridOptions.columnWidth
 			});
 		}
 		var dgColumns = $.merge([fgm.actionColumn], resultFields);
