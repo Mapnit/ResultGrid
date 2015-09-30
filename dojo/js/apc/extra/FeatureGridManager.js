@@ -578,6 +578,19 @@ define([
 				
 				var qry = fgm._readFromCache(queryName, "query"); 
 				var OIDArray = fgm._readFromCache(queryName, "OIDs"); 
+				var tdbField = fgm._readFromCache(queryName, "tdbField");
+				
+				if (!tdbField) {
+					// retrieve the tdb field
+					fgm._checkTdbField(queryName, qry); 					
+				} else {
+					// show or hide the toast launch button
+					if (tdbField === "none") {
+						fgm._hideTdbLink();
+					} else {
+						fgm._showTdbLink();
+					}
+				}
 				
 				// keep track of currentQuery
 				fgm._currentQuery = queryName; 
@@ -1362,6 +1375,41 @@ define([
 				console.log("Error in exportAsExcel"); 
 			});
 		}
+	}
+	
+	fgm._hideTdbLink() = function() {
+		$(".fgm-layerTool-tdb").css('display', 'none');
+	}
+	
+	fgm._showTdbLink() = function() {
+		$(".fgm-layerTool-tdb").css('display', 'inline-block');
+	}
+	
+	fgm._checkTdbField = function(queryName, qry) {
+		xhr(qry["serviceUrl"], {
+			handleAs: "json",
+			query: {"f":"json"}
+		}).then(function(layerDef){
+			// parse for a tdb field name 
+			// - weird place for such a config
+			var tdbDef = layerDef["copyrightText"], tdbField = "none"; 
+			if (tdbDef) {
+				tdbDef = tdbDef.trim(); 
+				if (tdbDef.indexOf("tdb.field=") === 0) {
+					tdbField = tdbDef.replace("tdb.field=", ""); 
+				}
+			}
+			// cache the tdb field
+			fgm._writeIntoCache(queryName, tdbField, "tdbField"); 
+			// show or hide the toast launch button
+			if (tdbField === "none") {
+				fgm._hideTdbLink();
+			} else {
+				fgm._showTdbLink();
+			}
+		}, function(err){
+			console.log("Error in isToastAvailable"); 
+		});
 	}
 
 	fgm._launchToast = function() {
