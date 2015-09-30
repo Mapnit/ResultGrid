@@ -818,7 +818,7 @@ define([
 				groupId = fgm._normalize(panelId[0]),
 				itemId = fgm._normalize(panelId[1]); 
 			
-			if (! isGroupEmpty[groupId]) {
+			if (!(groupId in isGroupEmpty)) {
 				isGroupEmpty[groupId] = true; 
 			}
 			
