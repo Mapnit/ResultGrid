@@ -753,16 +753,17 @@ define([
 					panelId = queryName.split(fgm.depthSeparator),
 					groupId = fgm._normalize(panelId[0]); 
 				
-				if (! isGroupEmpty[groupId]) {
-					isGroupEmpty[groupId] = true; 
-				}
-				
 				var rowCount = fgm._readFromCache(queryName, "rowCount");
-				isGroupEmpty[groupId] = isGroupEmpty[groupId] && (rowCount === 0);
+				if (groupId in isGroupEmpty) {
+					isGroupEmpty[groupId] = isGroupEmpty[groupId] && (rowCount === 0);					
+				} else {
+					isGroupEmpty[groupId] = (rowCount === 0);
+				}
 			}); 
 			// remove any empty group panel 
 			for(var groupId in isGroupEmpty) {
 				if (isGroupEmpty[groupId] === true) {
+					console.log("delete an empty group: " + groupId); 
 					var groupElement = $("#"+groupId); 
 					if (groupElement) {
 						groupElement.empty(); 
