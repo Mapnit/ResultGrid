@@ -469,12 +469,14 @@ define([
 			//height: 470,	height: 405, 
 			dataSource: resultData,
 			columns: resultColumns, 
+			columnMenu: true,
 			groupable: true,
 			filterable: true,
+			pageable: false, /*use separate pager*/
+			reorderable: true,
 			resizable: true, 
 			selectable: "row", 
 			sortable: true,
-			pageable: false,
 			change: fgm.onRowSelect
 		});	
 
