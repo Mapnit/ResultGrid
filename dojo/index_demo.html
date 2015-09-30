@@ -87,6 +87,7 @@
         }; 
 	</script>
 	<script src="//js.arcgis.com/3.13/"></script>
+	<script src="config/appConfig.js"></script>
 	<script>
 		define.amd.jQuery = true;
 
@@ -115,12 +116,17 @@
                 zoom: 4
             });
 			
-            var landLeaseLayer = new ArcGISDynamicMapServiceLayer(
+            var censusLayer = new ArcGISDynamicMapServiceLayer(
                 "http://sampleserver6.arcgisonline.com/arcgis/rest/services/Census/MapServer", {
-                "id": "LandLease",
+                "id": "Census",
                 "opacity": 0.75
             });
-            map.addLayer(landLeaseLayer);
+			var usaLayer = new ArcGISDynamicMapServiceLayer(
+				"http://sampleserver6.arcgisonline.com/arcgis/rest/services/USA/MapServer", {
+				"id": "USA",
+                "opacity": 0.5
+			});
+            map.addLayers([censusLayer, usaLayer]);
 
             map.on("load", function () {
                 //after map loads, connect to listen to mouse move & drag events
@@ -161,29 +167,7 @@
 
             var searchData = new SearchData({
                 map: map, 
-                targets: [{
-                        "name": "Census2000",
-                        "default": true,
-                        "queries": [{
-                            "name": "Block Points",
-                            "serviceUrl": "http://sampleserver6.arcgisonline.com/arcgis/rest/services/Census/MapServer/0",
-                            "where": "STATE_FIPS = '01' and BLOCK like '%{0}%'"
-                        }, {
-                            "name": "Block Groups",
-                            "serviceUrl": "http://sampleserver6.arcgisonline.com/arcgis/rest/services/Census/MapServer/1",
-                            "where": "STATE_FIPS = '01' and TRACT like '%{0}%'",
-							"numericWhere": "HOUSEHOLDS > {0}"
-                        }, {
-                            "name": "Counties",
-                            "serviceUrl": "http://sampleserver6.arcgisonline.com/arcgis/rest/services/Census/MapServer/2",
-                            "where": "STATE_FIPS = '01' and CNTY_FIPS like '%{0}%'"
-                        }]
-                    }, {
-                        "name": "Others",
-                        "default": false,
-                        "queries": null
-                    }
-                ]
+                targets: appConfig.searchTargets
             }, "searchDataWidget");
 
             searchData.startup(); 
