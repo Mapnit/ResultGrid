@@ -1012,6 +1012,12 @@ define([
 		var fieldCount = results.fields.length; 
 		for(var i=0; i<fieldCount; i++) {
 			var resultField = results.fields[i]; 
+			// filter out the shape column and any derived column
+			var isShapeColumn = (resultField["type"] === "esriFieldTypeGeometry");
+			var isDerivedColumn = (resultField["name"].indexOf(".") > -1); 
+			if (isShapeColumn === true || isDerivedColumn === true) {
+				continue; 
+			} 
 			var isIDColumn = (resultField["type"] === "esriFieldTypeOID");
 			if (isIDColumn === true) {
 				fgm.column_oid = resultField["name"]; 
@@ -1377,11 +1383,11 @@ define([
 		}
 	}
 	
-	fgm._hideTdbLink() = function() {
+	fgm._hideTdbLink = function() {
 		$(".fgm-layerTool-tdb").css('display', 'none');
 	}
 	
-	fgm._showTdbLink() = function() {
+	fgm._showTdbLink = function() {
 		$(".fgm-layerTool-tdb").css('display', 'inline-block');
 	}
 	
@@ -1400,6 +1406,7 @@ define([
 				}
 			}
 			// cache the tdb field
+			console.log("tdb field for " + queryName + ": " + tdbField);
 			fgm._writeIntoCache(queryName, tdbField, "tdbField"); 
 			// show or hide the toast launch button
 			if (tdbField === "none") {
