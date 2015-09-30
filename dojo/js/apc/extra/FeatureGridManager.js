@@ -728,11 +728,44 @@ define([
 			}
 		}); 
 		
-		if(allDone === true) {
-			console.log("all OID queries done");
-			fgm._queryllelArray = []; 
-		} else {
+		if(allDone !== true) {
 			setTimeout(fgm._checkOIDQueryStatus, fgm._queryCheckInterval); 
+		} else {
+			console.log("all OID queries done");
+
+			// scan the groups in the panelbar 
+			var isGroupEmpty = {}, allGroupsEmpty = true; 
+			$(fgm._queryllelArray).each(function(idx, q) {
+				var queryName = q.getQueryName(), 
+					panelId = queryName.split(fgm.depthSeparator),
+					groupId = fgm._normalize(panelId[0]); 
+				
+				if (! isGroupEmpty[groupId]) {
+					isGroupEmpty[groupId] = true; 
+				}
+				
+				var rowCount = fgm._readFromCache(queryName, "rowCount");
+				isGroupEmpty[groupId] = isGroupEmpty[groupId] && (rowCount === 0);
+			}); 
+			// remove any empty group panel 
+			for(var groupId in isGroupEmpty) {
+				if (isGroupEmpty[groupId] === true) {
+					var groupElement = $("#"+groupId); 
+					if (groupElement) {
+						groupElement.empty(); 
+						groupElement.remove();
+					}
+				} else {
+					allGroupsEmpty = false;  
+				}
+			}
+			// alert if there is no result at all
+			if (allGroupsEmpty === true) {
+				fgm._removeFeatureGrid(); 
+				alert("no data found");
+			}
+			// clear the queryllel array
+			fgm._queryllelArray = []; 
 		}
 	}
 	// query option 1 (END)
