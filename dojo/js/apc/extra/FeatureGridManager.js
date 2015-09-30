@@ -1,5 +1,6 @@
 define([
 	"dojo/_base/declare", 
+	"dojo/_base/lang", 
 	"dojo/topic", 
 	"dojo/promise/all", 
 	"dojo/request/xhr",
@@ -20,13 +21,81 @@ define([
 	
 	"jquery", "kendo" 
 ], function(
-	declare, topic, all, xhr, 
+	declare, lang, topic, all, xhr, 
 	QueryTask, Query, StatisticDefinition, 
 	Point, Polyline, Polygon, Extent, webMercatorUtils, GraphicsLayer, Graphic,
 	SimpleMarkerSymbol, SimpleFillSymbol, SimpleLineSymbol
 ) {	
 	var fgm = declare("FeatureGridManager", null, {}); 
 	
+	/* --------------------------------- */
+	/* Inner class for parallel queries  */
+	/* --------------------------------- */
+
+	var Queryllel = (function() {
+		// constructor
+		function Queryllel(queryName, elementId) {
+			this._queryName = queryName;
+			this._elementId = elementId; 
+			this._results = []; 
+			this._done = false; 
+		};
+		
+		Queryllel.prototype.query = function(qry) {
+			console.log("query [" + qry["where"] + "] on " + qry["serviceUrl"]); 
+			
+			var query = new Query();
+			query.where = qry["where"];
+			query.geometry = qry["geometry"]; 
+	
+			var queryTask = new QueryTask(qry["serviceUrl"]); 
+			queryTask.executeForIds(query, lang.hitch(this, function(results) {
+				this._processResults(results); 
+			}), lang.hitch(this, function(err) {
+				this._queryError(err); 
+			}));
+		};
+		
+		Queryllel.prototype._processResults = function(results) {
+			console.log("OIDs for " + this._queryName); 
+			
+			var queryElement = $("#"+this._elementId); 
+			if (! results || results.length === 0) {
+				if (queryElement.data("kendoGrid")) {
+					queryElement.data("kendoGrid").destroy();
+				}
+				queryElement.empty(); 
+				queryElement.remove();
+			} else {
+				var itemElement = queryElement.children("span"); 
+				itemElement.html(itemElement.html() + " (" + results.length + ")");				
+			}
+			
+			// assign it to member variable
+			this._results = results; 
+			// mark it done
+			this._done = true; 
+		};
+		
+		Queryllel.prototype._queryError = function(err) {
+			console.log("query error [" + this._queryName + "]" + err);
+		};
+		
+		Queryllel.prototype.isDone = function() {
+			return this._done;
+		};
+		
+		Queryllel.prototype.getResults = function() {
+			return this._results;
+		};
+		
+		Queryllel.prototype.getQueryName = function() {
+			return this._queryName; 
+		}; 
+		
+		return Queryllel; 
+	})(); 
+
 	/* ------------------ */
 	/* Private Variables  */
 	/* ------------------ */
@@ -112,6 +181,9 @@ define([
 	fgm._datagrid = null; 
 	fgm._dataPager = null;
 
+	fgm._queryllelArray = []; 
+	fgm._queryCheckInterval = 1000/*ms*/; 
+	
 	fgm.resultCache = {}; 
 	fgm._currentPage = -1; 
 	fgm._currentQuery = null; 
@@ -342,10 +414,6 @@ define([
 	}
 	
 	fgm._buildResultPanels = function() {
-		// initiate the async query
-		//fgm._queryForStats(); 
-		fgm._queryForOID(); 
-		
 		// build the panelbar UI
 		var layerPane = $("#fgm-layerPanelbar");
 		var groupIds = [], prevGrpName; 
@@ -381,7 +449,11 @@ define([
 		$(groupIds).each(function(idx, grpId) {
 			panelBar.expand($(grpId), false); 
 		}); 
-
+		
+		// initiate the async query
+		//fgm._queryForStats(); 
+		//fgm._queryForOID(); 		
+		fgm._fireQueriesForOID(); 
 	}
 	
 	fgm._buildResultGrid = function(resultData, resultColumns) {		
@@ -611,14 +683,64 @@ define([
 		return null; 
 	}	
 	
+	/* ---------------------------------------- */
+	/* Function to check parallel query status  */
+	/* ---------------------------------------- */
+	
 	/* ------------------------ */
 	/* Private Query Functions  */
 	/* ------------------------ */
 	
-	fgm._queryFailed = function(err) {
-		console.log("query Failed: " + err); 
+	// query option 1 (START): parallel query - Queryllel
+	fgm._fireQueriesForOID = function() {
+		$(fgm.searchParams).each(function(idx, item) {
+			$(item["queries"]).each(function(idx, qry) {
+				var queryName = item["name"]+fgm.depthSeparator+qry["name"]; 
+				var groupId = fgm._normalize(item["name"]),
+					itemId = fgm._normalize(qry["name"]); 
+				var elementId = groupId + fgm.depthSeparator + itemId; 
+				
+				// cache query
+				fgm._writeIntoCache(queryName, qry, "query");
+				
+				// fire query
+				var qll =  new Queryllel(queryName, elementId); 
+				fgm._queryllelArray.push(qll);
+				qll.query(qry); 
+			})
+		}); 
+		
+		// init the status check 
+		setTimeout(fgm._checkQueryStatus, fgm._queryCheckInterval); 
 	}
 
+	// query option 1 (): check status & process results
+	fgm._checkOIDQueryStatus = function () {
+		console.log("query status checking ..."); 
+		var allDone = true;
+		$(fgm._queryllelArray).each(function(idx, q) {
+			if (q.isDone() === true) {
+				// cache the query results 
+				//DEV: could be more than once but the same content
+				var queryName = q.getQueryName(); 
+				var results = q.getResults(); 
+				fgm._writeIntoCache(queryName, results, "OIDs"); 
+				fgm._writeIntoCache(queryName, (!results)?0:results.length, "rowCount"); 
+			} else {
+				allDone = false; 
+			}
+		}); 
+		
+		if(allDone === true) {
+			console.log("all OID queries done");
+			fgm._queryllelArray = []; 
+		} else {
+			setTimeout(fgm._checkQueryStatus, fgm._queryCheckInterval); 
+		}
+	}
+	// query option 1 (END)
+	
+	// query option 2 (START): dojo.promise/all
 	fgm._queryForOID = function() {
 		
 		var promiseDict = {}; 
@@ -643,13 +765,14 @@ define([
 		all(promiseDict).then(fgm._prepareOIDResults, fgm._queryFailed);
 	}
 	
+	// query option 2 (): process results
 	fgm._prepareOIDResults = function(OIDResults) {
 		var isGroupEmpty = {}, allGroupsEmpty = true; 
 		for(var queryName in OIDResults) {
 			console.log("OIDs for " + queryName); 
 			var panelId = queryName.split(fgm.depthSeparator),
 				groupId = fgm._normalize(panelId[0]),
-				itemId = fgm._normalize(panelId[1]); 			
+				itemId = fgm._normalize(panelId[1]); 
 			
 			if (! isGroupEmpty[groupId]) {
 				isGroupEmpty[groupId] = true; 
@@ -695,6 +818,7 @@ define([
 			alert("no data found");
 		}
 	}
+	// query option 2 (END)
 	
 	fgm._queryForStats = function() {
 
@@ -893,6 +1017,10 @@ define([
 		fgm._datagrid.refresh();
 		
 		fgm._displayDataOnMap(results);
+	}
+	
+	fgm._queryFailed = function(err) {
+		console.log("query Failed: " + err); 
 	}
 	
 	/* ---------------------------------- */
@@ -1119,7 +1247,7 @@ define([
 
 		var queryName = fgm._currentQuery;
 		var results = fgm._readFromCache(queryName, "data");
-		var resultCount = results.features.length;		
+		var resultCount = results.features.length;
 		for(var f=0; f<resultCount; f++) {
 			if (OID === results.features[f].attributes[fgm.column_oid]) {
 				var attributes = results.features[f].attributes; 
