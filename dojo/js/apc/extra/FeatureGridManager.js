@@ -681,11 +681,7 @@ define([
 			}			
 		}
 		return null; 
-	}	
-	
-	/* ---------------------------------------- */
-	/* Function to check parallel query status  */
-	/* ---------------------------------------- */
+	}
 	
 	/* ------------------------ */
 	/* Private Query Functions  */
@@ -711,7 +707,8 @@ define([
 		}); 
 		
 		// init the status check 
-		setTimeout(fgm._checkQueryStatus, fgm._queryCheckInterval); 
+		console.log("start query status checking ");
+		setTimeout(fgm._checkOIDQueryStatus, fgm._queryCheckInterval); 
 	}
 
 	// query option 1 (): check status & process results
@@ -735,7 +732,7 @@ define([
 			console.log("all OID queries done");
 			fgm._queryllelArray = []; 
 		} else {
-			setTimeout(fgm._checkQueryStatus, fgm._queryCheckInterval); 
+			setTimeout(fgm._checkOIDQueryStatus, fgm._queryCheckInterval); 
 		}
 	}
 	// query option 1 (END)
