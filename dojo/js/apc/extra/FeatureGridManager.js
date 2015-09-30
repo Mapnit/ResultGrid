@@ -903,9 +903,9 @@ define([
 		
 		var queryTask = new QueryTask(qry["serviceUrl"]); 
 		if (replaceDataOnly === true) {
-			queryTask.execute(query, fgm._replaceDataInResultGrid);
+			queryTask.execute(query, fgm._replaceDataInResultGrid, fgm._queryFailed);
 		} else {
-			queryTask.execute(query, fgm._prepareDataResults);
+			queryTask.execute(query, fgm._prepareDataResults, fgm._queryFailed);
 		}		
 	}
 	
@@ -923,9 +923,9 @@ define([
 		
 		var queryTask = new QueryTask(qry["serviceUrl"]); 
 		if (replaceDataOnly === true) {
-			queryTask.execute(query, fgm._replaceDataInResultGrid);
+			queryTask.execute(query, fgm._replaceDataInResultGrid, fgm._queryFailed);
 		} else {
-			queryTask.execute(query, fgm._prepareDataResults);
+			queryTask.execute(query, fgm._prepareDataResults, fgm._queryFailed);
 		}		
 	}
 	
