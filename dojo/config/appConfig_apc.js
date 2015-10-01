@@ -1,4 +1,25 @@
 var appConfig = {
+	columnTemplates: [
+		{
+			"name": "URL",
+			"content-type": "url"
+		}, {
+			"name": "INTERACTIVE_MAP_URL",
+			"content-type": "url"
+		}, {
+			"name": "FINS_URL",
+			"content-type": "url"
+		}, {
+			"name": "SCOUT_TAG",
+			"content-type": "a_tag"
+		}, {
+			"name": "DHUB_URL",
+			"content-type": "url"
+		}, {
+			"name": "DHUB_TAG",
+			"content-type": "a_tag"
+		}
+	], 
     searchTargets: [
         {
             "name": "Equipment",

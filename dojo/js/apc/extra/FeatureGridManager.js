@@ -95,7 +95,7 @@ define([
 		
 		return Queryllel; 
 	})(); 
-
+	
 	/* ------------------ */
 	/* Private Variables  */
 	/* ------------------ */
@@ -103,6 +103,7 @@ define([
 	fgm.gridOptions = {
 		pageSize: 100, //1000, 
 		columnWidth: 100, /*px*/
+		columnTemplates: [], /*DEV: global column templates*/
 		map: null, 
 		highlightSymbols: {
 			"point": {
@@ -1004,7 +1005,7 @@ define([
 				fgm._queryForDataByPage(lastPageIdx); 
 			}
 		}
-	}	
+	}
 	
 	fgm._prepareDataResults = function(results) {
 		
@@ -1024,13 +1025,33 @@ define([
 			if (isShapeColumn === true || isDerivedColumn === true) {
 				continue; 
 			} 
+			// discover the OID column
 			var isIDColumn = (resultField["type"] === "esriFieldTypeOID");
 			if (isIDColumn === true) {
 				fgm.column_oid = resultField["name"]; 
 			}
+			// find any column template
+			var columnTmpl = null; 
+			for(var t=0,tl=fgm.gridOptions.columnTemplates.length; t<tl; t++) {
+				var tmpl = fgm.gridOptions.columnTemplates[t]; 
+				if (tmpl["name"] === resultField["name"]) {
+					switch(tmpl["content-type"]) {
+						case "url":
+							columnTmpl = '<a target="_blank" style="color:Blue" href="#:' 
+								+ resultField["name"] + '#">' + resultField["alias"] + '</a>'; 
+							break; 
+						case "a_tag":
+							//TODO: how to handle an A tag??? 
+							columnTmpl = '#:' + resultField["name"] + '#'; 
+							break; 
+					}
+					break;
+				} 
+			}
 			resultFields.push({
 				"field": resultField["name"],
 				"title": resultField["alias"], 
+				"template": columnTmpl, 
 				"hidden": isIDColumn, 
 				"width": fgm.gridOptions.columnWidth
 			});

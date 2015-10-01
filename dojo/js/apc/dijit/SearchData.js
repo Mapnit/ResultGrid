@@ -44,6 +44,16 @@ define([
                     }]
                 }
         	*/], // required
+			columnTemplates: [/*
+				// template-schema: 
+				{
+					"columnName": "FINS_URL",
+					"type": "url"
+				}, {
+					"name": "DHUB_TAG",
+					"type": "a_tag"
+				}
+			*/],
             visible: true
         }, 
 
@@ -75,6 +85,7 @@ define([
             this.set("map", this.options.map);
             this.set("title", this.options.title);
             this.set("targets", this.options.targets); 
+			this.set("columnTemplates", this.options.columnTemplates); 
             this.set("visible", this.options.visible);
             // listeners
             this.watch("visible", this._visible);
@@ -239,7 +250,7 @@ define([
 
 			// pass searchParams for execution
 			if (searchParams.length > 0) {
-				FeatureGridManager.buildFeatureGrid(searchParams, {map: this.map}); 
+				FeatureGridManager.buildFeatureGrid(searchParams, {map: this.map, columnTemplates: this.columnTemplates}); 
 			}
 		}
 		
