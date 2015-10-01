@@ -1298,7 +1298,7 @@ define([
 		var cxtMenu;
 		if (cxtMenuElement.length === 0) {
 			// add a new element
-			$("body").append('<div id="fgm-hyperlinkMenu"></div>');
+			$("body").append('<ul id="fgm-hyperlinkMenu"></ul>');
 			cxtMenuElement = $("#fgm-hyperlinkMenu"); 
 		} else {
 			// remove the existing element
