@@ -170,7 +170,9 @@ define([
 		}, 
 		extRequestUrls: {
 			"tdb": "http://gis.anadarko.com/WebServices/connect/tdb",
-			"excel": "http://gis.anadarko.com/WebServices/connect/excel"
+			//TODO: service needs to return URL instead of actual content
+			//"excel": "http://gis.anadarko.com/WebServices/connect/excel"
+			"excel": "http://localhost/resultGrid/tdb_link.json"
 		}
 	}; 
 	
@@ -1141,7 +1143,11 @@ define([
 			
 		}; 
 		
-		fgm.gridOptions.map.setExtent(layerExtent, true);
+		if (layerExtent.getHeight() * layerExtent.getWidth() === 0) {
+			fgm.gridOptions.map.centerAndZoom(layerExtent.getCenter(), 12);
+		} else {
+			fgm.gridOptions.map.setExtent(layerExtent, true);
+		}
 		
 		// cache the extent of features on the current page
 		fgm._writeIntoCache(fgm._currentQuery, layerExtent, "extent"); 
@@ -1165,7 +1171,11 @@ define([
 			return; 
 		}
 		
-		fgm.gridOptions.map.setExtent(layerExtent, true);
+		if (layerExtent.getHeight() * layerExtent.getWidth() === 0) {
+			fgm.gridOptions.map.centerAndZoom(layerExtent.getCenter(), 12);
+		} else {
+			fgm.gridOptions.map.setExtent(layerExtent, true);
+		}
 	}
 
 	fgm._highlightFeature = function(OID, clearFirst) {
@@ -1270,7 +1280,11 @@ define([
 					geometryExtent = new Extent(geometry.x, geometry.y, geometry.x, geometry.y, geometry.spatialReference);
 				}
 				
-				fgm.gridOptions.map.setExtent(geometryExtent, true);
+				if (geometryExtent.getHeight() * geometryExtent.getWidth() === 0) {
+					fgm.gridOptions.map.centerAndZoom(geometryExtent.getCenter(), 12);
+				} else {
+					fgm.gridOptions.map.setExtent(geometryExtent, true);
+				}
 				
 				break; 
 			}
@@ -1344,15 +1358,60 @@ define([
 		cxtMenu.open(anchorPos.left, anchorPos.top);
 	}
 	
+	/* ------------------------------------ */
+	/* Private TDB-Field Related Functions  */
+	/* ------------------------------------ */
+	
+	fgm._hideTdbLink = function() {
+		$(".fgm-layerTool-tdb").css('display', 'none');
+	}
+	
+	fgm._showTdbLink = function() {
+		$(".fgm-layerTool-tdb").css('display', 'inline-block');
+	}
+	
+	fgm._checkTdbField = function(queryName, qry) {
+		// to retrieve it from the copyright property of a layer description 
+		// (such a weird place for such a config). 
+		// - ex: Copyright Text:  tdb.field=WELL_NO 
+		xhr(qry["serviceUrl"], {
+			handleAs: "json",
+			query: {"f":"json"}
+		}).then(function(layerDef){
+			// parse for a tdb field name 
+			var tdbDef = layerDef["copyrightText"], tdbField = "none"; 
+			if (tdbDef) {
+				tdbDef = tdbDef.trim(); 
+				if (tdbDef.indexOf("tdb.field=") === 0) {
+					tdbField = tdbDef.replace("tdb.field=", ""); 
+				}
+			}
+			// cache the tdb field
+			console.log("tdb field for " + queryName + ": " + tdbField);
+			fgm._writeIntoCache(queryName, tdbField, "tdbField"); 
+			
+			// show or hide the toast launch button
+			if (tdbField === "none") {
+				fgm._hideTdbLink();
+			} else {
+				fgm._showTdbLink();
+			}
+		}, function(err){
+			console.log("Error in isToastAvailable"); 
+		});
+	}	
+	
 	/* ----------------------------------- */
 	/* Private external request Functions  */
 	/* ----------------------------------- */
 	
 	fgm._exportAsExcel = function() {
-		if (fgm.gridOptions.extRequestUrls && fgm.gridOptions.extRequestUrls["excel"]){
+		var extReqUrls = fgm.gridOptions.extRequestUrls; 
+		if (extReqUrls && extReqUrls["excel"]){
 			var queryName = fgm._currentQuery; 
 			if (!queryName) {
 				console.log("no query is available"); 
+				return; 
 			}
 			
 			var qry = fgm._readFromCache(queryName, "query"); 
@@ -1376,59 +1435,32 @@ define([
 				OIDs: OIDArray
 			}; 
 			// send request
-			xhr(fgm.gridOptions.extRequestUrls["excel"], {
+			xhr(extReqUrls["excel"], {
 				method: "POST", 
 				handleAs: "json",
-				data: extRequest
+				headers: {'Content-Type': 'application/json'},
+				data: JSON.stringify(extRequest)
 			}).then(function(data){
-				//TODO: service needs to return URL instead of actual content
+				window.open(data["Url"]); 
 			}, function(err){
 				console.log("Error in exportAsExcel"); 
 			});
 		}
 	}
 	
-	fgm._hideTdbLink = function() {
-		$(".fgm-layerTool-tdb").css('display', 'none');
-	}
-	
-	fgm._showTdbLink = function() {
-		$(".fgm-layerTool-tdb").css('display', 'inline-block');
-	}
-	
-	fgm._checkTdbField = function(queryName, qry) {
-		xhr(qry["serviceUrl"], {
-			handleAs: "json",
-			query: {"f":"json"}
-		}).then(function(layerDef){
-			// parse for a tdb field name 
-			// - weird place for such a config
-			var tdbDef = layerDef["copyrightText"], tdbField = "none"; 
-			if (tdbDef) {
-				tdbDef = tdbDef.trim(); 
-				if (tdbDef.indexOf("tdb.field=") === 0) {
-					tdbField = tdbDef.replace("tdb.field=", ""); 
-				}
-			}
-			// cache the tdb field
-			console.log("tdb field for " + queryName + ": " + tdbField);
-			fgm._writeIntoCache(queryName, tdbField, "tdbField"); 
-			// show or hide the toast launch button
-			if (tdbField === "none") {
-				fgm._hideTdbLink();
-			} else {
-				fgm._showTdbLink();
-			}
-		}, function(err){
-			console.log("Error in isToastAvailable"); 
-		});
-	}
-
 	fgm._launchToast = function() {
-		if (fgm.gridOptions.extRequestUrls && fgm.gridOptions.extRequestUrls["excel"]){
+		var extReqUrls = fgm.gridOptions.extRequestUrls; 
+		if (extReqUrls && extReqUrls["tdb"]){
 			var queryName = fgm._currentQuery; 
 			if (!queryName) {
 				console.log("no query is available"); 
+				return;
+			}
+			
+			var tdbField = fgm._readFromCache(queryName, "tdbField"); 
+			if (!tdbField || tdbField === "none") {
+				console.log("no tdb field defined"); 
+				return;
 			}
 			
 			var qry = fgm._readFromCache(queryName, "query"); 
@@ -1446,19 +1478,18 @@ define([
 			var extRequest = {
 				LayerId: urlParts[urlParts.length-1],
 				FeatureServiceUrl: qry["serviceUrl"],
-				//TODO: to retrieve it from the layer description. 
-				// - ex: Copyright Text:  tdb.field=WELL_NO 
-				IdField: "WELL_NO",
+				IdField: tdbField,
 				OidField: fgm.column_oid,
 				OIDs: OIDArray
 			}; 
 			// send request
-			xhr(fgm.gridOptions.extRequestUrls["tdb"], {
+			xhr(extReqUrls["tdb"], {
 				method: "POST", 
 				handleAs: "json",
-				data: extRequest
+				headers: {'Content-Type': 'application/json'},
+				data: JSON.stringify(extRequest)
 			}).then(function(data){
-				window.open(data.url); 
+				window.open(data["Url"]); 
 			}, function(err){
 				console.log("Error in launchToast"); 
 			});
