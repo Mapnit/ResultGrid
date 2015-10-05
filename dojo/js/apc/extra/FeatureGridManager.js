@@ -102,7 +102,8 @@ define([
 
 	fgm.gridOptions = {
 		pageSize: 100, //1000, 
-		columnWidth: 100, /*px*/
+		minColumnWidth: 50, /*px*/
+		maxColumnWidth: 300, /*px*/
 		columnTemplates: [], /*DEV: global column templates*/
 		map: null, 
 		highlightSymbols: {
@@ -1049,12 +1050,16 @@ define([
 					break;
 				} 
 			}
+			// determine the column width based on the field length
+			var fieldLength = resultField["length"]; 
+			var columnWidth = fieldLength?Math.min(fieldLength*20, fgm.gridOptions.maxColumnWidth):fgm.gridOptions.minColumnWidth; 	
+			
 			resultFields.push({
 				"field": resultField["name"],
 				"title": resultField["alias"], 
 				"template": columnTmpl, 
 				"hidden": isIDColumn, 
-				"width": fgm.gridOptions.columnWidth
+				"width": columnWidth
 			});
 		}
 		var dgColumns = $.merge([fgm.actionColumn], resultFields);
