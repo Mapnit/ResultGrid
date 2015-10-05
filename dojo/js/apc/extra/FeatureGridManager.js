@@ -1037,12 +1037,11 @@ define([
 				if (tmpl["name"] === resultField["name"]) {
 					switch(tmpl["content-type"]) {
 						case "url":
-							columnTmpl = '<a target="_blank" style="color:Blue" href="#:' 
+							columnTmpl = '<a target="_blank" style="color:Blue" href="#=' 
 								+ resultField["name"] + '#">' + resultField["alias"] + '</a>'; 
 							break; 
 						case "a_tag":
-							//TODO: how to handle an A tag??? 
-							columnTmpl = '#:' + resultField["name"] + '#'; 
+							columnTmpl = '#=' + resultField["name"] + '#'; 
 							break; 
 					}
 					break;
