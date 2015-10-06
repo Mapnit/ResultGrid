@@ -7,7 +7,6 @@ define([
 	
 	"esri/tasks/QueryTask", 
 	"esri/tasks/query", 
-	"esri/tasks/StatisticDefinition",
     "esri/geometry/Point",
     "esri/geometry/Polyline",
     "esri/geometry/Polygon",
@@ -22,7 +21,7 @@ define([
 	"jquery", "kendo" 
 ], function(
 	declare, lang, topic, all, xhr, 
-	QueryTask, Query, StatisticDefinition, 
+	QueryTask, Query, 
 	Point, Polyline, Polygon, Extent, webMercatorUtils, GraphicsLayer, Graphic,
 	SimpleMarkerSymbol, SimpleFillSymbol, SimpleLineSymbol
 ) {	
@@ -870,74 +869,7 @@ define([
 		}
 	}
 	// query option 2 (END)
-	
-	fgm._queryForStats = function() {
-
-		var statsMaxDef = new StatisticDefinition(); 
-		statsMaxDef.statisticType = "max";
-		statsMaxDef.onStatisticField = fgm.column_oid;
-		statsMaxDef.outStatisticFieldName = "maxOID";
-
-		var statsMinDef = new StatisticDefinition(); 
-		statsMinDef.statisticType = "min";
-		statsMinDef.onStatisticField = fgm.column_oid;
-		statsMinDef.outStatisticFieldName = "minOID";
-
-		var statsCntDef = new StatisticDefinition(); 
-		statsCntDef.statisticType = "count";
-		statsCntDef.onStatisticField = fgm.column_oid;
-		statsCntDef.outStatisticFieldName = "cntOID";
 		
-		var promiseDict = {}; 
-		$(fgm.searchParams).each(function(idx, item) {
-			$(item["queries"]).each(function(idx, qry) {
-				console.log("query [" + qry["where"] + "] on " + qry["serviceUrl"]); 
-				var queryName = item["name"]+fgm.depthSeparator+qry["name"]; 
-				
-				var query = new Query();
-				query.where = qry["where"];
-				query.geometry = qry["geometry"]; 
-				query.returnGeometry = false;
-				query.outStatistics = [statsMaxDef, statsMinDef, statsCntDef];
-		
-				var queryTask = new QueryTask(qry["serviceUrl"]); 			 
-				promiseDict[queryName] = queryTask.execute(query); 
-			});
-		}); 
-		
-		all(promiseDict).then(fgm._prepareStatsResults);
-	}
-	
-	fgm._prepareStatsResults = function(statsResults) {
-		for(var queryName in statsResults) {
-			console.log("statistics for " + queryName); 
-			var panelId = queryName.split(fgm.depthSeparator); 
-			var elementId = fgm._normalize(panelId[0]) + fgm.depthSeparator + fgm._normalize(panelId[1]); 
-			var queryPanelElement = $("#"+elementId); 
-
-			if (statsResults[queryName].features.length === 0) {
-				if (queryPanelElement.data("kendoGrid")) {
-					queryPanelElement.data("kendoGrid").destroy();
-				}
-				queryPanelElement.empty(); 
-				queryPanelElement.remove();
-				
-			} else {
-				var statsResult = statsResults[queryName].features[0].attributes;
-				
-				queryPanelElement.attr("udata-min", statsResult.minOID)
-								 .attr("udata-max", statsResult.maxOID)
-								 .attr("udata-cnt", statsResult.cntOID); 
-				
-				var itemElement = queryPanelElement.children("span"); 
-				itemElement.html(itemElement.html() + " (" + statsResult.cntOID + ")");
-			}
-			
-			// cache the query results
-			fgm._writeIntoCache(queryName, OIDResults[queryName], "stats");
-		}
-	}
-	
 	fgm._queryForDataByWhere = function(qry, replaceDataOnly) {
 
 		console.log("query [" + qry["where"] + "] on " + qry["serviceUrl"]); 
