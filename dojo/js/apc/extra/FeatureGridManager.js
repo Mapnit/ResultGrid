@@ -1036,7 +1036,7 @@ define([
 			for(var t=0,tl=fgm.options.columnTemplates.length; t<tl; t++) {
 				var tmpl = fgm.options.columnTemplates[t]; 
 				if (tmpl["name"] === resultField["name"]) {
-					switch(tmpl["content-type"]) {
+					switch(tmpl["contentType"]) {
 						case "url":
 							columnTmpl = '<a target="_blank" style="color:Blue" href="#=' 
 								+ resultField["name"] + '#">' + resultField["alias"] + '</a>'; 

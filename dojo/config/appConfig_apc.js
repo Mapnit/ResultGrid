@@ -2,22 +2,34 @@ var appConfig = {
 	columnTemplates: [
 		{
 			"name": "URL",
-			"content-type": "url"
+			"contentType": "url"
+		}, {
+			"name": "TAG",
+			"contentType": "a_tag"
 		}, {
 			"name": "INTERACTIVE_MAP_URL",
-			"content-type": "url"
+			"contentType": "url"
 		}, {
 			"name": "FINS_URL",
-			"content-type": "url"
+			"contentType": "url"
 		}, {
 			"name": "SCOUT_TAG",
-			"content-type": "a_tag"
+			"contentType": "a_tag"
 		}, {
 			"name": "DHUB_URL",
-			"content-type": "url"
+			"contentType": "url"
 		}, {
 			"name": "DHUB_TAG",
-			"content-type": "a_tag"
+			"contentType": "a_tag"
+		}, {
+			"name": "LWS_LINK",
+			"contentType": "url"
+		}, {
+			"name": "DCMTNM_LINK",
+			"contentType": "url"
+		}, {
+			"name": "QLA_URL",
+			"contentType": "url"
 		}
 	], 
     searchTargets: [
