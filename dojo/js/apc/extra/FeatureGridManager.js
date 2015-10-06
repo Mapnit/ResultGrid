@@ -100,7 +100,7 @@ define([
 	/* Private Variables  */
 	/* ------------------ */
 
-	fgm.gridOptions = {
+	fgm.options = {
 		pageSize: 100, //1000, 
 		minColumnWidth: 50, /*px*/
 		maxColumnWidth: 300, /*px*/
@@ -242,9 +242,9 @@ define([
 	/* Private UI Functions  */
 	/* --------------------- */
 
-	fgm.buildFeatureGrid = function(searchParams, gridOptions) {
+	fgm.buildFeatureGrid = function(searchParams, options) {
 		fgm.searchParams = searchParams; 
-		fgm._mixInOptions(gridOptions);
+		fgm._mixInOptions(options);
 		
 		// remove it if any
 		fgm._removeFeatureGrid(); 
@@ -253,19 +253,19 @@ define([
 		if (!fgm._fgLayer) {
 			fgm._fgLayer = new GraphicsLayer({id: fgm._fgLayerId}); 
 		}
-		if (fgm.gridOptions.map.getLayer(fgm._fgLayerId)) {
+		if (fgm.options.map.getLayer(fgm._fgLayerId)) {
 			fgm._fgLayer.clear(); 
 		} else {
-			fgm.gridOptions.map.addLayer(fgm._fgLayer);
+			fgm.options.map.addLayer(fgm._fgLayer);
 		}
 		
 		if (!fgm._fhlgLayer) {
 			fgm._fhlgLayer = new GraphicsLayer({id: fgm._fhlgLayerId}); 
 		}		
-		if (fgm.gridOptions.map.getLayer(fgm._fhlgLayerId)) {
+		if (fgm.options.map.getLayer(fgm._fhlgLayerId)) {
 			fgm._fhlgLayer.clear(); 
 		} else {
-			fgm.gridOptions.map.addLayer(fgm._fhlgLayer);
+			fgm.options.map.addLayer(fgm._fhlgLayer);
 		}
 		
 		// add the html skeleton
@@ -355,7 +355,7 @@ define([
 		// remove the graphic layer from map 
 		$([fgm._fgLayer, fgm._fhlgLayer]).each(function(idx, gLayer) {
 			if (gLayer) {
-				fgm.gridOptions.map.removeLayer(gLayer);
+				fgm.options.map.removeLayer(gLayer);
 				gLayer = null; 
 			}
 		}); 
@@ -521,7 +521,7 @@ define([
 		
 		var dataSource = new kendo.data.DataSource({
 			data: OIDModeledArray, 			
-			pageSize: fgm.gridOptions.pageSize
+			pageSize: fgm.options.pageSize
 		});
 		dataSource.read();
 		
@@ -605,7 +605,7 @@ define([
 				
 				if (qry && OIDArray) {
 					// request data by OIDs
-					var OIDsForPage = OIDArray.slice(0, Math.min(OIDArray.length, fgm.gridOptions.pageSize));
+					var OIDsForPage = OIDArray.slice(0, Math.min(OIDArray.length, fgm.options.pageSize));
 					fgm._queryForDataByOIDs(qry, OIDsForPage, false); 
 					// build the pager 
 					fgm._buildResultPager(OIDArray); 
@@ -668,7 +668,7 @@ define([
 	fgm._mixInOptions = function(usrOptions) {
 		if (usrOptions) {
 			for(var k in usrOptions) {
-				fgm.gridOptions[k] = usrOptions[k]; 
+				fgm.options[k] = usrOptions[k]; 
 			}
 		}
 	}
@@ -948,8 +948,8 @@ define([
 		query.where = qry["where"];
 		query.geometry = qry["geometry"]; 
 
-		if (fgm.gridOptions.map) {
-			query.outSpatialReference = fgm.gridOptions.map.spatialReference; 
+		if (fgm.options.map) {
+			query.outSpatialReference = fgm.options.map.spatialReference; 
 		}
 		
 		var queryTask = new QueryTask(qry["serviceUrl"]); 
@@ -968,8 +968,8 @@ define([
 		query.outFields = ["*"];
 		query.objectIds = OIDs; 
 
-		if (fgm.gridOptions.map) {
-			query.outSpatialReference = fgm.gridOptions.map.spatialReference; 
+		if (fgm.options.map) {
+			query.outSpatialReference = fgm.options.map.spatialReference; 
 		}
 		
 		var queryTask = new QueryTask(qry["serviceUrl"]); 
@@ -989,12 +989,12 @@ define([
 			results.features = []; 
 			fgm._replaceDataInResultGrid(results); 
 		} else {
-			var OIDStartIdx = pageIdx * fgm.gridOptions.pageSize; 
+			var OIDStartIdx = pageIdx * fgm.options.pageSize; 
 			if (OIDStartIdx < rowCount) {
 				var qry = fgm._readFromCache(queryName, "query");
 				var OIDArray = fgm._readFromCache(queryName, "OIDs");
 				if (qry && OIDArray) {
-					var OIDEndIdx = Math.min(OIDStartIdx + fgm.gridOptions.pageSize, rowCount); 
+					var OIDEndIdx = Math.min(OIDStartIdx + fgm.options.pageSize, rowCount); 
 					var OIDsForPage = OIDArray.slice(OIDStartIdx, OIDEndIdx);
 					fgm._queryForDataByOIDs(qry, OIDsForPage, true /*replaceDataOnly*/); 
 
@@ -1010,9 +1010,9 @@ define([
 	
 	fgm._prepareDataResults = function(results) {
 		
-		// cache the query results (limited by fgm.gridOptions.pageSize)
+		// cache the query results (limited by fgm.options.pageSize)
 		var queryName = fgm._currentQuery; 
-		results.features = results.features.slice(0, fgm.gridOptions.pageSize); 
+		results.features = results.features.slice(0, fgm.options.pageSize); 
 		fgm._writeIntoCache(queryName, results, "data");
 		
 		// prepare results
@@ -1033,8 +1033,8 @@ define([
 			}
 			// find any column template
 			var columnTmpl = null; 
-			for(var t=0,tl=fgm.gridOptions.columnTemplates.length; t<tl; t++) {
-				var tmpl = fgm.gridOptions.columnTemplates[t]; 
+			for(var t=0,tl=fgm.options.columnTemplates.length; t<tl; t++) {
+				var tmpl = fgm.options.columnTemplates[t]; 
 				if (tmpl["name"] === resultField["name"]) {
 					switch(tmpl["content-type"]) {
 						case "url":
@@ -1052,7 +1052,7 @@ define([
 			}
 			// determine the column width based on the field length
 			var fieldLength = resultField["length"]; 
-			var columnWidth = fieldLength?Math.min(fieldLength*20, fgm.gridOptions.maxColumnWidth):fgm.gridOptions.minColumnWidth; 	
+			var columnWidth = fieldLength?Math.min(fieldLength*20, fgm.options.maxColumnWidth):fgm.options.minColumnWidth; 	
 			
 			resultFields.push({
 				"field": resultField["name"],
@@ -1077,9 +1077,9 @@ define([
 	
 	fgm._replaceDataInResultGrid = function(results) {
 		
-		// cache the query results (limited by fgm.gridOptions.pageSize)
+		// cache the query results (limited by fgm.options.pageSize)
 		var queryName = fgm._currentQuery; 
-		results.features = results.features.slice(0, fgm.gridOptions.pageSize); 
+		results.features = results.features.slice(0, fgm.options.pageSize); 
 		fgm._writeIntoCache(queryName, results, "data");
 
 		// load data into grid
@@ -1091,7 +1091,7 @@ define([
 		
 		var dataSource = new kendo.data.DataSource({
 			data: resultItems, 
-			pageSize: fgm.gridOptions.pageSize
+			pageSize: fgm.options.pageSize
 		});
 		dataSource.read(); 
 		
@@ -1112,7 +1112,7 @@ define([
 	fgm._displayDataOnMap = function(results) {
 		console.log("display Data On Map");
 		
-		if (!fgm.gridOptions.map) {
+		if (!fgm.options.map) {
 			console.log("no map available"); 
 			return; 
 		} 
@@ -1128,13 +1128,13 @@ define([
 		var symbol; 
 		switch(results.geometryType) {
 			case "esriGeometryPoint":
-				symbol = new SimpleMarkerSymbol(fgm.gridOptions.symbols["point"]);
+				symbol = new SimpleMarkerSymbol(fgm.options.symbols["point"]);
 				break; 
 			case "esriGeometryPolyline":
-				symbol = new SimpleLineSymbol(fgm.gridOptions.symbols["line"]); 
+				symbol = new SimpleLineSymbol(fgm.options.symbols["line"]); 
 				break; 
 			case "esriGeometryPolygon":
-				symbol = new SimpleFillSymbol(fgm.gridOptions.symbols["polygon"]); 
+				symbol = new SimpleFillSymbol(fgm.options.symbols["polygon"]); 
 				break; 
 		}
 
@@ -1171,9 +1171,9 @@ define([
 		}; 
 		
 		if (layerExtent.getHeight() * layerExtent.getWidth() === 0) {
-			fgm.gridOptions.map.centerAndZoom(layerExtent.getCenter(), 12);
+			fgm.options.map.centerAndZoom(layerExtent.getCenter(), 12);
 		} else {
-			fgm.gridOptions.map.setExtent(layerExtent, true);
+			fgm.options.map.setExtent(layerExtent, true);
 		}
 		
 		// cache the extent of features on the current page
@@ -1182,7 +1182,7 @@ define([
 	}
 	
 	fgm._zoomToFeaturesInPage = function() {
-		if (!fgm.gridOptions.map) {
+		if (!fgm.options.map) {
 			console.log("no map available"); 
 			return; 
 		} 
@@ -1199,9 +1199,9 @@ define([
 		}
 		
 		if (layerExtent.getHeight() * layerExtent.getWidth() === 0) {
-			fgm.gridOptions.map.centerAndZoom(layerExtent.getCenter(), 12);
+			fgm.options.map.centerAndZoom(layerExtent.getCenter(), 12);
 		} else {
-			fgm.gridOptions.map.setExtent(layerExtent, true);
+			fgm.options.map.setExtent(layerExtent, true);
 		}
 	}
 
@@ -1226,13 +1226,13 @@ define([
 				var symbol; 
 				switch(results.geometryType) {
 					case "esriGeometryPoint":
-						symbol = new SimpleMarkerSymbol(fgm.gridOptions.highlightSymbols["point"]);
+						symbol = new SimpleMarkerSymbol(fgm.options.highlightSymbols["point"]);
 						break; 
 					case "esriGeometryPolyline":
-						symbol = new SimpleLineSymbol(fgm.gridOptions.highlightSymbols["line"]); 
+						symbol = new SimpleLineSymbol(fgm.options.highlightSymbols["line"]); 
 						break; 
 					case "esriGeometryPolygon":
-						symbol = new SimpleFillSymbol(fgm.gridOptions.highlightSymbols["polygon"]); 
+						symbol = new SimpleFillSymbol(fgm.options.highlightSymbols["polygon"]); 
 						break; 
 				}
 				
@@ -1290,13 +1290,13 @@ define([
 					var symbol; 
 					switch(results.geometryType) {
 						case "esriGeometryPoint":
-							symbol = new SimpleMarkerSymbol(fgm.gridOptions.highlightSymbols["point"]);
+							symbol = new SimpleMarkerSymbol(fgm.options.highlightSymbols["point"]);
 							break; 
 						case "esriGeometryPolyline":
-							symbol = new SimpleLineSymbol(fgm.gridOptions.highlightSymbols["line"]); 
+							symbol = new SimpleLineSymbol(fgm.options.highlightSymbols["line"]); 
 							break; 
 						case "esriGeometryPolygon":
-							symbol = new SimpleFillSymbol(fgm.gridOptions.highlightSymbols["polygon"]); 
+							symbol = new SimpleFillSymbol(fgm.options.highlightSymbols["polygon"]); 
 							break; 
 					}
 					
@@ -1308,9 +1308,9 @@ define([
 				}
 				
 				if (geometryExtent.getHeight() * geometryExtent.getWidth() === 0) {
-					fgm.gridOptions.map.centerAndZoom(geometryExtent.getCenter(), 12);
+					fgm.options.map.centerAndZoom(geometryExtent.getCenter(), 12);
 				} else {
-					fgm.gridOptions.map.setExtent(geometryExtent, true);
+					fgm.options.map.setExtent(geometryExtent, true);
 				}
 				
 				break; 
@@ -1433,7 +1433,7 @@ define([
 	/* ----------------------------------- */
 	
 	fgm._exportAsExcel = function() {
-		var extReqUrls = fgm.gridOptions.extRequestUrls; 
+		var extReqUrls = fgm.options.extRequestUrls; 
 		if (extReqUrls && extReqUrls["excel"]){
 			var queryName = fgm._currentQuery; 
 			if (!queryName) {
@@ -1476,7 +1476,7 @@ define([
 	}
 	
 	fgm._launchToast = function() {
-		var extReqUrls = fgm.gridOptions.extRequestUrls; 
+		var extReqUrls = fgm.options.extRequestUrls; 
 		if (extReqUrls && extReqUrls["tdb"]){
 			var queryName = fgm._currentQuery; 
 			if (!queryName) {
