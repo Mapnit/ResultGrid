@@ -172,8 +172,7 @@ define([
 		extRequestUrls: {
 			"tdb": "http://gis.anadarko.com/WebServices/connect/tdb",
 			//TODO: service needs to return URL instead of actual content
-			//"excel": "http://gis.anadarko.com/WebServices/connect/excel"
-			"excel": "http://localhost/resultGrid/tdb_link.json"
+			"excel": "http://gis.anadarko.com/WebServices/connect/excel"
 		}
 	}; 
 	
@@ -234,6 +233,7 @@ define([
 					evt.currentTarget, {left:evt.clientX, top:evt.clientY}); 
 			}
 		}],
+		locked: true, 
 		width: 135
 	}; 
 	
