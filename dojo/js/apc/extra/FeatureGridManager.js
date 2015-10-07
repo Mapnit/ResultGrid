@@ -1045,6 +1045,13 @@ define([
 	};
 	
 	fgm._replaceDataInResultGrid = function(results) {
+		fgm._prepareDataResults(results); 
+	};
+	
+	/* DEV: data is loaded properly. 
+	 * However, sorting or grouping failed silently on the replaced data 
+	 */
+	fgm._replaceDataInResultGrid2 = function(results) {
 		
 		// cache the query results (limited by fgm.options.pageSize)
 		var queryName = fgm._currentQuery; 
