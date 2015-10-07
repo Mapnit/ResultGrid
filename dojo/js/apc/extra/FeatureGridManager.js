@@ -949,7 +949,7 @@ define([
 		fgm._writeIntoCache(queryName, results, "data");
 		
 		// prepare results
-		var resultFields = []; 
+		var resultFields = [], fieldTypes = {}; 
 		var fieldCount = results.fields.length; 
 		for(var i=0; i<fieldCount; i++) {
 			var resultField = results.fields[i]; 
@@ -964,7 +964,7 @@ define([
 			if (isIDColumn === true) {
 				fgm.column_oid = resultField["name"]; 
 			}
-			// find any column template
+			// find any column disguised as string but should be presented as hyperlink
 			var columnTmpl = null; 
 			for(var t=0,tl=fgm.options.columnTemplates.length; t<tl; t++) {
 				var tmpl = fgm.options.columnTemplates[t]; 
@@ -994,8 +994,37 @@ define([
 				"hidden": isIDColumn, 
 				"width": columnWidth
 			});
+			
+			// translate the data type to what kendo understands
+			var dataType; 
+			switch(resultField["type"]) {
+				case "esriFieldTypeString":
+				case "esriFieldTypeGUID":
+				case "esriFieldTypeGlobalID":
+					fieldTypes[resultField["name"]] = {type: "string"};
+					break;
+				case "esriFieldTypeOID":
+				case "esriFieldTypeSmallInteger":
+				case "esriFieldTypeInteger":
+				case "esriFieldTypeSingle":
+				case "esriFieldTypeDouble":
+					fieldTypes[resultField["name"]] = {type: "number"};
+					break; 
+				case "esriFieldTypeDate":
+					fieldTypes[resultField["name"]] = {type: "date"}; 					
+					break; 
+				default: 
+					dataType = "string"; 
+			}
+			 
 		}
+		
 		var dgColumns = $.merge([fgm.actionColumn], resultFields);
+		
+		var resultModel = kendo.data.Model.define({
+			id: fgm.column_oid, // the identifier of the model
+			fields: fieldTypes
+		});
 		
 		var resultItems = [];
 		var resultCount = results.features.length;
@@ -1003,7 +1032,14 @@ define([
 			resultItems.push(results.features[i].attributes);
 		}
 		
-		fgm._buildResultGrid(resultItems, dgColumns); 
+		var dataSource = new kendo.data.DataSource({
+			data: resultItems, 
+			model: resultModel, 
+			pageSize: fgm.options.pageSize
+		});
+		dataSource.read(); 
+		
+		fgm._buildResultGrid(dataSource, dgColumns); 
 		
 		fgm._displayDataOnMap(results); 
 	};
