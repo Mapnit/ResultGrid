@@ -953,10 +953,11 @@ define([
 		var fieldCount = results.fields.length; 
 		for(var i=0; i<fieldCount; i++) {
 			var resultField = results.fields[i]; 
-			// filter out the shape column and any derived column
+			// filter out the shape column and any derived column, and other non-alphanumeric columns
+			var isBinaryColumn = (jQuery.inArray(resultField["type"], ["esriFieldTypeBlob", "esriFieldTypeRaster"]) > -1);
 			var isShapeColumn = (resultField["type"] === "esriFieldTypeGeometry");
 			var isDerivedColumn = (resultField["name"].indexOf(".") > -1); 
-			if (isShapeColumn === true || isDerivedColumn === true) {
+			if (isBinaryColumn === true || isShapeColumn === true || isDerivedColumn === true) {
 				continue; 
 			} 
 			// discover the OID column
