@@ -38,7 +38,7 @@ define([
 			this._elementId = elementId; 
 			this._results = []; 
 			this._done = false; 
-		};
+		}
 		
 		Queryllel.prototype.query = function(qry) {
 			console.log("query [" + qry["where"] + "] on " + qry["serviceUrl"]); 
@@ -293,7 +293,7 @@ define([
 		fgm._buildResultPanels();
 		
 		topic.publish("featureGrid/ready", "fgm ready"); 
-	}
+	};
 	
 	fgm._buildResultWindow = function() {
 		// datagrid window
@@ -305,10 +305,10 @@ define([
 						panelDock.hide();
 					});
 
-		var onClose = function(evt) {
+		var onClose = function() {
 			//panelDock.show();
 			fgm._removeFeatureGrid();
-		}
+		};
 
 		if (!resultWin.data("kendoWindow")) {
 			resultWin.kendoWindow({
@@ -339,7 +339,7 @@ define([
 			]
 		});	
 		
-	}
+	};
 	
 	fgm._removeFeatureGrid = function() {
 		
@@ -401,7 +401,7 @@ define([
 		fgm._resultWindow = null; 
 		
 		topic.publish("featureGrid/destroyed", "fgm destroyed"); 
-	}
+	};
 	
 	fgm._buildResultTools = function() {
 		var toolbar = $("#fgm-layerToolbar");
@@ -415,7 +415,7 @@ define([
 		toolbar.append(
 			$("<span></span>").addClass("fgm-layerTool-tdb").click(fgm._launchToast)
 		); 
-	}
+	};
 	
 	fgm._buildResultPanels = function() {
 		// build the panelbar UI
@@ -442,14 +442,14 @@ define([
 					);
 				}); 
 			}
-		}); 
+		});
 
-		$("#fgm-layerPanelbar").kendoPanelBar({
+		layerPane.kendoPanelBar({
 			expandMode: "multiple",
 			select: fgm.onSelectResultPanel
 		});
 		
-		var panelBar = $("#fgm-layerPanelbar").data("kendoPanelBar");
+		var panelBar = layerPane.data("kendoPanelBar");
 		$(groupIds).each(function(idx, grpId) {
 			panelBar.expand($(grpId), false); 
 		}); 
@@ -458,14 +458,15 @@ define([
 		//fgm._queryForStats(); 
 		//fgm._queryForOID(); 		
 		fgm._fireQueriesForOID(); 
-	}
+	};
 	
 	fgm._buildResultGrid = function(resultData, resultColumns) {		
 		// remove if it exists
 		fgm._removeResultGrid();
 		// build a new one
-		var gridContainerDiv = $("#fgm-gridContainer"); 		
-		var dg = $("#fgm-datagrid").kendoGrid({
+		var gridContainerDiv = $("#fgm-gridContainer");
+		var dg = $("#fgm-datagrid");
+		dg.kendoGrid({
 			//width: gridContainerDiv.width() - 30, 
 			height: gridContainerDiv.height() - 50, 
 			//width: 818,
@@ -483,8 +484,8 @@ define([
 			change: fgm.onRowSelect
 		});	
 
-		fgm._datagrid = $("#fgm-datagrid").data("kendoGrid"); 
-	}
+		fgm._datagrid = dg.data("kendoGrid");
+	};
 	
 	fgm._removeResultGrid = function() {
 		// clear the graphic layer from map 
@@ -505,7 +506,7 @@ define([
 		}
 		
 		fgm._datagrid = null; 
-	}
+	};
 	
 	fgm._buildResultPager = function(OIDArray) {		
 		
@@ -523,9 +524,9 @@ define([
 			pageSize: fgm.options.pageSize
 		});
 		dataSource.read();
-		
-		var gridContainerDiv = $("#fgm-gridContainer"); 
-		var pg = $("#fgm-datapager").kendoPager({
+
+		var pg = $("#fgm-datapager");
+		pg.kendoPager({
 			//width: 818,
 			//width: gridContainerDiv.width() - 30, 
 			height: 65,
@@ -538,9 +539,9 @@ define([
 			//info: false,
 			change: fgm.onPageChanged
 		}); 
-				
-		fgm._dataPager = $("#fgm-datapager").data("kendoPager"); 
-	}
+
+		fgm._dataPager = pg.data("kendoPager");
+	};
 	
 	fgm._removeResultPager = function() {
 		var pgElement = $("#fgm-datapager"); 
@@ -551,7 +552,7 @@ define([
 			pgElement.empty(); 
 			//pgElement.remove();
 		}
-	}
+	};
 	
 	/* ----------------------- */
 	/* Private Event Handlers  */
@@ -568,7 +569,7 @@ define([
 		if (gridElement.data("kendoGrid")) {
 			gridElement.data("kendoGrid").resize();
 		}	
-	}
+	};
 	
 	fgm.onSelectResultPanel = function(evt) {
 
@@ -622,9 +623,9 @@ define([
 				panelBar.select(fgm.selectedPanel); 
 			}
 		}
-	}
+	};
 	
-	fgm.onRowSelect = function(evt) {
+	fgm.onRowSelect = function() {
 		var dg = this; 
 		var rowData = dg.dataItem(dg.select()); 
 		var rowOID = rowData[fgm.column_oid]; 
@@ -634,12 +635,12 @@ define([
 			
 			fgm._highlightFeature(rowOID, true); 
 		}
-	}
+	};
 	
 	fgm.onPageChanged = function(evt) {
 		console.log("onPageChanged: " + evt); 
 		fgm._queryForDataByPage(evt.index - 1); 
-	}
+	};
 	
 	fgm.onHyperlinkCxtMenuSelect = function(evt) {
 		console.log("Hyperlink CxtMenu Selected: " + evt.item.textContent);
@@ -654,11 +655,11 @@ define([
 				}
 			}
 		}
-	}
+	};
 	
-	fgm.onHyperlinkCxtMenuClose = function(evt) {
+	fgm.onHyperlinkCxtMenuClose = function() {
 		console.log("Hyperlink CxtMenu Closed");
-	}
+	};
 	
 	/* -------------------------- */
 	/* Private Utility Functions  */
@@ -670,7 +671,7 @@ define([
 				fgm.options[k] = usrOptions[k]; 
 			}
 		}
-	}
+	};
 	
     fgm._normalize = function(name) {
 		if (name) {
@@ -678,7 +679,7 @@ define([
 		} else {
 			return name; 
 		}
-	}
+	};
 	
 	fgm._writeIntoCache = function(queryName, value, key) {
 		if (key) {
@@ -689,7 +690,7 @@ define([
 		} else {
 			fgm.resultCache[queryName] = value;
 		}
-	}
+	};
 	
 	fgm._readFromCache = function(queryName, key) {
 		if (fgm.resultCache[queryName]) {
@@ -700,7 +701,7 @@ define([
 			}			
 		}
 		return null; 
-	}
+	};
 	
 	/* ------------------------ */
 	/* Private Query Functions  */
@@ -728,7 +729,7 @@ define([
 		// init the status check 
 		console.log("start query status checking ");
 		setTimeout(fgm._checkOIDQueryStatus, fgm._queryCheckInterval); 
-	}
+	};
 
 	// query option 1 (): check status & process results
 	fgm._checkOIDQueryStatus = function () {
@@ -787,7 +788,7 @@ define([
 			// clear the queryllel array
 			fgm._queryllelArray = []; 
 		}
-	}
+	};
 	// query option 1 (END)
 	
 	// query option 2 (START): dojo.promise/all
@@ -813,7 +814,7 @@ define([
 		}); 
 		
 		all(promiseDict).then(fgm._prepareOIDResults, fgm._queryFailed);
-	}
+	};
 	
 	// query option 2 (): process results
 	fgm._prepareOIDResults = function(OIDResults) {
@@ -822,10 +823,10 @@ define([
 			console.log("OIDs for " + queryName); 
 			var panelId = queryName.split(fgm.depthSeparator),
 				groupId = fgm._normalize(panelId[0]),
-				itemId = fgm._normalize(panelId[1]); 
-			
+				itemId = fgm._normalize(panelId[1]);
+
 			if (!(groupId in isGroupEmpty)) {
-				isGroupEmpty[groupId] = true; 
+				isGroupEmpty[groupId] = true;
 			}
 			
 			var elementId = groupId + fgm.depthSeparator + itemId; 
@@ -850,7 +851,7 @@ define([
 			fgm._writeIntoCache(queryName, OIDResults[queryName].length, "rowCount"); 
 		}
 		
-		for(var groupId in isGroupEmpty) {
+		for(groupId in isGroupEmpty) {
 			// remove any empty group panel 
 			if (isGroupEmpty[groupId] === true) {
 				var groupElement = $("#"+groupId); 
@@ -867,7 +868,7 @@ define([
 			fgm._removeFeatureGrid(); 
 			alert("no data found");
 		}
-	}
+	};
 	// query option 2 (END)
 		
 	fgm._queryForDataByWhere = function(qry, replaceDataOnly) {
@@ -890,7 +891,7 @@ define([
 		} else {
 			queryTask.execute(query, fgm._prepareDataResults, fgm._queryFailed);
 		}		
-	}
+	};
 	
 	fgm._queryForDataByOIDs = function(qry, OIDs, replaceDataOnly) {
 		console.log("query by OIDs on " + qry["serviceUrl"]); 
@@ -910,7 +911,7 @@ define([
 		} else {
 			queryTask.execute(query, fgm._prepareDataResults, fgm._queryFailed);
 		}		
-	}
+	};
 	
 	fgm._queryForDataByPage = function(pageIdx /*zero-based*/) {
 		var queryName = fgm._currentQuery;		
@@ -938,7 +939,7 @@ define([
 				fgm._queryForDataByPage(lastPageIdx); 
 			}
 		}
-	}
+	};
 	
 	fgm._prepareDataResults = function(results) {
 		
@@ -1005,7 +1006,7 @@ define([
 		fgm._buildResultGrid(resultItems, dgColumns); 
 		
 		fgm._displayDataOnMap(results); 
-	}
+	};
 	
 	fgm._replaceDataInResultGrid = function(results) {
 		
@@ -1035,7 +1036,7 @@ define([
 	
 	fgm._queryFailed = function(err) {
 		console.log("query Failed: " + err); 
-	}
+	};
 	
 	/* ---------------------------------- */
 	/* Private Map-Interaction Functions  */
@@ -1098,9 +1099,8 @@ define([
 				}
 			}
 
-			fgm._fgLayer.add(new Graphic(geometry, symbol, attributes)); 
-			
-		}; 
+			fgm._fgLayer.add(new Graphic(geometry, symbol, attributes));
+		}
 		
 		if (layerExtent.getHeight() * layerExtent.getWidth() === 0) {
 			fgm.options.map.centerAndZoom(layerExtent.getCenter(), 12);
@@ -1109,9 +1109,8 @@ define([
 		}
 		
 		// cache the extent of features on the current page
-		fgm._writeIntoCache(fgm._currentQuery, layerExtent, "extent"); 
-		
-	}
+		fgm._writeIntoCache(fgm._currentQuery, layerExtent, "extent");
+	};
 	
 	fgm._zoomToFeaturesInPage = function() {
 		if (!fgm.options.map) {
@@ -1135,7 +1134,7 @@ define([
 		} else {
 			fgm.options.map.setExtent(layerExtent, true);
 		}
-	}
+	};
 
 	fgm._highlightFeature = function(OID, clearFirst) {
 		
@@ -1173,8 +1172,7 @@ define([
 				break; 
 			}
 		}
-		
-	}
+	};
 	
 	fgm._removeFeature = function(OID) {
 			
@@ -1205,7 +1203,7 @@ define([
 		
 		// reload the features for the current page 
 		fgm._queryForDataByPage(fgm._currentPage); 
-	}
+	};
 		
 	fgm._zoomToFeature = function(OID, highlighted) {
 		var queryName = fgm._currentQuery;
@@ -1248,7 +1246,7 @@ define([
 				break; 
 			}
 		}
-	}
+	};
 	
 	fgm._popupMenuForFeature = function(OID, anchorElement, anchorPos) {
 		
@@ -1279,7 +1277,7 @@ define([
 				var attributes = results.features[f].attributes; 
 				$(results.fields).each(function(idx, field) {
 					var attrValue = attributes[field.name]; 
-					if ((/^http\:\/\/.+$/i).test(attrValue) === true) {
+					if ((/^http:\/\/.+$/i).test(attrValue) === true) {
 						fgm._cxtMenuItems.push({
 							text: field.alias, 
 							cssClass: "fgm-cxtmenu-hyperlink",
@@ -1315,7 +1313,7 @@ define([
 		// open the ContextMenu at the given anchor position
 		cxtMenu = cxtMenuElement.data("kendoContextMenu");
 		cxtMenu.open(anchorPos.left, anchorPos.top);
-	}
+	};
 	
 	/* ------------------------------------ */
 	/* Private TDB-Field Related Functions  */
@@ -1323,11 +1321,11 @@ define([
 	
 	fgm._hideTdbLink = function() {
 		$(".fgm-layerTool-tdb").css('display', 'none');
-	}
+	};
 	
 	fgm._showTdbLink = function() {
 		$(".fgm-layerTool-tdb").css('display', 'inline-block');
-	}
+	};
 	
 	fgm._checkTdbField = function(queryName, qry) {
 		// to retrieve it from the copyright property of a layer description 
@@ -1356,9 +1354,9 @@ define([
 				fgm._showTdbLink();
 			}
 		}, function(err){
-			console.log("Error in isToastAvailable"); 
+			console.log("Error in isToastAvailable: " + err.message);
 		});
-	}	
+	};
 	
 	/* ----------------------------------- */
 	/* Private external request Functions  */
@@ -1402,10 +1400,10 @@ define([
 			}).then(function(data){
 				window.open(data["Url"]); 
 			}, function(err){
-				console.log("Error in exportAsExcel"); 
+				console.log("Error in exportAsExcel: " + err.message);
 			});
 		}
-	}
+	};
 	
 	fgm._launchToast = function() {
 		var extReqUrls = fgm.options.extRequestUrls; 
@@ -1450,10 +1448,10 @@ define([
 			}).then(function(data){
 				window.open(data["Url"]); 
 			}, function(err){
-				console.log("Error in launchToast"); 
+				console.log("Error in launchToast: " + err.message);
 			});
 		}
-	}
+	};
 	
 	return fgm; 
 }); 
