@@ -109,7 +109,7 @@ define([
 			"point": {
 				"type": "esriSMS",
 				"style": "esriSMSCircle",
-				"color": [0,0,255,255],
+				"color": [0,0,255,0],
 				"size": 6,
 				"angle": 0,
 				"xoffset": 0,
@@ -121,14 +121,14 @@ define([
 			}, 
 			"line": {
 				"type": "esriSLS",
-				"style": "esriSLSDash",
+				"style": "esriSLS",
 				"color": [0,0,255,255],
 				"width": 1
 			},
 			"polygon": {
 				"type": "esriSFS",
 				"style": "esriSFSSolid",
-				"color": [0,0,0,75],
+				"color": [0,0,0,0],
 				"outline": {
 					"type": "esriSLS",
 					"style": "esriSLS",
@@ -141,7 +141,7 @@ define([
 			"point": {
 				"type": "esriSMS",
 				"style": "esriSMSCircle",
-				"color": [255,255,0,255],
+				"color": [255,255,0,0],
 				"size": 6,
 				"angle": 0,
 				"xoffset": 0,
@@ -153,14 +153,14 @@ define([
 			}, 
 			"line": {
 				"type": "esriSLS",
-				"style": "esriSLSDash",
+				"style": "esriSLS",
 				"color": [255,255,0,255],
 				"width": 2
 			},
 			"polygon": {
 				"type": "esriSFS",
 				"style": "esriSFSSolid",
-				"color": [0,0,0,75],
+				"color": [0,0,0,0],
 				"outline": {
 					"type": "esriSLS",
 					"style": "esriSLS",
