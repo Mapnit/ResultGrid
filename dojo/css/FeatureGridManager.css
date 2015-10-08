@@ -62,6 +62,14 @@
 .cmd-icon-hyperlink {
 	background-image: url("../images/hyperlink.png");	
 }
+/* datagrid action column icon - END */
+
+/* override kendo ui - START */
+
+.k-window {
+	font-family: arial;
+	font-size: 0.9em; 
+}
 
 #fgm-datagrid span.k-icon {
 	opacity: 1;
