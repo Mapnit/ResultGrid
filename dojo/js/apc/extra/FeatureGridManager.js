@@ -966,10 +966,11 @@ define([
 				fgm.column_oid = resultField["name"]; 
 			}
 			// find any column disguised as string but should be presented as hyperlink
-			var columnTmpl = null; 
+			var columnTmpl = null, isHyperlinkColumn = false; 
 			for(var t=0,tl=fgm.options.columnTemplates.length; t<tl; t++) {
 				var tmpl = fgm.options.columnTemplates[t]; 
 				if (tmpl["name"] === resultField["name"]) {
+					isHyperlinkColumn = true; 
 					switch(tmpl["contentType"]) {
 						case "url":
 							columnTmpl = '<a target="_blank" style="color:Blue" href="#=' 
@@ -993,7 +994,10 @@ define([
 				"title": resultField["alias"], 
 				"template": columnTmpl, 
 				"hidden": isIDColumn, 
-				"width": columnWidth
+				"width": columnWidth, 
+				"filterable": !isHyperlinkColumn,
+				"groupable": !isHyperlinkColumn,
+				"sortable": !isHyperlinkColumn
 			});
 			
 			// translate the data type to what kendo understands
@@ -1002,17 +1006,27 @@ define([
 				case "esriFieldTypeString":
 				case "esriFieldTypeGUID":
 				case "esriFieldTypeGlobalID":
-					fieldTypes[resultField["name"]] = {type: "string"};
+					fieldTypes[resultField["name"]] = {
+						type: "string"
+					};
 					break;
 				case "esriFieldTypeOID":
 				case "esriFieldTypeSmallInteger":
 				case "esriFieldTypeInteger":
 				case "esriFieldTypeSingle":
 				case "esriFieldTypeDouble":
-					fieldTypes[resultField["name"]] = {type: "number"};
+					fieldTypes[resultField["name"]] = {
+						type: "number"
+					};
 					break; 
 				case "esriFieldTypeDate":
-					fieldTypes[resultField["name"]] = {type: "date"}; 					
+					fieldTypes[resultField["name"]] = {
+						type: "date", 
+						parse: function(t) {
+							var d = new Date(t); 
+							return d.toLocaleDateString(); 
+						}
+					}; 
 					break; 
 				default: 
 					dataType = "string"; 
@@ -1035,7 +1049,7 @@ define([
 		
 		var dataSource = new kendo.data.DataSource({
 			data: resultItems, 
-			model: resultModel, 
+			schema: {model: resultModel}, 
 			pageSize: fgm.options.pageSize
 		});
 		dataSource.read(); 
