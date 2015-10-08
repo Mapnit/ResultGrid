@@ -948,8 +948,8 @@ define([
 		results.features = results.features.slice(0, fgm.options.pageSize); 
 		fgm._writeIntoCache(queryName, results, "data");
 		
-		// prepare results
-		var resultFields = [], fieldTypes = {}; 
+		// prepare columns and model for a new grid
+		var resultColumns = [], fieldTypes = {}; 
 		var fieldCount = results.fields.length; 
 		for(var i=0; i<fieldCount; i++) {
 			var resultField = results.fields[i]; 
@@ -989,7 +989,7 @@ define([
 			var fieldLength = resultField["length"]; 
 			var columnWidth = fieldLength?Math.min(fieldLength*20, fgm.options.maxColumnWidth):fgm.options.minColumnWidth; 	
 			
-			resultFields.push({
+			resultColumns.push({
 				"field": resultField["name"],
 				"title": resultField["alias"], 
 				"template": columnTmpl, 
@@ -1034,19 +1034,23 @@ define([
 			 
 		}
 		
-		var dgColumns = $.merge([fgm.actionColumn], resultFields);
+		var dgColumns = $.merge([fgm.actionColumn], resultColumns);
+		fgm._writeIntoCache(queryName, dgColumns, "dgColumns"); 
 		
 		var resultModel = kendo.data.Model.define({
 			id: fgm.column_oid, // the identifier of the model
 			fields: fieldTypes
 		});
+		fgm._writeIntoCache(queryName, resultModel, "dgModel"); 
 		
+		// pack data into array
 		var resultItems = [];
 		var resultCount = results.features.length;
 		for (var i = 0; i < resultCount; i++) {
 			resultItems.push(results.features[i].attributes);
 		}
 		
+		// prepare data for a new grid
 		var dataSource = new kendo.data.DataSource({
 			data: resultItems, 
 			schema: {model: resultModel}, 
@@ -1060,14 +1064,40 @@ define([
 	};
 	
 	fgm._replaceDataInResultGrid = function(results) {
-		fgm._prepareDataResults(results); 
+		// cache the query results (limited by fgm.options.pageSize)
+		var queryName = fgm._currentQuery; 
+		results.features = results.features.slice(0, fgm.options.pageSize); 
+		fgm._writeIntoCache(queryName, results, "data");
+
+		// retrieve the column and model definitions from cache 
+		var dgColumns = fgm._readFromCache(queryName, "dgColumns"); 
+		var resultModel = fgm._readFromCache(queryName, "dgModel"); 
+		
+		// pack data into array
+		var resultItems = [];
+		var resultCount = results.features.length;
+		for (var i = 0; i < resultCount; i++) {
+			resultItems.push(results.features[i].attributes);
+		}
+		
+		// prepare data for a new grid
+		var dataSource = new kendo.data.DataSource({
+			data: resultItems, 
+			schema: {model: resultModel}, 
+			pageSize: fgm.options.pageSize
+		});
+		dataSource.read(); 
+		
+		fgm._buildResultGrid(dataSource, dgColumns); 
+		
+		fgm._displayDataOnMap(results); 		
 	};
 	
-	/* DEV: data is loaded properly. 
+	/* DEV: 
+	 * data is loaded properly. 
 	 * However, sorting or grouping failed silently on the replaced data 
 	 */
-	fgm._replaceDataInResultGrid2 = function(results) {
-		
+	fgm._replaceDataInResultGrid_OLD = function(results) {		
 		// cache the query results (limited by fgm.options.pageSize)
 		var queryName = fgm._currentQuery; 
 		results.features = results.features.slice(0, fgm.options.pageSize); 
