@@ -13,6 +13,14 @@
 	overflow: hidden; 
 }
 
+#fgm-statusMessage {
+	position: absolute;
+    color: yellow;
+    background-color: red;
+    font-weight:bold;
+	padding: 5px; 
+}
+
 .fgm-layerTool-zoomIn {
 	background-image: url("../images/zoomIn.png");
 	background-repeat: no-repeat;
@@ -53,13 +61,13 @@
 }
 
 /* datagrid action column icon - START */
-.cmd-icon-dismiss {
+.fgm-cmd-icon-dismiss {
 	background-image: url("../images/dismiss.png");
 }
-.cmd-icon-zoomIn {
+.fgm-cmd-icon-zoomIn {
 	background-image: url("../images/zoomIn.png");
 }
-.cmd-icon-hyperlink {
+.fgm-cmd-icon-hyperlink {
 	background-image: url("../images/hyperlink.png");	
 }
 /* datagrid action column icon - END */

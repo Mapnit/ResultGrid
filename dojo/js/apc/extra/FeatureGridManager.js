@@ -205,7 +205,7 @@ define([
 			name: "Dismiss",
 			text:"",
 			class: "ob-icon-only",
-			imageClass: "k-icon cmd-icon-dismiss ob-icon-only",
+			imageClass: "k-icon fgm-cmd-icon-dismiss ob-icon-only",
 			click: function(evt) {
 				var dataItem = this.dataItem($(evt.currentTarget).closest("tr"));
 				console.log("delete this row: " + dataItem[fgm.column_oid]);
@@ -215,7 +215,7 @@ define([
 			name: "ZoomIn",
 			text:"",
 			class: "ob-icon-only",
-			imageClass: "k-icon cmd-icon-zoomIn ob-icon-only",
+			imageClass: "k-icon fgm-cmd-icon-zoomIn ob-icon-only",
 			click: function(evt) {
 				var dataItem = this.dataItem($(evt.currentTarget).closest("tr"));
 				console.log("zoom to this row: " + dataItem[fgm.column_oid]);
@@ -225,7 +225,7 @@ define([
 			name: "Hyperlink",
 			text:"",
 			class: "ob-icon-only",
-			imageClass: "k-icon cmd-icon-hyperlink ob-icon-only",
+			imageClass: "k-icon fgm-cmd-icon-hyperlink ob-icon-only",
 			click: function(evt) {
 				var dataItem = this.dataItem($(evt.currentTarget).closest("tr"));
 				console.log("pop up hyperlinks: " + dataItem[fgm.column_oid]);
