@@ -33,11 +33,13 @@ define([
 
 	var Queryllel = (function() {
 		// constructor
-		function Queryllel(queryName, elementId) {
+		function Queryllel(queryName, elementId, callback, errback) {
 			this._queryName = queryName;
 			this._elementId = elementId; 
 			this._results = []; 
 			this._done = false; 
+			this._callback = callback; 
+			this._errback = errback; 
 		}
 		
 		Queryllel.prototype.query = function(qry) {
@@ -57,7 +59,9 @@ define([
 		
 		Queryllel.prototype._processResults = function(results) {
 			console.log("OIDs for " + this._queryName); 
-			
+			/*
+			// move this app-specific code out of Queryllel and 
+			// use a callback function to revoke any additional app-specific function
 			var queryElement = $("#"+this._elementId); 
 			if (! results || results.length === 0) {
 				if (queryElement.data("kendoGrid")) {
@@ -69,15 +73,23 @@ define([
 				var itemElement = queryElement.children("span"); 
 				itemElement.html(itemElement.html() + " (" + results.length + ")");				
 			}
-			
+			 */
 			// assign it to member variable
 			this._results = results; 
 			// mark it done
 			this._done = true; 
+			// call the user-defined callback if any
+			if (this._callback) {
+				this._callback(this._queryName, this._elementId, this._results); 
+			}
 		};
 		
 		Queryllel.prototype._queryError = function(err) {
-			console.log("query error [" + this._queryName + "]" + err);
+			console.log("query error [" + this._queryName + "]" + err);			
+			// call the user-defined error callback if any
+			if (this._errback) {
+				this._errback(this._queryName, this._elementId, err); 
+			}
 		};
 		
 		Queryllel.prototype.isDone = function() {
@@ -176,6 +188,9 @@ define([
 		}
 	}; 
 	
+	fgm._loadingIdSuffix = "loading"; 
+	fgm.loadingHtml = "<i class='fa fa-refresh fa-spin'></i>"; 
+
 	fgm.depthSeparator = "-"; 
 	fgm.column_oid = "OBJECTID";
 	fgm.searchParams = []; 
@@ -714,13 +729,22 @@ define([
 				var queryName = item["name"]+fgm.depthSeparator+qry["name"]; 
 				var groupId = fgm._normalize(item["name"]),
 					itemId = fgm._normalize(qry["name"]); 
-				var elementId = groupId + fgm.depthSeparator + itemId; 
+				var elementId = groupId + fgm.depthSeparator + itemId; 				
+				var loadingId = elementId + fgm.depthSeparator + fgm._loadingIdSuffix; 
+				
+				// add the loading element
+				var queryElement = $("#" + elementId);
+				var itemElement = queryElement.children("span");
+				if (itemElement) {
+					var loadingElement = $(fgm.loadingHtml).attr("id", loadingId); 
+					itemElement.append(loadingElement); 
+				}	
 				
 				// cache query
 				fgm._writeIntoCache(queryName, qry, "query");
 				
 				// fire query
-				var qll =  new Queryllel(queryName, elementId); 
+				var qll =  new Queryllel(queryName, elementId, fgm._showOIDResults); 
 				fgm._queryllelArray.push(qll);
 				qll.query(qry); 
 			})
@@ -731,6 +755,28 @@ define([
 		setTimeout(fgm._checkOIDQueryStatus, fgm._queryCheckInterval); 
 	};
 
+	fgm._showOIDResults = function(queryName, elementId, results) {
+		// add the number of OIDs into the query element
+		var queryElement = $("#"+elementId); 
+		if (! results || results.length === 0) {
+			if (queryElement.data("kendoGrid")) {
+				queryElement.data("kendoGrid").destroy();
+			}
+			queryElement.empty(); 
+			queryElement.remove();
+		} else {
+			var itemElement = queryElement.children("span"); 
+			itemElement.html(itemElement.html().replace(fgm.loadingHtml, "") + " (" + results.length + ")");
+
+			// remove the loading element
+			var loadingId = elementId + fgm.depthSeparator + fgm._loadingIdSuffix; 
+			var loadingElement = $("#" + loadingId);
+			if (loadingElement) {
+				loadingElement.remove(); 
+			}
+		}		
+	}
+	
 	// query option 1 (): check status & process results
 	fgm._checkOIDQueryStatus = function () {
 		console.log("query status checking ..."); 
