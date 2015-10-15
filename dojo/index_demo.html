@@ -164,14 +164,16 @@
             }
 			 
             var queryMap = new QueryMap({
-                map: map
+                map: map, 
+				columnTemplates: appConfig.columnTemplates
             }, "queryMapWidget"); 
 
             queryMap.startup();
 
             var searchData = new SearchData({
                 map: map, 
-                targets: appConfig.searchTargets
+                targets: appConfig.searchTargets, 
+				columnTemplates: appConfig.columnTemplates
             }, "searchDataWidget");
 
             searchData.startup(); 
