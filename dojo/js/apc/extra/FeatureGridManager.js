@@ -33,11 +33,13 @@ define([
 
 	var Queryllel = (function() {
 		// constructor
-		function Queryllel(queryName, elementId) {
+		function Queryllel(queryName, elementId, callback, errback) {
 			this._queryName = queryName;
 			this._elementId = elementId; 
 			this._results = []; 
 			this._done = false; 
+			this._callback = callback; 
+			this._errback = errback; 
 		}
 		
 		Queryllel.prototype.query = function(qry) {
@@ -57,7 +59,9 @@ define([
 		
 		Queryllel.prototype._processResults = function(results) {
 			console.log("OIDs for " + this._queryName); 
-			
+			/*
+			// move this app-specific code out of Queryllel and 
+			// use a callback function to revoke any additional app-specific function
 			var queryElement = $("#"+this._elementId); 
 			if (! results || results.length === 0) {
 				if (queryElement.data("kendoGrid")) {
@@ -69,15 +73,23 @@ define([
 				var itemElement = queryElement.children("span"); 
 				itemElement.html(itemElement.html() + " (" + results.length + ")");				
 			}
-			
+			 */
 			// assign it to member variable
 			this._results = results; 
 			// mark it done
 			this._done = true; 
+			// call the user-defined callback if any
+			if (this._callback) {
+				this._callback(this._queryName, this._elementId, this._results); 
+			}
 		};
 		
 		Queryllel.prototype._queryError = function(err) {
-			console.log("query error [" + this._queryName + "]" + err);
+			console.log("query error [" + this._queryName + "]" + err);			
+			// call the user-defined error callback if any
+			if (this._errback) {
+				this._errback(this._queryName, this._elementId, err); 
+			}
 		};
 		
 		Queryllel.prototype.isDone = function() {
@@ -100,7 +112,7 @@ define([
 	/* ------------------ */
 
 	fgm.options = {
-		pageSize: 100, //1000, 
+		pageSize: 1000, //1000, 
 		minColumnWidth: 50, /*px*/
 		maxColumnWidth: 300, /*px*/
 		columnTemplates: [], /*DEV: global column templates*/
@@ -176,6 +188,9 @@ define([
 		}
 	}; 
 	
+	fgm._loadingIdSuffix = "loading"; 
+	fgm.loadingHtml = "<i class='fa fa-refresh fa-spin'></i>"; 
+
 	fgm.depthSeparator = "-"; 
 	fgm.column_oid = "OBJECTID";
 	fgm.searchParams = []; 
@@ -286,7 +301,7 @@ define([
 		dockerDiv.addClass("k-button"); 
 		dockerDiv.hide(); 
 		$("body").append(dockerDiv);
-		
+				
 		// build UI widgets
 		fgm._buildResultWindow(); 
 		fgm._buildResultTools();
@@ -460,7 +475,9 @@ define([
 		fgm._fireQueriesForOID(); 
 	};
 	
-	fgm._buildResultGrid = function(resultData, resultColumns) {		
+	fgm._buildResultGrid = function(resultData, resultColumns) {
+		fgm._showMessage("Loading data into datagrid for " + fgm._currentQuery); 
+		
 		// remove if it exists
 		fgm._removeResultGrid();
 		// build a new one
@@ -485,6 +502,8 @@ define([
 		});	
 
 		fgm._datagrid = dg.data("kendoGrid");
+		
+		fgm._showMessage(""); 
 	};
 	
 	fgm._removeResultGrid = function() {
@@ -703,24 +722,63 @@ define([
 		return null; 
 	};
 	
+	fgm._showMessage = function(message) {
+		var wndElement, 
+			wndContentElement = $("#fgm-resultWindow"),
+			msgElement = $("#fgm-statusMessage"); 
+		if (! msgElement.length) {
+			wndElement = wndContentElement.parent(); 
+			wndElement.append($('<span id="fgm-statusMessage"></span>'));
+		}
+		
+		msgElement = $("#fgm-statusMessage");
+		msgElement.hide(); 
+		
+		if (message && message.length > 0) {
+			message = message.trim(); 
+			msgElement.text(message); 
+			
+			var width = wndContentElement.width();
+
+			msgElement.css({
+				top: 5, 
+				left: (width/2)-message.length*5,
+				display: "block"
+			}); 			
+		} else {
+			msgElement.text(""); 
+		}
+	}
+	
 	/* ------------------------ */
 	/* Private Query Functions  */
 	/* ------------------------ */
 	
 	// query option 1 (START): parallel query - Queryllel
 	fgm._fireQueriesForOID = function() {
+		fgm._showMessage("Searching..."); 
+		
 		$(fgm.searchParams).each(function(idx, item) {
 			$(item["queries"]).each(function(idx, qry) {
 				var queryName = item["name"]+fgm.depthSeparator+qry["name"]; 
 				var groupId = fgm._normalize(item["name"]),
 					itemId = fgm._normalize(qry["name"]); 
-				var elementId = groupId + fgm.depthSeparator + itemId; 
+				var elementId = groupId + fgm.depthSeparator + itemId; 				
+				var loadingId = elementId + fgm.depthSeparator + fgm._loadingIdSuffix; 
+				
+				// add the loading element
+				var queryElement = $("#" + elementId);
+				var itemElement = queryElement.children("span");
+				if (itemElement) {
+					var loadingElement = $(fgm.loadingHtml).attr("id", loadingId); 
+					itemElement.append(loadingElement); 
+				}	
 				
 				// cache query
 				fgm._writeIntoCache(queryName, qry, "query");
 				
 				// fire query
-				var qll =  new Queryllel(queryName, elementId); 
+				var qll =  new Queryllel(queryName, elementId, fgm._showOIDResults); 
 				fgm._queryllelArray.push(qll);
 				qll.query(qry); 
 			})
@@ -731,6 +789,28 @@ define([
 		setTimeout(fgm._checkOIDQueryStatus, fgm._queryCheckInterval); 
 	};
 
+	fgm._showOIDResults = function(queryName, elementId, results) {
+		// add the number of OIDs into the query element
+		var queryElement = $("#"+elementId); 
+		if (! results || results.length === 0) {
+			if (queryElement.data("kendoGrid")) {
+				queryElement.data("kendoGrid").destroy();
+			}
+			queryElement.empty(); 
+			queryElement.remove();
+		} else {
+			var itemElement = queryElement.children("span"); 
+			itemElement.html(itemElement.html().replace(fgm.loadingHtml, "") + " (" + results.length + ")");
+
+			// remove the loading element
+			var loadingId = elementId + fgm.depthSeparator + fgm._loadingIdSuffix; 
+			var loadingElement = $("#" + loadingId);
+			if (loadingElement) {
+				loadingElement.remove(); 
+			}
+		}		
+	}
+	
 	// query option 1 (): check status & process results
 	fgm._checkOIDQueryStatus = function () {
 		console.log("query status checking ..."); 
@@ -787,6 +867,9 @@ define([
 			}
 			// clear the queryllel array
 			fgm._queryllelArray = []; 
+			
+			// clear the status message 
+			fgm._showMessage(""); 
 		}
 	};
 	// query option 1 (END)
@@ -895,6 +978,7 @@ define([
 	
 	fgm._queryForDataByOIDs = function(qry, OIDs, replaceDataOnly) {
 		console.log("query by OIDs on " + qry["serviceUrl"]); 
+		fgm._showMessage("Requesting data for " + fgm._currentQuery); 
 		
 		var query = new Query();
 		query.returnGeometry = true;
@@ -914,6 +998,8 @@ define([
 	};
 	
 	fgm._queryForDataByPage = function(pageIdx /*zero-based*/) {
+		fgm._showMessage("Requesting data for " + fgm._currentQuery); 
+		
 		var queryName = fgm._currentQuery;		
 		var rowCount = fgm._readFromCache(queryName, "rowCount");
 		if (rowCount === 0) {
@@ -942,6 +1028,7 @@ define([
 	};
 	
 	fgm._prepareDataResults = function(results) {
+		fgm._showMessage("Preparing data for " + fgm._currentQuery); 
 		
 		// cache the query results (limited by fgm.options.pageSize)
 		var queryName = fgm._currentQuery; 
@@ -1124,6 +1211,7 @@ define([
 	
 	fgm._queryFailed = function(err) {
 		console.log("query Failed: " + err); 
+		fgm._showMessage(err.message);
 	};
 	
 	/* ---------------------------------- */
@@ -1132,6 +1220,7 @@ define([
 	
 	fgm._displayDataOnMap = function(results) {
 		console.log("display Data On Map");
+		fgm._showMessage("Display data on map for " + fgm._currentQuery); 
 		
 		if (!fgm.options.map) {
 			console.log("no map available"); 
@@ -1198,6 +1287,8 @@ define([
 		
 		// cache the extent of features on the current page
 		fgm._writeIntoCache(fgm._currentQuery, layerExtent, "extent");
+		
+		fgm._showMessage(""); 
 	};
 	
 	fgm._zoomToFeaturesInPage = function() {
