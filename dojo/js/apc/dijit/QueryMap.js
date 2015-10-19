@@ -23,7 +23,10 @@ define([
     "esri/symbols/SimpleLineSymbol", 
     "esri/symbols/SimpleFillSymbol", 
 
-    "dojo/text!apc/dijit/templates/QueryMap.html" // template html
+    "dojo/text!apc/dijit/templates/QueryMap.html", // template html
+	
+	"apc/extra/FeatureGridManager", // 3rd-party lib
+	"xstyle/css!apc/dijit/css/QueryMap.css" // widget style 
 ], function(
 	_WidgetBase,
     topic, Evented, declare, lang, array, 
@@ -31,7 +34,7 @@ define([
     on, dom, domConstruct, domClass, domStyle, ready, 
     Draw, GraphicsLayer, Graphic, 
     SimpleMarkerSymbol, SimpleLineSymbol, SimpleFillSymbol, 
-    dijitTemplate
+    dijitTemplate, FeatureGridManager
 ) {
 
     var queryMap = declare("QueryMap", [_WidgetBase, _TemplatedMixin, Evented], {

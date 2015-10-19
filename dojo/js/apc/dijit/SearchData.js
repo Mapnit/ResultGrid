@@ -15,14 +15,16 @@ define([
     "dojo/dom-style",
     "dojo/ready",
 
+    "dojo/text!apc/dijit/templates/SearchData.html", // template html
+
     "apc/extra/FeatureGridManager", // 3rd-party lib
-    "dojo/text!apc/dijit/templates/SearchData.html" // template html
+	"xstyle/css!apc/dijit/css/SearchData.css" // widget style 
 ], function(
 	_WidgetBase,
     topic, Evented, declare, lang, array, 
     parser, _TemplatedMixin,
     on, dom, domConstruct, domClass, domStyle, ready, 
-    FeatureGridManager, dijitTemplate
+    dijitTemplate, FeatureGridManager
 ) {
 
     var searchData = declare("SearchData", [_WidgetBase, _TemplatedMixin, Evented], {

@@ -14,9 +14,11 @@
     <link rel="stylesheet" href="//kendo.cdn.telerik.com/2015.2.805/styles/kendo.default.min.css">
     <link rel="stylesheet" href="//kendo.cdn.telerik.com/2015.2.805/styles/kendo.dataviz.min.css">
     <link rel="stylesheet" href="//kendo.cdn.telerik.com/2015.2.805/styles/kendo.dataviz.default.min.css">	
+	<!--
     <link rel="stylesheet" href="css/SearchData.css">
 	<link rel="stylesheet" href="css/QueryMap.css">
     <link rel="stylesheet" href="css/FeatureGridManager.css">
+	 -->
 	<style>
 		html, body, #map {
             height: 100%;
@@ -74,6 +76,10 @@
             parseOnLoad: true,
             debug: true,
             packages: [{
+				name: "xstyle",
+				location: '//kriszyp.github.io/xstyle',
+				main: 'xstyle.min'
+			}, {
 				name: "jquery",
 				location: '//code.jquery.com/',
 				main: 'jquery-1.11.3.min'

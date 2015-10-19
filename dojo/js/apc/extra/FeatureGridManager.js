@@ -18,7 +18,8 @@ define([
     "esri/symbols/SimpleFillSymbol", 
 	"esri/symbols/SimpleLineSymbol",	
 	
-	"jquery", "kendo" 
+	"jquery", "kendo", 
+	"xstyle/css!apc/extra/css/FeatureGridManager.css"
 ], function(
 	declare, lang, topic, all, xhr, 
 	QueryTask, Query, 
