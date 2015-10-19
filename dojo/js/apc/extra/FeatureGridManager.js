@@ -183,9 +183,12 @@ define([
 			}
 		}, 
 		extRequestUrls: {
-			"tdb": "http://gis.anadarko.com/WebServices/connect/tdb",
-			//TODO: service needs to return URL instead of actual content
-			"excel": "http://gis.anadarko.com/WebServices/connect/excel"
+			// return url
+			"tdb": "/apc/services/tdb",
+			//"tdb": "http://gis.anadarko.com/WebServices/connect/tdb",
+			// return data
+			"excel": "/apc/services/excel"
+			//"excel": "http://gis.anadarko.com/WebServices/connect/excel"
 		}
 	}; 
 	
@@ -1515,7 +1518,71 @@ define([
 	/* Private external request Functions  */
 	/* ----------------------------------- */
 	
+	// receive from the service the actual Excel binary data over network (better!)
 	fgm._exportAsExcel = function() {
+		var extReqUrls = fgm.options.extRequestUrls; 
+		if (extReqUrls && extReqUrls["excel"]){
+			var queryName = fgm._currentQuery; 
+			if (!queryName) {
+				console.log("no query is available"); 
+				return; 
+			}
+			
+			var qry = fgm._readFromCache(queryName, "query"); 
+			var OIDArray = fgm._readFromCache(queryName, "OIDs"); 
+			var results = fgm._readFromCache(queryName, "data"); 
+			
+			// parse for layerId
+			var urlParts = qry["serviceUrl"].split("/"); 
+			// pack field names
+			var fieldNames = []; 
+			$(results.fields).each(function(idx, field) {
+				fieldNames.push(field.name); 
+			}); 
+			// construct request
+			var extRequest = {
+				LayerName: qry["name"], 
+				LayerId: urlParts[urlParts.length-1],
+				FeatureServiceUrl: qry["serviceUrl"],
+				Fields: fieldNames,
+				OidField: fgm.column_oid,
+				OIDs: OIDArray
+			}; 
+			// send request
+			xhr(extReqUrls["excel"], {
+				method: "POST", 
+				handleAs: "arraybuffer", // treat the response as binary
+				headers: {'Content-Type': 'application/json'},
+				data: JSON.stringify(extRequest)
+			}).then(function(data){
+				var blob = new Blob([data], {type: "application/vnd.ms-excel"});
+				var filename = queryName + ".xlsx"; 
+			   // IE and Chrome have different ways to download file from Blob
+			   // - prompt user to save or open the file
+			   if (window.navigator.msSaveOrOpenBlob) {
+				  // The IE way 
+				  window.navigator.msSaveOrOpenBlob(blob, filename);
+				} else {
+				  // The HTML5 way
+				  // - create a blob (referred by blob:http://host/guid)
+				  var objectUrl = URL.createObjectURL(blob);
+				  // - programmatically create a hyperlink tag
+				  var a = document.createElement("a");
+				  a.setAttribute("href", objectUrl);
+				  a.setAttribute("download", filename);
+				  // - call the click to start download
+				  a.click(); 
+				  // - remove the blob object
+				  URL.revokeObjectURL(objectUrl); 
+			   }
+			}, function(err){
+				console.log("Error in exportAsExcel: " + err.message);
+			});
+		}
+	};
+	
+	// receive from the service the url to a dump file on server
+	fgm._exportAsExcelByUrl = function() {
 		var extReqUrls = fgm.options.extRequestUrls; 
 		if (extReqUrls && extReqUrls["excel"]){
 			var queryName = fgm._currentQuery; 
