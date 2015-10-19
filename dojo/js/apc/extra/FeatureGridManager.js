@@ -426,12 +426,12 @@ define([
 		var toolbar = $("#fgm-layerToolbar");
 		
 		toolbar.append(
-			
+			/*
 			$("<span></span>").addClass("fgm-layerTool-icon").click(fgm._zoomToFeaturesInPage)
 							  .append(
 								$("<i></i>").addClass("fa fa-search-plus fa-2x")
-							  ) 
-			//$("<span></span>").addClass("fgm-layerTool-zoomIn").click(fgm._zoomToFeaturesInPage)			
+							  ) */
+			$("<span></span>").addClass("fgm-layerTool-zoomIn").click(fgm._zoomToFeaturesInPage)			
 		); 
 		toolbar.append(
 			/*
