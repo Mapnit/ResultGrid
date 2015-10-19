@@ -21,6 +21,12 @@
 	padding: 5px; 
 }
 
+.fgm-layerTool-icon {
+	display: inline-block; 
+	padding-left: 10px;
+	cursor: pointer;
+}
+
 .fgm-layerTool-zoomIn {
 	background-image: url("../../../../images/zoomIn.png");
 	background-repeat: no-repeat;

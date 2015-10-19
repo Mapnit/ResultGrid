@@ -221,7 +221,8 @@ define([
 			name: "Dismiss",
 			text:"",
 			class: "ob-icon-only",
-			imageClass: "k-icon fgm-cmd-icon-dismiss ob-icon-only",
+			//imageClass: "k-icon fgm-cmd-icon-dismiss ob-icon-only",
+			imageClass: "fa fa-trash fa-fw",
 			click: function(evt) {
 				var dataItem = this.dataItem($(evt.currentTarget).closest("tr"));
 				console.log("delete this row: " + dataItem[fgm.column_oid]);
@@ -231,7 +232,8 @@ define([
 			name: "ZoomIn",
 			text:"",
 			class: "ob-icon-only",
-			imageClass: "k-icon fgm-cmd-icon-zoomIn ob-icon-only",
+			//imageClass: "k-icon fgm-cmd-icon-zoomIn ob-icon-only",
+			imageClass: "fa fa-search-plus fa-fw",
 			click: function(evt) {
 				var dataItem = this.dataItem($(evt.currentTarget).closest("tr"));
 				console.log("zoom to this row: " + dataItem[fgm.column_oid]);
@@ -241,7 +243,8 @@ define([
 			name: "Hyperlink",
 			text:"",
 			class: "ob-icon-only",
-			imageClass: "k-icon fgm-cmd-icon-hyperlink ob-icon-only",
+			//imageClass: "k-icon fgm-cmd-icon-hyperlink ob-icon-only",
+			imageClass: "fa fa-link fa-fw",
 			click: function(evt) {
 				var dataItem = this.dataItem($(evt.currentTarget).closest("tr"));
 				console.log("pop up hyperlinks: " + dataItem[fgm.column_oid]);
@@ -423,12 +426,27 @@ define([
 		var toolbar = $("#fgm-layerToolbar");
 		
 		toolbar.append(
-			$("<span></span>").addClass("fgm-layerTool-zoomIn").click(fgm._zoomToFeaturesInPage)
+			
+			$("<span></span>").addClass("fgm-layerTool-icon").click(fgm._zoomToFeaturesInPage)
+							  .append(
+								$("<i></i>").addClass("fa fa-search-plus fa-2x")
+							  ) 
+			//$("<span></span>").addClass("fgm-layerTool-zoomIn").click(fgm._zoomToFeaturesInPage)			
 		); 
 		toolbar.append(
-			$("<span></span>").addClass("fgm-layerTool-excel").click(fgm._exportAsExcel)
+			/*
+			$("<span></span>").addClass("fgm-layerTool-icon").click(fgm._exportAsExcel)
+							  .append(
+								$("<i></i>").addClass("fa fa-table fa-2x")
+							  ) */
+			$("<span></span>").addClass("fgm-layerTool-excel").click(fgm._exportAsExcel)			
 		); 
 		toolbar.append(
+			/*
+			$("<span></span>").addClass("fgm-layerTool-icon").click(fgm._launchToast)
+							  .append(
+								$("<i></i>").addClass("fa fa-windows fa-2x")
+							  ) */
 			$("<span></span>").addClass("fgm-layerTool-tdb").click(fgm._launchToast)
 		); 
 	};
