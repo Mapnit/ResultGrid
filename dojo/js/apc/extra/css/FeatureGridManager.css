@@ -22,7 +22,7 @@
 }
 
 .fgm-layerTool-zoomIn {
-	background-image: url("../images/zoomIn.png");
+	background-image: url("../../../../images/zoomIn.png");
 	background-repeat: no-repeat;
 	display: inline-block; 
 	width: 24px;
@@ -32,7 +32,7 @@
 }
 
 .fgm-layerTool-excel {
-	background-image: url("../images/excel.png");
+	background-image: url("../../../../images/excel.png");
 	background-repeat: no-repeat;
 	display: inline-block; 
 	width: 24px;
@@ -42,7 +42,7 @@
 }
 
 .fgm-layerTool-tdb {
-	background-image: url("../images/tdb.png");
+	background-image: url("../../../../images/tdb.png");
 	background-repeat: no-repeat;
 	width: 24px;
 	height: 24px; 
