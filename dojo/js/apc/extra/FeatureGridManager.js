@@ -241,7 +241,7 @@ define([
 				var dataItem = this.dataItem($(evt.currentTarget).closest("tr"));
 				console.log("zoom to this row: " + dataItem[fgm.column_oid]);
 				fgm._zoomToFeature(dataItem[fgm.column_oid]); 
-			}
+			} 
 		}, { 
 			name: "Hyperlink",
 			text:"",
@@ -253,6 +253,18 @@ define([
 				console.log("pop up hyperlinks: " + dataItem[fgm.column_oid]);
 				fgm._popupMenuForFeature(dataItem[fgm.column_oid], 
 					evt.currentTarget, {left:evt.clientX, top:evt.clientY}); 
+			} 
+		}, { 
+			name: "Elevation",
+			text:"",
+			hidden: true, 
+			class: "ob-icon-only",
+			//imageClass: "k-icon fgm-cmd-icon-elevation ob-icon-only",
+			imageClass: "fa fa-area-chart fa-fw",
+			click: function(evt) {
+				var dataItem = this.dataItem($(evt.currentTarget).closest("tr"));
+				console.log("create elevation: " + dataItem[fgm.column_oid]);
+				fgm._findFeatureByOID(dataItem[fgm.column_oid]); 
 			}
 		}],
 		locked: true, 
@@ -1362,45 +1374,38 @@ define([
 	};
 		
 	fgm._zoomToFeature = function(OID, highlighted) {
-		var queryName = fgm._currentQuery;
-		var results = fgm._readFromCache(queryName, "data"); 
-		
-		var resultCount = results.features.length;
-		for(var f=0; f<resultCount; f++) {
-			if (OID === results.features[f].attributes[fgm.column_oid]) {
-				var attributes = results.features[f].attributes, 
-					geometry = results.features[f].geometry;
-				var geometryExtent = geometry.getExtent(); 
+		var feature = fgm._findFeatureByOID(OID); 
+		if (feature) {
+			var attributes = feature.attributes, 
+				geometry = feature.geometry;
+			var geometryExtent = geometry.getExtent(); 
 
-				if (highlighted === true) {
-					var symbol; 
-					switch(results.geometryType) {
-						case "esriGeometryPoint":
-							symbol = new SimpleMarkerSymbol(fgm.options.highlightSymbols["point"]);
-							break; 
-						case "esriGeometryPolyline":
-							symbol = new SimpleLineSymbol(fgm.options.highlightSymbols["line"]); 
-							break; 
-						case "esriGeometryPolygon":
-							symbol = new SimpleFillSymbol(fgm.options.highlightSymbols["polygon"]); 
-							break; 
-					}
-					
-					fgm._fhlgLayer.add(new Graphic(geometry, symbol, attributes));
+			if (highlighted === true) {
+				var symbol; 
+				switch(results.geometryType) {
+					case "esriGeometryPoint":
+						symbol = new SimpleMarkerSymbol(fgm.options.highlightSymbols["point"]);
+						break; 
+					case "esriGeometryPolyline":
+						symbol = new SimpleLineSymbol(fgm.options.highlightSymbols["line"]); 
+						break; 
+					case "esriGeometryPolygon":
+						symbol = new SimpleFillSymbol(fgm.options.highlightSymbols["polygon"]); 
+						break; 
 				}
 				
-				if (!geometryExtent) { 
-					geometryExtent = new Extent(geometry.x, geometry.y, geometry.x, geometry.y, geometry.spatialReference);
-				}
-				
-				if (geometryExtent.getHeight() * geometryExtent.getWidth() === 0) {
-					fgm.options.map.centerAndZoom(geometryExtent.getCenter(), 12);
-				} else {
-					fgm.options.map.setExtent(geometryExtent, true);
-				}
-				
-				break; 
+				fgm._fhlgLayer.add(new Graphic(geometry, symbol, attributes));
 			}
+			
+			if (!geometryExtent) { 
+				geometryExtent = new Extent(geometry.x, geometry.y, geometry.x, geometry.y, geometry.spatialReference);
+			}
+			
+			if (geometryExtent.getHeight() * geometryExtent.getWidth() === 0) {
+				fgm.options.map.centerAndZoom(geometryExtent.getCenter(), 12);
+			} else {
+				fgm.options.map.setExtent(geometryExtent, true);
+			}			
 		}
 	};
 	
@@ -1470,6 +1475,24 @@ define([
 		cxtMenu = cxtMenuElement.data("kendoContextMenu");
 		cxtMenu.open(anchorPos.left, anchorPos.top);
 	};
+	
+	fgm._findFeatureByOID = function(OID, broadcast) {
+		var queryName = fgm._currentQuery;
+		var results = fgm._readFromCache(queryName, "data"); 
+		
+		var resultCount = results.features.length;
+		for(var f=0; f<resultCount; f++) {
+			if (OID === results.features[f].attributes[fgm.column_oid]) {
+				if (broadcast === true) {
+					// broadcast an event for any listener
+					topic.publish("featureGrid/feature", results.features[f]); 
+				}
+				// return back to any widget caller
+				return results.features[f]; 
+			}
+		}
+		return null; 
+	}; 
 	
 	/* ------------------------------------ */
 	/* Private TDB-Field Related Functions  */
