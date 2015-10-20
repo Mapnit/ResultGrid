@@ -219,6 +219,8 @@ define([
 	fgm._fhlgLayerId = "fgm_highlightLayer";
     fgm._fhlgLayer = null; 
 	
+	fgm._linkTypes = ["a_tag", "url"]; 
+	/*
 	fgm.actionColumn = {
 		command: [{ 
 			name: "Dismiss",
@@ -269,7 +271,7 @@ define([
 		}],
 		locked: true, 
 		width: 135
-	}; 
+	}; */
 	
 	/* --------------------- */
 	/* Private UI Functions  */
@@ -1113,8 +1115,9 @@ define([
 			}
 			 
 		}
-		
-		var dgColumns = $.merge([fgm.actionColumn], resultColumns);
+		var actionColumn = fgm._composeActionColumn(results); 
+		var dgColumns = $.merge([actionColumn], resultColumns);
+		//var dgColumns = $.merge([fgm.actionColumn], resultColumns);
 		fgm._writeIntoCache(queryName, dgColumns, "dgColumns"); 
 		
 		var resultModel = kendo.data.Model.define({
@@ -1205,7 +1208,92 @@ define([
 	fgm._queryFailed = function(err) {
 		console.log("query Failed: " + err); 
 	};
-	
+
+	fgm._composeActionColumn = function(results) {
+		var cmdColumns = []; 
+		
+		// the remove command
+		cmdColumns.push({ 
+			name: "Dismiss",
+			text:"",
+			class: "ob-icon-only",
+			//imageClass: "k-icon fgm-cmd-icon-dismiss ob-icon-only",
+			imageClass: "fa fa-trash fa-fw",
+			click: function(evt) {
+				var dataItem = this.dataItem($(evt.currentTarget).closest("tr"));
+				console.log("delete this row: " + dataItem[fgm.column_oid]);
+				fgm._removeFeature(dataItem[fgm.column_oid]); 
+			}
+		});
+		
+		if (results.geometryType) {
+			// the zoom to map command
+			cmdColumns.push({ 
+				name: "ZoomIn",
+				text:"",
+				class: "ob-icon-only",
+				//imageClass: "k-icon fgm-cmd-icon-zoomIn ob-icon-only",
+				imageClass: "fa fa-search-plus fa-fw",
+				click: function(evt) {
+					var dataItem = this.dataItem($(evt.currentTarget).closest("tr"));
+					console.log("zoom to this row: " + dataItem[fgm.column_oid]);
+					fgm._zoomToFeature(dataItem[fgm.column_oid]); 
+				}
+			});
+			
+			if (results.geometryType === "esriGeometryPolyline") {
+				// the line elevation command
+				cmdColumns.push({ 
+					name: "Elevation",
+					text:"",
+					hidden: true, 
+					class: "ob-icon-only",
+					//imageClass: "k-icon fgm-cmd-icon-elevation ob-icon-only",
+					imageClass: "fa fa-area-chart fa-fw",
+					click: function(evt) {
+						var dataItem = this.dataItem($(evt.currentTarget).closest("tr"));
+						console.log("create elevation: " + dataItem[fgm.column_oid]);
+						fgm._findFeatureByOID(dataItem[fgm.column_oid]); 
+					}
+				});
+			}
+		}
+		
+		var fieldCount = results.fields.length;  
+		var resultField, linkFields;
+		for(var f=0; f<fieldCount; f++) {
+			resultField = results.fields[f];
+			if (resultField["type"] === "esriFieldTypeString") {
+				linkFields = $.grep(fgm.options.columnTemplates, function(item) {
+					return (resultField["name"] === item["name"])
+						&& (fgm._linkTypes.indexOf(item["contentType"]) > -1); 
+				});
+				if (linkFields.length > 0) {
+					cmdColumns.push({ 
+						name: "Hyperlink",
+						text:"",
+						class: "ob-icon-only",
+						//imageClass: "k-icon fgm-cmd-icon-hyperlink ob-icon-only",
+						imageClass: "fa fa-link fa-fw",
+						click: function(evt) {
+							var dataItem = this.dataItem($(evt.currentTarget).closest("tr"));
+							console.log("pop up hyperlinks: " + dataItem[fgm.column_oid]);
+							fgm._popupMenuForFeature(dataItem[fgm.column_oid], 
+								evt.currentTarget, {left:evt.clientX, top:evt.clientY}); 
+						}
+					}); 
+					break; 
+				}
+			}
+		}
+		
+		return /*actionColumn*/ {
+			command: cmdColumns,
+			locked: true, 
+			width: 45 * cmdColumns.length + 5
+		};
+	}; 
+
 	/* ---------------------------------- */
 	/* Private Map-Interaction Functions  */
 	/* ---------------------------------- */
