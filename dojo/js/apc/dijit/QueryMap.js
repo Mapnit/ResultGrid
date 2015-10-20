@@ -39,7 +39,8 @@ define([
 
     var queryMap = declare("QueryMap", [_WidgetBase, _TemplatedMixin, Evented], {
 
-        templateString: dijitTemplate,
+		templateString: dijitTemplate,
+		baseClass: "QueryMap", // css base class
 
         options: {
             map: null, // required
@@ -87,11 +88,6 @@ define([
 				}
 			*/],
             visible: true
-        }, 
-
-        _css: {
-        	bufferOptions: "queryMap-bufferOptions",
-			statusMessage: "queryMap-statusMessage"
         }, 
 
         /* ------------------ */

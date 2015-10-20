@@ -2,7 +2,7 @@
 	<div><input type="radio" name="queryMethod" data-dojo-attach-event="onchange:_queryMethodChanged" value="rectangle" checked/>Draw a rectangle</div>
 	<div><input type="radio" name="queryMethod" data-dojo-attach-event="onchange:_queryMethodChanged" value="polygon" />Draw a polygon</div>
 	<div><input type="radio" name="queryMethod" data-dojo-attach-event="onchange:_queryMethodChanged" value="pointBuffer" />Distance around a point
-		<table class="${_css.bufferOptions}" data-dojo-attach-point="_bufferOptions">
+		<table class="${baseClass}BufferOptions" data-dojo-attach-point="_bufferOptions">
 			<tr>
 				<td>
 					<span>Distance: </span>
@@ -15,5 +15,5 @@
 			</tr>
 		</table>
 	</div>
-	<span data-dojo-attach-point="_status" class="${_css.statusMessage}"></span>
+	<span data-dojo-attach-point="_status" class="${baseClass}StatusMessage"></span>
 </div>

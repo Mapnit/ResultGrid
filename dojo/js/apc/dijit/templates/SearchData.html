@@ -1,17 +1,17 @@
 <div>
 	<input type="text" placeholder="Search" data-dojo-attach-point="_searchText" data-dojo-attach-event="onkeyup:_inputChanged" />
-	<button class="${_css.searchButton}" data-dojo-attach-point="_searchButton" data-dojo-attach-event="onclick:_doSearch">Search</button>
+	<button class="${baseClass}SearchButton" data-dojo-attach-point="_searchButton" data-dojo-attach-event="onclick:_doSearch">Search</button>
 	<hr/>
-	<span data-dojo-attach-point="_status" class="${_css.statusMessage}"></span>
+	<span data-dojo-attach-point="_status" class="${baseClass}StatusMessage"></span>
 	<table data-dojo-attach-point="_searchOptions">
 		<tr>
-		<td class="${_css.options}">
+		<td class="${baseClass}Options">
 			<fieldset>
 				<legend>Options</legend>
 				<div data-dojo-attach-point="_optionList"></div>
 			</fieldset>
 		</td>
-		<td class="${_css.shortcuts}">
+		<td class="${baseClass}Shortcuts">
 			<div>
 				<input type="radio" name="optionShortcut" value="all" data-dojo-attach-point="_shortcutAll" data-dojo-attach-event="onchange:_shortcutChanged"/>
 				All

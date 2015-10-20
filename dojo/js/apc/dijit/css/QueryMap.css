@@ -1,6 +1,4 @@
-
-
-.queryMap-bufferOptions {
+.QueryMapBufferOptions {
 	border: 1px solid;	
     border-collapse: collapse; 
 	margin-top: 5px; 
@@ -8,7 +6,7 @@
 	display: none; 
 }
 
-.queryMap-statusMessage {
+.QueryMapStatusMessage {
 	position: absolute;
 	right: 5px;
     top: 45px;

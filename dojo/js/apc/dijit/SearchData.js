@@ -28,8 +28,9 @@ define([
 ) {
 
     var searchData = declare("SearchData", [_WidgetBase, _TemplatedMixin, Evented], {
-
-        templateString: dijitTemplate,
+	
+		templateString: dijitTemplate,
+		baseClass: "SearchData", // css base class
 
         options: {
             map: null, // required
@@ -57,13 +58,6 @@ define([
 				}
 			*/],
             visible: true
-        }, 
-
-        _css: {
-        	searchButton: "searchData-button", 
-            options: "searchData-options", 
-            shortcuts: "searchData-shortcuts",
-			statusMessage: "searchData-statusMessage"
         }, 
 
         /* ------------------ */
