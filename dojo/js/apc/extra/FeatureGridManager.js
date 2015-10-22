@@ -1445,7 +1445,8 @@ define([
 				geometryExtent = new Extent(geometry.x, geometry.y, geometry.x, geometry.y, geometry.spatialReference);
 			}
 			
-			if (geometryExtent.getHeight() * geometryExtent.getWidth() === 0) {
+			if (geometryExtent.getHeight() === 0 && geometryExtent.getWidth() === 0) {
+				// zoom to a point
 				fgm.options.map.centerAndZoom(geometryExtent.getCenter(), 12);
 			} else {
 				fgm.options.map.setExtent(geometryExtent, true);
