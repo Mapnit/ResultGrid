@@ -269,7 +269,10 @@ define([
 			click: function(evt) {
 				var dataItem = this.dataItem($(evt.currentTarget).closest("tr"));
 				console.log("create elevation: " + dataItem[fgm.column_oid]);
-				fgm._findFeatureByOID(dataItem[fgm.column_oid]); 
+				// find the feature by OID
+				var feature = fgm._findFeatureByOID(dataItem[fgm.column_oid]); 				
+				// broadcast an event for any listener
+				topic.publish("featureGrid/feature", feature); 
 			}
 		}
 	}; 
@@ -1418,8 +1421,11 @@ define([
 	};
 		
 	fgm._zoomToFeature = function(OID, highlighted) {
-		var feature = fgm._findFeatureByOID(OID); 
-		if (feature) {
+		var queryName = fgm._currentQuery;
+		var results = fgm._readFromCache(queryName, "data");
+
+		var feature = fgm._findFeatureByOID(OID, results); 
+		if (feature) {			
 			var attributes = feature.attributes, 
 				geometry = feature.geometry;
 			var geometryExtent = geometry.getExtent(); 
@@ -1450,7 +1456,7 @@ define([
 				fgm.options.map.centerAndZoom(geometryExtent.getCenter(), 12);
 			} else {
 				fgm.options.map.setExtent(geometryExtent, true);
-			}			
+			}
 		}
 	};
 	
@@ -1521,17 +1527,15 @@ define([
 		cxtMenu.open(anchorPos.left, anchorPos.top);
 	};
 	
-	fgm._findFeatureByOID = function(OID, broadcast) {
-		var queryName = fgm._currentQuery;
-		var results = fgm._readFromCache(queryName, "data"); 
+	fgm._findFeatureByOID = function(OID, results) {
+		if (!results) {
+			var queryName = fgm._currentQuery;
+			results = fgm._readFromCache(queryName, "data"); 
+		}
 		
 		var resultCount = results.features.length;
 		for(var f=0; f<resultCount; f++) {
-			if (OID === results.features[f].attributes[fgm.column_oid]) {
-				if (broadcast === true) {
-					// broadcast an event for any listener
-					topic.publish("featureGrid/feature", results.features[f]); 
-				}
+			if (OID === results.features[f].attributes[fgm.column_oid]) {				
 				// return back to any widget caller
 				return results.features[f]; 
 			}
