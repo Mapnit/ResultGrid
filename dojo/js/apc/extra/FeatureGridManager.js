@@ -712,7 +712,7 @@ define([
 			aspect.after(fgm, "_queryFailed", function(err) {
 				var errMsg = (err && err.message && err.message.length > 0)?err.message:"Data Query failed"; 
 				fgm.showMessage(errMsg);
-			}, true)
+			}, true /*receive original arguments*/)
 		);	
 	}; 
 	
