@@ -137,7 +137,7 @@ define([
 				"type": "esriSLS",
 				"style": "esriSLS",
 				"color": [0,0,255,255],
-				"width": 1
+				"width": 2
 			},
 			"polygon": {
 				"type": "esriSFS",
@@ -147,7 +147,7 @@ define([
 					"type": "esriSLS",
 					"style": "esriSLS",
 					"color": [0,0,255,255],
-					"width": 1
+					"width": 2
 				}
 			}
 		}, 
