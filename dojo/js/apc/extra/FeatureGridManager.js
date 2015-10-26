@@ -331,7 +331,8 @@ define([
 		$("body").append(dockerDiv);
 		
 		// build UI widgets
-		fgm._buildResultWindow(); 
+		fgm._buildResultWindow();
+		fgm._buildResultSplitter();
 		fgm._buildResultTools();
 		fgm._buildResultPanels();
 		
@@ -341,10 +342,21 @@ define([
 		topic.publish("featureGrid/ready", "fgm ready"); 
 	};
 	
+	fgm._buildResultSplitter = function() {
+		var resultSplitter = $('#fgm-resultSplitter'); 
+		
+		resultSplitter.kendoSplitter({
+			orientation: 'horizontal',
+			panes: [
+				{ collapsible: false, resizable: true, size: "200px"},
+				{ collapsible: false, resizable: true }
+			]
+		});	
+	}; 
+	
 	fgm._buildResultWindow = function() {
 		// datagrid window
 		var resultWin = $("#fgm-resultWindow"),
-			resultSplitter = $('#fgm-resultSplitter'),
 			panelDock = $("#fgm-panelDock")
 					.bind("click", function() {
 						resultWin.data("kendoWindow").open();
@@ -376,14 +388,6 @@ define([
 			fgm._resultWindow = $("#fgm-resultWindow").data("kendoWindow");
 			fgm._resultWindow.center().open(); 
 		}
-		
-		resultSplitter.kendoSplitter({
-			orientation: 'horizontal',
-			panes: [
-				{ collapsible: false, resizable: true, size: "200px"},
-				{ collapsible: false, resizable: true }
-			]
-		});	
 		
 	};
 	
