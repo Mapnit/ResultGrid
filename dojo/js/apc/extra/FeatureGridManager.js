@@ -4,6 +4,7 @@ define([
 	"dojo/topic", 
 	"dojo/promise/all", 
 	"dojo/request/xhr",
+	"dojo/aspect", 
 	
 	"esri/tasks/QueryTask", 
 	"esri/tasks/query", 
@@ -21,7 +22,7 @@ define([
 	"jquery", "kendo", 
 	"xstyle/css!apc/extra/css/FeatureGridManager.css"
 ], function(
-	declare, lang, topic, all, xhr, 
+	declare, lang, topic, all, xhr, aspect, 
 	QueryTask, Query, 
 	Point, Polyline, Polygon, Extent, webMercatorUtils, GraphicsLayer, Graphic,
 	SimpleMarkerSymbol, SimpleFillSymbol, SimpleLineSymbol
@@ -113,7 +114,7 @@ define([
 	/* ------------------ */
 
 	fgm.options = {
-		pageSize: 100, //1000, 
+		pageSize: 1000, 
 		minColumnWidth: 50, /*px*/
 		maxColumnWidth: 300, /*px*/
 		columnTemplates: [], /*DEV: global column templates*/
@@ -205,6 +206,8 @@ define([
 
 	fgm._queryllelArray = []; 
 	fgm._queryCheckInterval = 1000/*ms*/; 
+	
+	fgm._messageAdvisors = []; 
 	
 	fgm.resultCache = {}; 
 	fgm._currentPage = -1; 
@@ -332,6 +335,9 @@ define([
 		fgm._buildResultTools();
 		fgm._buildResultPanels();
 		
+		// add messaging advisors
+		fgm._addMessageAdvisors(); 
+		
 		topic.publish("featureGrid/ready", "fgm ready"); 
 	};
 	
@@ -389,7 +395,10 @@ define([
 		fgm._currentQuery = null; 
 		fgm.selectedPanel = null; 
 		fgm.selectedRowOID = null;
-		fgm._cxtMenuItems = []; 
+		fgm._cxtMenuItems = []; 		
+		
+		// remove messageing advisors
+		fgm._removeMessageAdvisors(); 		
 		
 		// remove the graphic layer from map 
 		$([fgm._fgLayer, fgm._fhlgLayer]).each(function(idx, gLayer) {
@@ -452,7 +461,15 @@ define([
 							  .append(
 								$("<i></i>").addClass("fa fa-search-plus fa-2x")
 							  ) */
-			$("<span></span>").addClass("fgm-layerTool-zoomIn").click(fgm._zoomToFeaturesInPage)			
+			//$("<span></span>").addClass("fgm-layerTool-zoomIn").click(fgm._zoomToFeaturesInPage); 
+			$("<span></span>").addClass("fgm-layerTool-zoomIn").click(function() {
+				if (fgm._currentQuery) {
+					fgm._zoomToFeaturesInPage(); 
+				} else {
+					console.log("no datagrid is loaded"); 
+					//fgm.showMessage("select a dataset first"); 
+				}
+			})
 		); 
 		toolbar.append(
 			/*
@@ -460,7 +477,19 @@ define([
 							  .append(
 								$("<i></i>").addClass("fa fa-table fa-2x")
 							  ) */
-			$("<span></span>").addClass("fgm-layerTool-excel").click(fgm._exportAsExcel)			
+			/*
+			 * just to set the _exportAsExcel function to the jquery click function wouldn't work with dojo AOP.
+			 * has to wrap the call into an anonymous function. This won't be an issue with dojo functions.
+			 */
+			//$("<span></span>").addClass("fgm-layerTool-excel").click(fgm._exportAsExcel); 
+			$("<span></span>").addClass("fgm-layerTool-excel").click(function() {
+				if (fgm._currentQuery) {
+					fgm._exportAsExcel();  
+				} else {
+					console.log("no datagrid is loaded"); 
+					//fgm.showMessage("select a dataset first"); 
+				}
+			})
 		); 
 		toolbar.append(
 			/*
@@ -468,7 +497,14 @@ define([
 							  .append(
 								$("<i></i>").addClass("fa fa-windows fa-2x")
 							  ) */
-			$("<span></span>").addClass("fgm-layerTool-tdb").click(fgm._launchToast)
+			//$("<span></span>").addClass("fgm-layerTool-tdb").click(fgm._launchToast); 
+			$("<span></span>").addClass("fgm-layerTool-tdb").click(function() {
+				if (fgm._currentQuery) {
+					fgm._launchToast(); 
+				} else {
+					console.log("no datagrid is loaded"); 
+				}
+			})
 		); 
 	};
 	
@@ -540,6 +576,7 @@ define([
 		});	
 
 		fgm._datagrid = dg.data("kendoGrid");
+		
 	};
 	
 	fgm._removeResultGrid = function() {
@@ -608,6 +645,85 @@ define([
 			//pgElement.remove();
 		}
 	};
+	
+	/* --------------------------------- */
+	/* Private Messaging AOP Connectors  */
+	/* --------------------------------- */	
+	
+	fgm._addMessageAdvisors = function() {
+		console.log("add message advisors");
+		
+		fgm._messageAdvisors.push(
+			aspect.before(fgm, "_exportAsExcel", function() {
+				fgm.showMessage("exporting data into Excel..."); 
+			}, true)
+		); 
+		fgm._messageAdvisors.push(
+			aspect.after(fgm, "_prepareExcelData", function() {
+				fgm.showMessage("");
+			}, true)
+		);	
+		fgm._messageAdvisors.push(
+			aspect.after(fgm, "_exportAsExcelFailed", function(err) {
+				var errMsg = (err && err.message && err.message.length > 0)?err.message:"Excel export failed"; 
+				fgm.showMessage(errMsg);
+			}, true)
+		);	
+		
+		fgm._messageAdvisors.push(
+			aspect.before(fgm, "_launchToast", function() {
+				fgm.showMessage("launching Toast browser..."); 
+			}, true)
+		); 
+		fgm._messageAdvisors.push(
+			aspect.after(fgm, "_openUrlInBrowser", function() {
+				fgm.showMessage("");
+			}, true)
+		);	
+		fgm._messageAdvisors.push(
+			aspect.after(fgm, "_launchToastFailed", function(err) {
+				var errMsg = (err && err.message && err.message.length > 0)?err.message:"Launch Toast failed"; 
+				fgm.showMessage(errMsg);
+			}, true)
+		);	
+		
+		fgm._messageAdvisors.push(
+			aspect.before(fgm, "_removeFeature", function() {
+				fgm.showMessage("removing row from datagrid..."); 
+			}, true)
+		); 
+				
+		fgm._messageAdvisors.push(
+			aspect.before(fgm, "_queryForDataByOIDs", function() {
+				fgm.showMessage("loading data into datagrid..."); 
+			}, true)
+		); 
+		fgm._messageAdvisors.push(
+			aspect.after(fgm, "_prepareDataResults", function() {
+				fgm.showMessage("");
+			}, true)
+		);
+		fgm._messageAdvisors.push(
+			aspect.after(fgm, "_replaceDataInResultGrid", function() {
+				fgm.showMessage("");
+			}, true)
+		);
+		fgm._messageAdvisors.push(
+			aspect.after(fgm, "_queryFailed", function(err) {
+				var errMsg = (err && err.message && err.message.length > 0)?err.message:"Data Query failed"; 
+				fgm.showMessage(errMsg);
+			}, true)
+		);	
+	}; 
+	
+	fgm._removeMessageAdvisors = function() {
+		console.log("remove message advisors");
+		
+		$(fgm._messageAdvisors).each(function(idx, connector) {
+			connector.remove(); 
+		}); 
+		fgm._messageAdvisors = []; 
+	}; 	
 	
 	/* ----------------------- */
 	/* Private Event Handlers  */
@@ -753,10 +869,41 @@ define([
 				return fgm.resultCache[queryName][key];
 			} else {
 				return fgm.resultCache[queryName]; 
-			}			
+			}
 		}
 		return null; 
-	};
+	};	
+
+	/* --------------------------- */
+	/* Override Utility Functions  */
+	/* --------------------------- */
+	
+	fgm.showMessage = function(message) {
+		var wndElement, 
+			wndContentElement = $("#fgm-resultWindow"),
+			msgElement = $("#fgm-statusMessage"); 
+		if (! msgElement.length) {
+			wndElement = wndContentElement.parent(); 
+			wndElement.append($('<span id="fgm-statusMessage"></span>'));
+		}
+		
+		msgElement = $("#fgm-statusMessage");
+		msgElement.hide(); 
+		
+		if (message && message.length > 0) {
+			message = message.trim(); 
+			msgElement.text(message); 
+			
+			var width = wndContentElement.width();
+			msgElement.css({
+				top: 5, 
+				left: (width/2)-message.length*5,
+				display: "block"
+			}); 
+		} else {
+			msgElement.text(""); 
+		}
+	}; 
 	
 	/* ------------------------ */
 	/* Private Query Functions  */
@@ -815,7 +962,7 @@ define([
 				loadingElement.remove(); 
 			}
 		}		
-	}
+	};
 	
 	// query option 1 (): check status & process results
 	fgm._checkOIDQueryStatus = function () {
@@ -1207,7 +1354,7 @@ define([
 		fgm._datagrid.refresh();
 		
 		fgm._displayDataOnMap(results);
-	}
+	};
 	
 	fgm._queryFailed = function(err) {
 		console.log("query Failed: " + err); 
@@ -1414,7 +1561,7 @@ define([
 		var dataSource = fgm._dataPager.dataSource;
 		var dataItem = dataSource.at(f); 
 		dataSource.remove(dataItem); 
-		dataSource.sync(); 
+		//dataSource.sync(); // nothing to be sent to the server side
 		
 		// reload the features for the current page 
 		fgm._queryForDataByPage(fgm._currentPage); 
@@ -1626,32 +1773,38 @@ define([
 				handleAs: "arraybuffer", // treat the response as binary
 				headers: {'Content-Type': 'application/json'},
 				data: JSON.stringify(extRequest)
-			}).then(function(data){
-				var blob = new Blob([data], {type: "application/vnd.ms-excel"});
-				var filename = queryName + ".xlsx"; 
-			   // IE and Chrome have different ways to download file from Blob
-			   // - prompt user to save or open the file
-			   if (window.navigator.msSaveOrOpenBlob) {
-				  // The IE way 
-				  window.navigator.msSaveOrOpenBlob(blob, filename);
-				} else {
-				  // The HTML5 way
-				  // - create a blob (referred by blob:http://host/guid)
-				  var objectUrl = URL.createObjectURL(blob);
-				  // - programmatically create a hyperlink tag
-				  var a = document.createElement("a");
-				  a.setAttribute("href", objectUrl);
-				  a.setAttribute("download", filename);
-				  // - call the click to start download
-				  a.click(); 
-				  // - remove the blob object
-				  URL.revokeObjectURL(objectUrl); 
-			   }
-			}, function(err){
-				console.log("Error in exportAsExcel: " + err.message);
-			});
+			}).then(fgm._prepareExcelData, fgm._exportAsExcelFailed);
 		}
 	};
+	
+	fgm._prepareExcelData = function(data){
+		var queryName = fgm._currentQuery; 
+		var filename = queryName + ".xlsx"; 
+
+		var blob = new Blob([data], {type: "application/vnd.ms-excel"});
+	   // IE and Chrome have different ways to download file from Blob
+	   // - prompt user to save or open the file
+	   if (window.navigator.msSaveOrOpenBlob) {
+		  // The IE way 
+		  window.navigator.msSaveOrOpenBlob(blob, filename);
+		} else {
+		  // The HTML5 way
+		  // - create a blob (referred by blob:http://host/guid)
+		  var objectUrl = URL.createObjectURL(blob);
+		  // - programmatically create a hyperlink tag
+		  var a = document.createElement("a");
+		  a.setAttribute("href", objectUrl);
+		  a.setAttribute("download", filename);
+		  // - call the click to start download
+		  a.click(); 
+		  // - remove the blob object
+		  URL.revokeObjectURL(objectUrl); 
+	   }
+	}; 
+	
+	fgm._exportAsExcelFailed = function(err){
+		console.log("Error in exportAsExcel: " + err.message);
+	}; 
 	
 	// receive from the service the url to a dump file on server
 	fgm._exportAsExcelByUrl = function() {
@@ -1737,13 +1890,17 @@ define([
 				handleAs: "json",
 				headers: {'Content-Type': 'application/json'},
 				data: JSON.stringify(extRequest)
-			}).then(function(data){
-				window.open(data["Url"]); 
-			}, function(err){
-				console.log("Error in launchToast: " + err.message);
-			});
+			}).then(fgm._openUrlInBrowser, fgm._launchToastFailed);
 		}
 	};
+	
+	fgm._openUrlInBrowser = function(data) {
+		window.open(data["Url"]); 
+	}; 
+	
+	fgm._launchToastFailed = function(err){
+		console.log("Error in launchToast: " + err.message);
+	}; 
 	
 	return fgm; 
 }); 
