@@ -1223,7 +1223,7 @@ define([
 				} 
 			}
 			// determine the column width based on the field length
-			var fieldLength = resultField["length"]; 
+			var fieldLength = (resultField["type"] === "esriFieldTypeDate")?5:resultField["length"]; 
 			var columnWidth = fieldLength?Math.min(fieldLength*20, fgm.options.maxColumnWidth):fgm.options.minColumnWidth; 	
 			
 			resultColumns.push({
@@ -1267,9 +1267,9 @@ define([
 					break; 
 				default: 
 					dataType = "string"; 
-			}
-			 
+			}			 
 		}
+		
 		var actionColumn = fgm._composeActionColumn(results); 
 		var dgColumns = $.merge([actionColumn], resultColumns);
 		//var dgColumns = $.merge([fgm.actionColumn], resultColumns);
