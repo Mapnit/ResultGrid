@@ -309,7 +309,7 @@ define([
         	// pass searchParams for execution
 			if (searchParams.length > 0) {
 				FeatureGridManager.buildFeatureGrid(searchParams, {
-					title: "Identified Features", 
+					title: "Identified Results", 
 					map: this.map, 
 					columnTemplates: this.columnTemplates
 				}); 
