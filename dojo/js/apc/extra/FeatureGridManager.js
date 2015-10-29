@@ -115,7 +115,7 @@ define([
 
 	fgm.options = {
 		pageSize: 1000, 
-		minColumnWidth: 50, /*px*/
+		minColumnWidth: 100, /*px*/
 		maxColumnWidth: 300, /*px*/
 		columnTemplates: [], /*DEV: global column templates*/
 		map: null, 
