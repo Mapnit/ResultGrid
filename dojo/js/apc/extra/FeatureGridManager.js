@@ -1212,7 +1212,8 @@ define([
 					switch(tmpl["contentType"]) {
 						case "url":
 							columnTmpl = '<a target="_blank" style="color:Blue" href="#=' 
-								+ resultField["name"] + '#">' + resultField["alias"] + '</a>'; 
+								//+ resultField["name"] + '#">' + resultField["alias"] + '</a>'; 
+								+ resultField["name"] + '#">Open</a>'; 
 							break; 
 						case "a_tag":
 							// use "#= column#" instead of "#: column#" 
