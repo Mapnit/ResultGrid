@@ -246,7 +246,11 @@ define([
 
 			// pass searchParams for execution
 			if (searchParams.length > 0) {
-				FeatureGridManager.buildFeatureGrid(searchParams, {map: this.map, columnTemplates: this.columnTemplates}); 
+				FeatureGridManager.buildFeatureGrid(searchParams, {
+					title: "Search Results", 
+					map: this.map, 
+					columnTemplates: this.columnTemplates
+				}); 
 			}
 		}
 		

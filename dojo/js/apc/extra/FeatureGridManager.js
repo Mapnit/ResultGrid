@@ -118,6 +118,7 @@ define([
 		minColumnWidth: 100, /*px*/
 		maxColumnWidth: 300, /*px*/
 		columnTemplates: [], /*DEV: global column templates*/
+		title: "Query Results", 
 		map: null, 
 		highlightSymbols: {
 			"point": {
@@ -372,7 +373,7 @@ define([
 			resultWin.kendoWindow({
 				width: "1050px",
 				height: "500px",
-				title: "Query Results",
+				title: fgm.options.title,
 				actions: [
 					//"Pin",
 					"Minimize",
