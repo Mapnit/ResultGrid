@@ -311,6 +311,7 @@ define([
 				FeatureGridManager.buildFeatureGrid(searchParams, {
 					title: "Identified Results", 
 					map: this.map, 
+					srcRefNode: this.map.id, 
 					columnTemplates: this.columnTemplates
 				}); 
 			}

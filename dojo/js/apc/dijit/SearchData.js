@@ -249,6 +249,7 @@ define([
 				FeatureGridManager.buildFeatureGrid(searchParams, {
 					title: "Search Results", 
 					map: this.map, 
+					srcRefNode: this.map.id, 
 					columnTemplates: this.columnTemplates
 				}); 
 			}
