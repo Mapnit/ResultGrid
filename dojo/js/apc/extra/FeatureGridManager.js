@@ -581,7 +581,7 @@ define([
 		fgm._fireQueriesForOID(); 
 	};
 	
-	fgm._buildResultGrid = function(resultData, resultColumns) {		
+	fgm._buildResultGrid = function(resultData, resultColumns) {
 		// remove if it exists
 		fgm._removeResultGrid();
 		// build a new one
@@ -757,7 +757,7 @@ define([
 	
 	/* ----------------------- */
 	/* Private Event Handlers  */
-	/* ----------------------- */	
+	/* ----------------------- */
 
 	fgm.resizePanesInWnd = function (evt) {
 		$('#fgm-resultSplitter').trigger("resize");
@@ -769,7 +769,7 @@ define([
 		gridElement.height(newGridHeight);
 		if (gridElement.data("kendoGrid")) {
 			gridElement.data("kendoGrid").resize();
-		}	
+		}
 	};
 	
 	fgm.onSelectResultPanel = function(evt) {
@@ -1248,22 +1248,7 @@ define([
 					}
 					break;
 				} 
-			}
-			// determine the column width based on the field length
-			var fieldLength = (resultField["type"] === "esriFieldTypeDate")?5:resultField["length"]; 
-			var columnWidth = fieldLength?Math.min(fieldLength*20, fgm.options.maxColumnWidth):fgm.options.minColumnWidth; 	
-			
-			resultColumns.push({
-				"field": resultField["name"],
-				"title": resultField["alias"], 
-				"template": columnTmpl, 
-				"hidden": isIDColumn, 
-				"width": columnWidth, 
-				"filterable": !isHyperlinkColumn,
-				"groupable": !isHyperlinkColumn,
-				"sortable": !isHyperlinkColumn
-			});
-			
+			}			
 			// translate the data type to what kendo understands
 			var dataType; 
 			switch(resultField["type"]) {
@@ -1294,7 +1279,22 @@ define([
 					break; 
 				default: 
 					dataType = "string"; 
-			}			 
+			}
+			
+			// determine the column width based on the field length
+			var fieldLength = (resultField["type"] === "esriFieldTypeDate")?5:resultField["length"]; 
+			var columnWidth = fieldLength?Math.min(fieldLength*20, fgm.options.maxColumnWidth):fgm.options.minColumnWidth; 	
+			
+			resultColumns.push({
+				"field": resultField["name"],
+				"title": resultField["alias"], 
+				"template": columnTmpl, 
+				"hidden": isIDColumn, 
+				"width": columnWidth, 
+				"filterable": !isHyperlinkColumn,
+				"groupable": !isHyperlinkColumn,
+				"sortable": !isHyperlinkColumn
+			});			
 		}
 		
 		var actionColumn = fgm._composeActionColumn(results); 
