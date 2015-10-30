@@ -123,6 +123,7 @@ define([
 		srcRefNode: null, // refNode for window sizing and positioning
 		windowHeight: 500, /*default height in px*/
 		windowWidth: 1050, /*default width in px*/
+		textLengthLimit: 10, /*words*/
 		highlightSymbols: {
 			"point": {
 				"type": "esriSMS",
@@ -1253,6 +1254,26 @@ define([
 			var dataType; 
 			switch(resultField["type"]) {
 				case "esriFieldTypeString":
+					if (isHyperlinkColumn === true) {
+						fieldTypes[resultField["name"]] = {
+							type: "string"
+						}
+					} else {
+						fieldTypes[resultField["name"]] = {
+							type: "string",
+							parse: function(s) {
+								if (s) {
+									var w = s.split(" "); 
+									if (w.length > fgm.options.textLengthLimit) {
+										s = w.slice(0, fgm.options.textLengthLimit).join(" "); 
+										s += " ...";
+									}
+								}
+								return s; 
+							}
+						}
+					};
+					break;
 				case "esriFieldTypeGUID":
 				case "esriFieldTypeGlobalID":
 					fieldTypes[resultField["name"]] = {
