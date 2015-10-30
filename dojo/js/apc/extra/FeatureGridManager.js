@@ -120,6 +120,9 @@ define([
 		columnTemplates: [], /*DEV: global column templates*/
 		title: "Query Results", 
 		map: null, 
+		srcRefNode: null, // refNode for window sizing and positioning
+		windowHeight: 500, /*default height in px*/
+		windowWidth: 1050, /*default width in px*/
 		highlightSymbols: {
 			"point": {
 				"type": "esriSMS",
@@ -316,7 +319,8 @@ define([
 		var panelContainerDiv = $('<div id="fgm-panelContainer"></div>');
 		panelContainerDiv.append('<div id="fgm-layerToolbar"></div>');
 		panelContainerDiv.append('<div id="fgm-layerPanelbar"></div>');
-		splitterDiv.append(panelContainerDiv); 
+		splitterDiv.append(panelContainerDiv);
+		
 		var gridContainerDiv = $('<div id="fgm-gridContainer"></div>');
 		gridContainerDiv.append('<div id="fgm-datagrid"></div>');
 		gridContainerDiv.append('<div id="fgm-datapager"></div>');
@@ -342,19 +346,7 @@ define([
 		
 		topic.publish("featureGrid/ready", "fgm ready"); 
 	};
-	
-	fgm._buildResultSplitter = function() {
-		var resultSplitter = $('#fgm-resultSplitter'); 
 		
-		resultSplitter.kendoSplitter({
-			orientation: 'horizontal',
-			panes: [
-				{ collapsible: false, resizable: true, size: "200px"},
-				{ collapsible: false, resizable: true }
-			]
-		});	
-	}; 
-	
 	fgm._buildResultWindow = function() {
 		// datagrid window
 		var resultWin = $("#fgm-resultWindow"),
@@ -368,11 +360,31 @@ define([
 			//panelDock.show();
 			fgm._removeFeatureGrid();
 		};
+		
+		var onOpen = function(e) {			
+			var wndRefNode = $("#"+fgm.options.srcRefNode);
+			if (wndRefNode.length > 0) {
+				// align the window to the left/bottom corner
+				this.wrapper.css({ 
+					top: wndRefNode.height() - fgm.options.windowHeight - 50, 
+					left: 10 
+				});				
+			} else {
+				// place at the center of the browser window
+				this.center(); 
+			}
+		}; 
 
 		if (!resultWin.data("kendoWindow")) {
+			var wndWidth = fgm.options.windowWidth, wndHeight = fgm.options.windowHeight; 
+			var wndRefNode = $("#"+fgm.options.srcRefNode);
+			if (wndRefNode.length > 0) {
+				wndWidth = wndRefNode.width() - 20;
+			}
+
 			resultWin.kendoWindow({
-				width: "1050px",
-				height: "500px",
+				width: wndWidth + "px",
+				height: wndHeight + "px",
 				title: fgm.options.title,
 				actions: [
 					//"Pin",
@@ -381,13 +393,14 @@ define([
 					"Close"
 				],
 				close: onClose,
+				open: onOpen,
 				//minimize: onMinimize,
-				resize: fgm.resizePanes, 
+				resize: fgm.resizePanesInWnd, 
 				visible: false
 			});
 			
 			fgm._resultWindow = $("#fgm-resultWindow").data("kendoWindow");
-			fgm._resultWindow.center().open(); 
+			fgm._resultWindow.open();
 		}
 		
 	};
@@ -456,6 +469,18 @@ define([
 		
 		topic.publish("featureGrid/destroyed", "fgm destroyed"); 
 	};
+	
+	fgm._buildResultSplitter = function() {
+		var resultSplitter = $('#fgm-resultSplitter'); 
+		
+		resultSplitter.kendoSplitter({
+			orientation: 'horizontal',
+			panes: [
+				{ collapsible: false, resizable: true, size: "200px"},
+				{ collapsible: false, resizable: true }
+			]
+		});	
+	}; 
 	
 	fgm._buildResultTools = function() {
 		var toolbar = $("#fgm-layerToolbar");
@@ -734,7 +759,7 @@ define([
 	/* Private Event Handlers  */
 	/* ----------------------- */	
 
-	fgm.resizePanes = function (evt) {
+	fgm.resizePanesInWnd = function (evt) {
 		$('#fgm-resultSplitter').trigger("resize");
 
 		//var newGridHeight = evt.height - 30;
