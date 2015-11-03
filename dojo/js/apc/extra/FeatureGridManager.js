@@ -1249,7 +1249,27 @@ define([
 					}
 					break;
 				} 
-			}			
+			} 
+			// define the default column template for tooltip when mouseover
+			if (! columnTmpl) {
+				/*
+				// long-text option 2: use an event handler inside a template 
+				// note: only work with global functions (aka, window.showLongText)
+				columnTmpl = '<span onclick="javascript:showLongText(\'#=' 
+					+ resultField["name"] + '#\');">#=' + resultField["name"] + '#</span>'; 
+				 */
+				 /*
+				// long-text option 3: use the title attribute and display mouse tip
+				columnTmpl = '<span title="#=' 
+					+ resultField["name"] + '#")>#=' + resultField["name"] + '#</span>';
+				  */
+				// long-text option 4: use the embedded code snippet as a conditional template
+				// note: enhanced from option 3 to allow a conditional template
+				columnTmpl = '#if ('
+					+ resultField["name"] + ' === null) {# #} else {# <span title="#=' 
+					+ resultField["name"] + '#")>#=' + resultField["name"] + '#</span> #}# '
+			}
+			
 			// translate the data type to what kendo understands
 			var dataType; 
 			switch(resultField["type"]) {
@@ -1260,7 +1280,10 @@ define([
 						}
 					} else {
 						fieldTypes[resultField["name"]] = {
-							type: "string",
+							type: "string"/*,
+							// long-text option 1: use a custom function to trim long text
+							// when a text is quoted, kendo tends to display as a whole. 
+							// use css white-space:nowrap; to override that.
 							parse: function(s) {
 								if (s) {
 									var w = s.split(" "); 
@@ -1270,7 +1293,7 @@ define([
 									}
 								}
 								return s; 
-							}
+							}*/
 						}
 					};
 					break;
