@@ -1326,7 +1326,12 @@ define([
 			}
 			
 			// determine the column width based on the field length
-			var fieldLength = (resultField["type"] === "esriFieldTypeDate")?5:resultField["length"]; 
+			var fieldLength = resultField["length"];
+			if (resultField["type"] === "esriFieldTypeDate")
+				fieldLength = 5; 
+			else if (isHyperlinkColumn === true)
+				fieldLength = 7; 
+			
 			var columnWidth = fieldLength?Math.min(fieldLength*20, fgm.options.maxColumnWidth):fgm.options.minColumnWidth; 	
 			
 			resultColumns.push({
