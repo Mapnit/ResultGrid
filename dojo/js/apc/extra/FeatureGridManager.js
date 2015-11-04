@@ -960,6 +960,8 @@ define([
 				
 				// cache query
 				fgm._writeIntoCache(queryName, qry, "query");
+				fgm._writeIntoCache(queryName, groupId, "groupId");
+				fgm._writeIntoCache(queryName, loadingId, "loadingId");
 				
 				// fire query
 				var qll =  new Queryllel(queryName, elementId, fgm._showOIDResults); 
@@ -987,7 +989,7 @@ define([
 			itemElement.html(itemElement.html().replace(fgm.loadingHtml, "") + " (" + results.length + ")");
 
 			// remove the loading element
-			var loadingId = elementId + fgm.depthSeparator + fgm._loadingIdSuffix; 
+			var loadingId = fgm._readFromCache(queryName, "loadingId"); 
 			var loadingElement = $("#" + loadingId);
 			if (loadingElement) {
 				loadingElement.remove(); 
@@ -1021,8 +1023,7 @@ define([
 			var isGroupEmpty = {}, allGroupsEmpty = true; 
 			$(fgm._queryllelArray).each(function(idx, q) {
 				var queryName = q.getQueryName(), 
-					panelId = queryName.split(fgm.depthSeparator),
-					groupId = fgm._normalize(panelId[0]); 
+					groupId = fgm._readFromCache(queryName, "groupId"); 
 				
 				var rowCount = fgm._readFromCache(queryName, "rowCount");
 				if (groupId in isGroupEmpty) {
