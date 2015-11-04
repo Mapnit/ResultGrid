@@ -204,7 +204,7 @@ define([
 	fgm._loadingIdSuffix = "loading"; 
 	fgm.loadingHtml = "<i class='fa fa-refresh fa-spin'></i>"; 
 
-	fgm.depthSeparator = "-"; 
+	fgm.depthSeparator = "-0-"; 
 	fgm.column_oid = "OBJECTID";
 	fgm.searchParams = []; 
 	
