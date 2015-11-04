@@ -490,8 +490,8 @@ define([
 				if (fgm._currentQuery) {
 					fgm._zoomToFeaturesInPage(); 
 				} else {
-					console.log("no datagrid is loaded"); 
-					//fgm.showMessage("select a dataset first"); 
+					console.log("no query is selected"); 
+					fgm.showMessage("no data layer is selected");
 				}
 			})
 		); 
@@ -510,8 +510,8 @@ define([
 				if (fgm._currentQuery) {
 					fgm._exportAsExcel();  
 				} else {
-					console.log("no datagrid is loaded"); 
-					//fgm.showMessage("select a dataset first"); 
+					console.log("no query is selected"); 
+					fgm.showMessage("no data layer is selected"); 
 				}
 			})
 		); 
@@ -526,7 +526,8 @@ define([
 				if (fgm._currentQuery) {
 					fgm._launchTdb(); 
 				} else {
-					console.log("no datagrid is loaded"); 
+					console.log("no query is selected"); 
+					fgm.showMessage("no data layer is selected");
 				}
 			})
 		); 
@@ -541,7 +542,8 @@ define([
 				if (fgm._currentQuery) {
 					fgm._launchToast(); 
 				} else {
-					console.log("no datagrid is loaded"); 
+					console.log("no query is selected"); 
+					fgm.showMessage("no data layer is selected");
 				}
 			})
 		); 		
@@ -1511,13 +1513,15 @@ define([
 		} 
 
 		if (!fgm._currentQuery) {
-			console.log("no query is available"); 
+			console.log("no query is selected"); 
+			fgm.showMessage("no data layer is selected");
 			return; 
 		}
 			
 		var layerExtent = fgm._readFromCache(fgm._currentQuery, "extent"); 
 		if (!layerExtent) {
 			console.log("no extent is available"); 
+			fgm.showMessage("no data in datagrid");
 			return; 
 		}
 		
@@ -1819,14 +1823,19 @@ define([
 		if (extReqUrls && extReqUrls["excel"]){
 			var queryName = fgm._currentQuery; 
 			if (!queryName) {
-				console.log("no data in datagrid"); 
-				fgm.showMessage("no data in datagrid"); 
+				console.log("no query is selected"); 
+				fgm.showMessage("no data layer is selected"); 
 				return; 
 			}
 			
 			var qry = fgm._readFromCache(queryName, "query"); 
 			var OIDArray = fgm._readFromCache(queryName, "OIDs"); 
 			var results = fgm._readFromCache(queryName, "data"); 
+			if (!results) {
+				console.log("no data in datagrid"); 
+				fgm.showMessage("no data in datagrid"); 
+				return; 
+			}
 			
 			// parse for layerId
 			var urlParts = qry["serviceUrl"].split("/"); 
@@ -1884,7 +1893,7 @@ define([
 	fgm._exportAsExcelFailed = function(err){
 		console.log("Error in exportAsExcel: " + err.message);
 		var errMsg = (err && err.message && err.message.length > 0)?err.message:""; 
-		fgm.showMessage("Failed to export data into Excel:" + errMsg);
+		fgm.showMessage("Failed to export data into Excel: " + errMsg);
 	}; 
 	
 	// receive from the service the url to a dump file on server
