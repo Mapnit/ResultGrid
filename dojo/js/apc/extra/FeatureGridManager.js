@@ -4,7 +4,6 @@ define([
 	"dojo/topic", 
 	"dojo/promise/all", 
 	"dojo/request/xhr",
-	"dojo/aspect", 
 	
 	"esri/tasks/QueryTask", 
 	"esri/tasks/query", 
@@ -22,7 +21,7 @@ define([
 	"jquery", "kendo", 
 	"xstyle/css!apc/extra/css/FeatureGridManager.css"
 ], function(
-	declare, lang, topic, all, xhr, aspect, 
+	declare, lang, topic, all, xhr, 
 	QueryTask, Query, 
 	Point, Polyline, Polygon, Extent, webMercatorUtils, GraphicsLayer, Graphic,
 	SimpleMarkerSymbol, SimpleFillSymbol, SimpleLineSymbol
@@ -214,8 +213,6 @@ define([
 	fgm._queryllelArray = []; 
 	fgm._queryCheckInterval = 1000/*ms*/; 
 	
-	fgm._messageAdvisors = []; 
-	
 	fgm.resultCache = {}; 
 	fgm._currentPage = -1; 
 	fgm._currentQuery = null; 
@@ -344,9 +341,6 @@ define([
 		fgm._buildResultTools();
 		fgm._buildResultPanels();
 		
-		// add messaging advisors
-		fgm._addMessageAdvisors(); 
-		
 		topic.publish("featureGrid/ready", "fgm ready"); 
 	};
 		
@@ -416,10 +410,7 @@ define([
 		fgm._currentQuery = null; 
 		fgm.selectedPanel = null; 
 		fgm.selectedRowOID = null;
-		fgm._cxtMenuItems = []; 		
-		
-		// remove messageing advisors
-		fgm._removeMessageAdvisors(); 		
+		fgm._cxtMenuItems = [];	
 		
 		// remove the graphic layer from map 
 		$([fgm._fgLayer, fgm._fhlgLayer]).each(function(idx, gLayer) {
@@ -693,98 +684,6 @@ define([
 			//pgElement.remove();
 		}
 	};
-	
-	/* --------------------------------- */
-	/* Private Messaging AOP Connectors  */
-	/* --------------------------------- */	
-	
-	fgm._addMessageAdvisors = function() {
-		console.log("add message advisors");
-		
-		fgm._messageAdvisors.push(
-			aspect.before(fgm, "_exportAsExcel", function() {
-				fgm.showMessage("exporting data into Excel..."); 
-			}, true)
-		); 
-		fgm._messageAdvisors.push(
-			aspect.after(fgm, "_prepareExcelData", function() {
-				fgm.showMessage("");
-			}, true)
-		);	
-		fgm._messageAdvisors.push(
-			aspect.after(fgm, "_exportAsExcelFailed", function(err) {
-				var errMsg = (err && err.message && err.message.length > 0)?err.message:"Excel export failed"; 
-				fgm.showMessage(errMsg);
-			}, true)
-		);	
-		
-		fgm._messageAdvisors.push(
-			aspect.before(fgm, "_launchTdb", function() {
-				fgm.showMessage("launching TDB browser..."); 
-			}, true)
-		); 
-		fgm._messageAdvisors.push(
-			aspect.after(fgm, "_launchTdbFailed", function(err) {
-				var errMsg = (err && err.message && err.message.length > 0)?err.message:"Launch TDB browser failed"; 
-				fgm.showMessage(errMsg);
-			}, true)
-		);	
-
-		fgm._messageAdvisors.push(
-			aspect.before(fgm, "_launchToast", function() {
-				fgm.showMessage("launching Toast browser..."); 
-			}, true)
-		); 
-		fgm._messageAdvisors.push(
-			aspect.after(fgm, "_launchToastFailed", function(err) {
-				var errMsg = (err && err.message && err.message.length > 0)?err.message:"Launch Toast browser failed"; 
-				fgm.showMessage(errMsg);
-			}, true)
-		);	
-
-		fgm._messageAdvisors.push(
-			aspect.after(fgm, "_openUrlInBrowser", function() {
-				fgm.showMessage("");
-			}, true)
-		);	
-		
-		fgm._messageAdvisors.push(
-			aspect.before(fgm, "_removeFeature", function() {
-				fgm.showMessage("removing row from datagrid..."); 
-			}, true)
-		); 
-				
-		fgm._messageAdvisors.push(
-			aspect.before(fgm, "_queryForDataByOIDs", function() {
-				fgm.showMessage("loading data into datagrid..."); 
-			}, true)
-		); 
-		fgm._messageAdvisors.push(
-			aspect.after(fgm, "_prepareDataResults", function() {
-				fgm.showMessage("");
-			}, true)
-		);
-		fgm._messageAdvisors.push(
-			aspect.after(fgm, "_replaceDataInResultGrid", function() {
-				fgm.showMessage("");
-			}, true)
-		);
-		fgm._messageAdvisors.push(
-			aspect.after(fgm, "_queryFailed", function(err) {
-				var errMsg = (err && err.message && err.message.length > 0)?err.message:"Data Query failed"; 
-				fgm.showMessage(errMsg);
-			}, true /*receive original arguments*/)
-		);	
-	}; 
-	
-	fgm._removeMessageAdvisors = function() {
-		console.log("remove message advisors");
-		
-		$(fgm._messageAdvisors).each(function(idx, connector) {
-			connector.remove(); 
-		}); 
-		fgm._messageAdvisors = []; 
-	}; 	
 	
 	/* ----------------------- */
 	/* Private Event Handlers  */
@@ -1203,6 +1102,7 @@ define([
 	
 	fgm._queryForDataByOIDs = function(qry, OIDs, replaceDataOnly) {
 		console.log("query by OIDs on " + qry["serviceUrl"]); 
+		fgm.showMessage("loading data into datagrid..."); 
 		
 		var query = new Query();
 		query.returnGeometry = true;
@@ -1419,6 +1319,8 @@ define([
 		fgm._buildResultGrid(dataSource, dgColumns); 
 		
 		fgm._displayDataOnMap(results); 
+		
+		fgm.showMessage("");
 	};
 	
 	fgm._replaceDataInResultGrid = function(results) {
@@ -1448,7 +1350,9 @@ define([
 		
 		fgm._buildResultGrid(dataSource, dgColumns); 
 		
-		fgm._displayDataOnMap(results); 		
+		fgm._displayDataOnMap(results); 
+
+		fgm.showMessage("");		
 	};
 	
 	/* DEV: 
@@ -1482,6 +1386,8 @@ define([
 	
 	fgm._queryFailed = function(err) {
 		console.log("query Failed: " + err); 
+		var errMsg = (err && err.message && err.message.length > 0)?err.message:""; 
+		fgm.showMessage("Failed to query data: " + errMsg);
 	};
 
 	fgm._composeActionColumn = function(results) {
@@ -1661,6 +1567,7 @@ define([
 	};
 	
 	fgm._removeFeature = function(OID) {
+		fgm.showMessage("removing row from datagrid..."); 
 			
 		var queryName = fgm._currentQuery;
 		
@@ -1906,11 +1813,14 @@ define([
 	
 	// receive from the service the actual Excel binary data over network (better!)
 	fgm._exportAsExcel = function() {
+		fgm.showMessage("exporting data into Excel..."); 
+		
 		var extReqUrls = fgm.options.extRequestUrls; 
 		if (extReqUrls && extReqUrls["excel"]){
 			var queryName = fgm._currentQuery; 
 			if (!queryName) {
-				console.log("no query is available"); 
+				console.log("no data in datagrid"); 
+				fgm.showMessage("no data in datagrid"); 
 				return; 
 			}
 			
@@ -1967,10 +1877,14 @@ define([
 		  // - remove the blob object
 		  URL.revokeObjectURL(objectUrl); 
 	   }
+	   
+	   fgm.showMessage("");
 	}; 
 	
 	fgm._exportAsExcelFailed = function(err){
 		console.log("Error in exportAsExcel: " + err.message);
+		var errMsg = (err && err.message && err.message.length > 0)?err.message:""; 
+		fgm.showMessage("Failed to export data into Excel:" + errMsg);
 	}; 
 	
 	// receive from the service the url to a dump file on server
@@ -2018,6 +1932,8 @@ define([
 	};
 	
 	fgm._launchTdb = function() {
+		fgm.showMessage("launching TDB browser..."); 
+		
 		var extReqUrls = fgm.options.extRequestUrls; 
 		if (extReqUrls && extReqUrls["tdb"]){
 			var queryName = fgm._currentQuery; 
@@ -2059,9 +1975,13 @@ define([
 	
 	fgm._launchTdbFailed = function(err){
 		console.log("Error in launchTdb: " + err.message);
+		var errMsg = (err && err.message && err.message.length > 0)?err.message:""; 
+		fgm.showMessage("failed to launch TDB: " + errMsg);
 	}; 
 
 	fgm._launchToast = function() {
+		fgm.showMessage("launching Toast browser..."); 
+		
 		var extReqUrls = fgm.options.extRequestUrls; 
 		if (extReqUrls && extReqUrls["toast"]){
 			var queryName = fgm._currentQuery; 
@@ -2113,10 +2033,13 @@ define([
 	
 	fgm._launchToastFailed = function(err){
 		console.log("Error in launchToast: " + err.message);
+		var errMsg = (err && err.message && err.message.length > 0)?err.message:""; 
+		fgm.showMessage("Failed to launch Toast:" + errMsg);
 	}; 	
 	
 	fgm._openUrlInBrowser = function(data) {
 		window.open(data["Url"]); 
+		fgm.showMessage("");
 	}; 
 		
 	return fgm; 
