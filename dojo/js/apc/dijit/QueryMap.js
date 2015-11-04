@@ -312,6 +312,7 @@ define([
 					title: "Identified Results", 
 					map: this.map, 
 					srcRefNode: this.map.id, 
+					windowHeight: 500 /*px*/, 
 					columnTemplates: this.columnTemplates
 				}); 
 			}

@@ -250,6 +250,7 @@ define([
 					title: "Search Results", 
 					map: this.map, 
 					srcRefNode: this.map.id, 
+					windowHeight: 350 /*px*/, 
 					columnTemplates: this.columnTemplates
 				}); 
 			}
