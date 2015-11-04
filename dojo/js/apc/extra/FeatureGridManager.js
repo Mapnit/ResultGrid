@@ -123,7 +123,6 @@ define([
 		srcRefNode: null, // refNode for window sizing and positioning
 		windowHeight: 500, /*default height in px*/
 		windowWidth: 1050, /*default width in px*/
-		textLengthLimit: 10, /*words*/
 		highlightSymbols: {
 			"point": {
 				"type": "esriSMS",
