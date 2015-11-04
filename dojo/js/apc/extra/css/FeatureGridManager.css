@@ -57,6 +57,16 @@
 	display: none; 
 }
 
+.fgm-layerTool-toast {
+	background-image: url("../../../../images/toast.png");
+	background-repeat: no-repeat;
+	width: 24px;
+	height: 24px; 
+	padding-left: 5px;
+	cursor: pointer;
+	display: none; 
+}
+
 .fgm-cxtmenu-nohyperlink {
 	font-style: italic;
 	color: #dddddd;

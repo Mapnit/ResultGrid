@@ -192,6 +192,9 @@ define([
 			// return url
 			"tdb": "/apc/services/tdb",
 			//"tdb": "http://gis.anadarko.com/WebServices/connect/tdb",
+			// return url
+			"toast": "/apc/services/toast",
+			//"toast": "http://gis.anadarko.com/WebServices/connect/toast",
 			// return data
 			"excel": "/apc/services/excel"
 			//"excel": "http://gis.anadarko.com/WebServices/connect/excel"
@@ -524,19 +527,34 @@ define([
 		); 
 		toolbar.append(
 			/*
+			$("<span></span>").addClass("fgm-layerTool-icon").click(fgm._launchTdb)
+							  .append(
+								$("<i></i>").addClass("fa fa-windows fa-2x")
+							  ) */
+			//$("<span></span>").addClass("fgm-layerTool-tdb").click(fgm._launchTdb); 
+			$("<span></span>").addClass("fgm-layerTool-tdb").click(function() {
+				if (fgm._currentQuery) {
+					fgm._launchTdb(); 
+				} else {
+					console.log("no datagrid is loaded"); 
+				}
+			})
+		); 
+		toolbar.append(
+			/*
 			$("<span></span>").addClass("fgm-layerTool-icon").click(fgm._launchToast)
 							  .append(
 								$("<i></i>").addClass("fa fa-windows fa-2x")
 							  ) */
-			//$("<span></span>").addClass("fgm-layerTool-tdb").click(fgm._launchToast); 
-			$("<span></span>").addClass("fgm-layerTool-tdb").click(function() {
+			//$("<span></span>").addClass("fgm-layerTool-toast").click(fgm._launchToast); 
+			$("<span></span>").addClass("fgm-layerTool-toast").click(function() {
 				if (fgm._currentQuery) {
 					fgm._launchToast(); 
 				} else {
 					console.log("no datagrid is loaded"); 
 				}
 			})
-		); 
+		); 		
 	};
 	
 	fgm._buildResultPanels = function() {
@@ -702,19 +720,32 @@ define([
 		);	
 		
 		fgm._messageAdvisors.push(
+			aspect.before(fgm, "_launchTdb", function() {
+				fgm.showMessage("launching TDB browser..."); 
+			}, true)
+		); 
+		fgm._messageAdvisors.push(
+			aspect.after(fgm, "_launchTdbFailed", function(err) {
+				var errMsg = (err && err.message && err.message.length > 0)?err.message:"Launch TDB browser failed"; 
+				fgm.showMessage(errMsg);
+			}, true)
+		);	
+
+		fgm._messageAdvisors.push(
 			aspect.before(fgm, "_launchToast", function() {
 				fgm.showMessage("launching Toast browser..."); 
 			}, true)
 		); 
 		fgm._messageAdvisors.push(
-			aspect.after(fgm, "_openUrlInBrowser", function() {
-				fgm.showMessage("");
+			aspect.after(fgm, "_launchToastFailed", function(err) {
+				var errMsg = (err && err.message && err.message.length > 0)?err.message:"Launch Toast browser failed"; 
+				fgm.showMessage(errMsg);
 			}, true)
 		);	
+
 		fgm._messageAdvisors.push(
-			aspect.after(fgm, "_launchToastFailed", function(err) {
-				var errMsg = (err && err.message && err.message.length > 0)?err.message:"Launch Toast failed"; 
-				fgm.showMessage(errMsg);
+			aspect.after(fgm, "_openUrlInBrowser", function() {
+				fgm.showMessage("");
 			}, true)
 		);	
 		
@@ -788,18 +819,31 @@ define([
 				var qry = fgm._readFromCache(queryName, "query"); 
 				var OIDArray = fgm._readFromCache(queryName, "OIDs"); 
 				var tdbField = fgm._readFromCache(queryName, "tdbField");
+				var toastField = fgm._readFromCache(queryName, "toastField");
 				
 				if (!tdbField) {
 					// retrieve the tdb field
-					fgm._checkTdbField(queryName, qry); 					
+					fgm._checkTdbField(queryName, qry);
 				} else {
-					// show or hide the toast launch button
+					// show or hide the tdb launch button
 					if (tdbField === "none") {
 						fgm._hideTdbLink();
 					} else {
 						fgm._showTdbLink();
 					}
 				}
+				
+				if (!toastField) {
+					// retrieve the toast field
+					fgm._checkToastField(queryName, qry);
+				} else {
+					// show or hide the toast launch button
+					if (toastField === "none") {
+						fgm._hideToastLink();
+					} else {
+						fgm._showToastLink();
+					}
+				}				
 				
 				// keep track of currentQuery
 				fgm._currentQuery = queryName; 
@@ -1810,6 +1854,49 @@ define([
 				fgm._showTdbLink();
 			}
 		}, function(err){
+			console.log("Error in isTdbAvailable: " + err.message);
+		});
+	};
+
+	/* -------------------------------------- */
+	/* Private Toast-Field Related Functions  */
+	/* -------------------------------------- */
+	
+	fgm._hideToastLink = function() {
+		$(".fgm-layerTool-toast").css('display', 'none');
+	};
+	
+	fgm._showToastLink = function() {
+		$(".fgm-layerTool-toast").css('display', 'inline-block');
+	};
+	
+	fgm._checkToastField = function(queryName, qry) {
+		// to retrieve it from the copyright property of a layer description 
+		// (such a weird place for such a config). 
+		// - ex: Copyright Text:  tdb.field=WELL_NO 
+		xhr(qry["serviceUrl"], {
+			handleAs: "json",
+			query: {"f":"json"}
+		}).then(function(layerDef){
+			// parse for a tdb field name 
+			var tdbDef = layerDef["copyrightText"], toastField = "none"; 
+			if (tdbDef) {
+				tdbDef = tdbDef.trim(); 
+				if (tdbDef.indexOf("toast.field=") === 0) {
+					toastField = tdbDef.replace("toast.field=", ""); 
+				}
+			}
+			// cache the tdb field
+			console.log("toast field for " + queryName + ": " + toastField);
+			fgm._writeIntoCache(queryName, toastField, "toastField"); 
+			
+			// show or hide the toast launch button
+			if (toastField === "none") {
+				fgm._hideToastLink();
+			} else {
+				fgm._showToastLink();
+			}
+		}, function(err){
 			console.log("Error in isToastAvailable: " + err.message);
 		});
 	};
@@ -1931,7 +2018,7 @@ define([
 		}
 	};
 	
-	fgm._launchToast = function() {
+	fgm._launchTdb = function() {
 		var extReqUrls = fgm.options.extRequestUrls; 
 		if (extReqUrls && extReqUrls["tdb"]){
 			var queryName = fgm._currentQuery; 
@@ -1952,11 +2039,7 @@ define([
 			
 			// parse for layerId
 			var urlParts = qry["serviceUrl"].split("/"); 
-			// pack field names
-			var fieldNames = []; 
-			$(results.fields).each(function(idx, field) {
-				fieldNames.push(field.name); 
-			}); 
+
 			// construct request
 			var extRequest = {
 				LayerId: urlParts[urlParts.length-1],
@@ -1971,17 +2054,71 @@ define([
 				handleAs: "json",
 				headers: {'Content-Type': 'application/json'},
 				data: JSON.stringify(extRequest)
+			}).then(fgm._openUrlInBrowser, fgm._launchTdbFailed);
+		}
+	};
+	
+	fgm._launchTdbFailed = function(err){
+		console.log("Error in launchTdb: " + err.message);
+	}; 
+
+	fgm._launchToast = function() {
+		var extReqUrls = fgm.options.extRequestUrls; 
+		if (extReqUrls && extReqUrls["toast"]){
+			var queryName = fgm._currentQuery; 
+			if (!queryName) {
+				console.log("no query is available"); 
+				return;
+			}
+			
+			var toastField = fgm._readFromCache(queryName, "toastField"); 
+			if (!toastField || toastField === "none") {
+				console.log("no toast field defined"); 
+				return;
+			}
+			
+			var qry = fgm._readFromCache(queryName, "query"); 
+			var OIDArray = fgm._readFromCache(queryName, "OIDs"); 
+			var results = fgm._readFromCache(queryName, "data"); 
+			var layerExtent = fgm._readFromCache(queryName, "extent"); 
+			
+			// parse for layerId
+			var urlParts = qry["serviceUrl"].split("/"); 
+ 
+			// construct request
+			var extRequest = {
+				DisplayField: results.displayFieldName,
+				Extent: {
+					WKID: layerExtent.spatialReference.wkid,
+					XMax: layerExtent.xmax,
+					XMin: layerExtent.xmin,
+					YMax: layerExtent.ymax,
+					YMin: layerExtent.ymin
+				},
+				LayerName: qry["name"], 
+				LayerId: urlParts[urlParts.length-1],
+				FeatureServiceUrl: qry["serviceUrl"],
+				IdField: toastField,
+				OidField: fgm.column_oid,
+				OIDs: OIDArray
+			}; 
+			// send request
+			xhr(extReqUrls["toast"], {
+				method: "POST", 
+				handleAs: "json",
+				headers: {'Content-Type': 'application/json'},
+				data: JSON.stringify(extRequest)
 			}).then(fgm._openUrlInBrowser, fgm._launchToastFailed);
 		}
 	};
 	
+	fgm._launchToastFailed = function(err){
+		console.log("Error in launchToast: " + err.message);
+	}; 	
+	
 	fgm._openUrlInBrowser = function(data) {
 		window.open(data["Url"]); 
 	}; 
-	
-	fgm._launchToastFailed = function(err){
-		console.log("Error in launchToast: " + err.message);
-	}; 
-	
+		
 	return fgm; 
 }); 
