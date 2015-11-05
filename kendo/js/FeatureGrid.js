@@ -101,8 +101,8 @@ function buildResultWindow(layer_schema) {
 			title: "Query Results",
 			actions: [
 				//"Pin",
-				//"Minimize",
-				//"Maximize",
+				"Minimize",
+				"Maximize",
 				"Close"
 			],
 			close: onClose,

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <!--The viewport meta tag is used to improve the presentation and behavior of the samples 
+      on iOS devices-->
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no">
+    <title>Query Info</title>
+	<script src="//js.arcgis.com/3.13/"></script>
+	<script>
+		var package_path = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
+        var dojoConfig = {
+            parseOnLoad: true,
+            debug: true,
+            packages: [{ /*
+                name: "async1",
+                location: 'js/async',
+				main: 'async'
+				*/
+            }]
+        }; 
+	</script>	
+	<script>
+		var searchParams = [{
+			"name": "Census2000",
+			"queries": [{
+				"name": "Block Points",
+				"url": "http://sampleserver6.arcgisonline.com/arcgis/rest/services/Census/MapServer/0",
+				"where": "STATE_FIPS = '01' and CNTY_FIPS = '001' and HOUSEHOLDS > 10"
+			}, {
+				"name": "Block Groups",
+				"url": "http://sampleserver6.arcgisonline.com/arcgis/rest/services/Census/MapServer/1",
+				"where": "STATE_FIPS = '01' and CNTY_FIPS = '001' and POP2007 > 1000"
+			}, {
+				"name": "Counties",
+				"url": "http://sampleserver6.arcgisonline.com/arcgis/rest/services/Census/MapServer/2",
+				"where": "STATE_FIPS = '01' and CNTY_FIPS = '001' and AGE_22_29 > 100"
+			}]
+		}]; 
+	</script>
+	<script>
+		require([
+			"dojo/dom", "dojo/on", "dojo/dom-construct", 
+			"esri/config", "esri/map",
+			"esri/tasks/query", "esri/tasks/QueryTask", 
+			"dojo/domReady!"
+		  ], function (dom, on, domConstruct, esriConfig, map, Query, QueryTask) {
+		  
+			on(dom.byId("execute"), "click", executeQuery);
+			
+			function executeQuery() {
+				for(var s=0,sl=searchParams.length; s<sl; s++) {
+					var param = searchParams[s]; 
+					for(var q=0,ql=param["queries"].length; q<ql; q++) {
+						var qry = param["queries"][q]; 
+						console.log("query [" + qry["where"] + "] on " + qry["url"]); 
+
+						var query = new Query();
+						query.returnGeometry = false;
+						query.outFields = ["*"];
+						query.where = qry["where"];
+						
+						var queryTask = new QueryTask(qry["url"]); 						
+						queryTask.execute(query, showResults);
+					}
+				}
+			}
+
+			function showResults (results) {
+			  console.log("show results"); 
+			  var resultItems = [];
+			  var resultCount = results.features.length;
+			  for (var i = 0; i < resultCount; i++) {
+				var featureAttributes = results.features[i].attributes;
+				for (var attr in featureAttributes) {
+				  resultItems.push("<b>" + attr + ":</b>  " + featureAttributes[attr] + "<br>");
+				}
+				resultItems.push("<br>");
+			  }
+			  domConstruct.place(domConstruct.toDom("<div>New Result</div>"), "info"); 
+			  domConstruct.place(domConstruct.toDom(resultItems.join("")), "info"); 
+			}
+		  });
+
+	</script>
+</head>
+<body>
+    US state name :
+    <input type="text" id="stateName" value="California">
+    <input id="execute" type="button" value="Get Details">
+    <br />
+    <br />
+    <div id="info" style="padding:5px; margin:5px; background-color:#eee;">
+    </div>
+</body>
+</html>

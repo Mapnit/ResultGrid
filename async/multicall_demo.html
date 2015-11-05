@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <!--The viewport meta tag is used to improve the presentation and behavior of the samples on iOS devices-->
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no">
+	<title>Feature Datagrid</title>
+	
+    <link rel="stylesheet" href="//js.arcgis.com/3.13/dijit/themes/claro/claro.css">
+    <link rel="stylesheet" href="//js.arcgis.com/3.13/esri/css/esri.css">
+
+	<script>
+		var package_path = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
+        var dojoConfig = {
+            parseOnLoad: true,
+            debug: true,
+            packages: [{
+				name: "jquery",
+				location: '//code.jquery.com/',
+				main: 'jquery-1.11.3.min'
+            }]
+        }; 
+	</script>	
+	<script src="//js.arcgis.com/3.13/"></script>
+	<script>
+		define.amd.jQuery = true;
+	
+		require([
+			"dojo/dom", "dojo/on", "dojo/_base/lang", 
+			"esri/tasks/QueryTask", 
+			"esri/tasks/query", 
+			"jquery"
+		], function(
+			dom, on, lang, 
+			QueryTask, Query
+		) {
+
+			var queryArray = []; 
+		
+			var searchParams = [{
+					"name": "Census2000",
+					"default": true,
+					"queries": [{
+						"name": "Block_Points",
+						"serviceUrl": "http://sampleserver6.arcgisonline.com/arcgis/rest/services/Census/MapServer/0",
+						"where": "BLOCK like '%78%'"
+					}, {
+						"name": "Block_Groups",
+						"serviceUrl": "http://sampleserver6.arcgisonline.com/arcgis/rest/services/Census/MapServer/1",
+						"where": "TRACT like '%678%'"
+					}, {
+						"name": "Counties",
+						"serviceUrl": "http://sampleserver6.arcgisonline.com/arcgis/rest/services/Census/MapServer/2",
+						"where": "CNTY_FIPS like '%678%'"
+					}]
+				}
+			];
+			
+			var Foo = (function() {
+
+				// constructor
+				function Foo(queryId) {
+					this._queryId = queryId; 
+					this._done = false; 
+				};
+
+				// add the methods to the prototype so that all of the 
+				// Foo instances can access the private static
+				Foo.prototype.query = function(qry) {
+					console.log("query [" + qry["where"] + "] on " + qry["serviceUrl"]); 
+					
+					var query = new Query();
+					query.where = qry["where"];
+			
+					var queryTask = new QueryTask(qry["serviceUrl"]); 
+					queryTask.executeForIds(query, lang.hitch(this, function(results) {
+						this._processResults(results); 
+					}), lang.hitch(this, function(err) {
+						this._queryError(err); 
+					}));
+				};
+				
+				Foo.prototype._processResults = function(results) {
+					console.log("OIDs for " + this._queryId); 
+					
+					var countElement = $("#"+this._queryId); 
+					var resultCount = (!results)?0:results.length; 
+					countElement.html(countElement.html() + ": " + this._queryId + " (" + resultCount + ")");
+					
+					this._done = true; 
+				};
+				
+				Foo.prototype._queryError = function(err) {
+					console.log("query error [" + this._queryId + "]" + err);
+				};
+				
+				Foo.prototype.isDone = function() {
+					return this._done;
+				};
+				
+				Foo.prototype.getQueryId = function() {
+					return this._queryId; 
+				}; 
+
+				return Foo;
+			})(); 
+			
+			function checkQueryStatus() {
+				console.log("status checking ..."); 
+				var allDone = true;
+				$(queryArray).each(function(idx, q) {
+					allDone = allDone && q.isDone(); 					
+				}); 
+				
+				if(allDone === true) {
+					$("#status").html("all done"); 
+				} else {
+					setTimeout(checkQueryStatus, 1000); 
+				}
+			}
+			
+			function startQueries() {
+				$(searchParams).each(function(idx, item) {
+					$(item["queries"]).each(function(idx, qry) {
+						console.log("query: " + qry["name"]); 
+						// option 1: 
+						//new Foo(qry["name"]).query(qry); 
+						// option 2: 
+						var q = new Foo(qry["name"]);
+						queryArray.push(q); 
+						q.query(qry); 
+					}); 
+				});
+				// init the status check 
+				setTimeout(checkQueryStatus, 1000); 
+			}; 
+			
+			$("#btnQuery").click(startQueries);
+			
+		});
+	</script>
+	
+</head>
+<body class="claro esri">
+	<span id="Block_Points">Block_Points:</span><p>
+	<span id="Block_Groups">Block_Groups: </span><p>
+	<span id="Counties">Counties: </span><p>
+	<button id="btnQuery">Query</button>
+	<span id="status"></span><p>
+</body>
+</html>

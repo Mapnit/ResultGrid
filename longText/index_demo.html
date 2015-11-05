@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<style>
+		.trimmed {
+			width: 300px;     
+			overflow: hidden; 
+			text-overflow: ellipsis; 
+			white-space: nowrap;
+		}
+
+		.expanded {
+			border: 1px solid #000000;
+			background-color: #fffc00; 
+			font-family: Arial, Helvetica, sans-serif;
+			font-size: 11px; 
+		}
+	</style>
+	<script src="https://code.jquery.com/jquery-2.1.4.js"></script>
+	<script>
+		function expandText(refNode) {
+			var fullTextNodeId = refNode.id + "-full"; 
+			var collapseLink = $("<a href='#' style='button'>...less</a>").attr('u-refId', fullTextNodeId); 
+			
+			var expandedNode = $("<div></div>").attr("id", fullTextNodeId)
+											   .html(refNode.innerHTML)
+											   .addClass("expanded")
+											   .css("position", "absolute")
+											   .css("top", $(refNode).offset().top) 
+											   .css("left", $(refNode).offset().left)
+											   .css("width", $(refNode).width());
+											   //.css("height", 300);
+			expandedNode.append(collapseLink); 
+			
+			$(refNode).after(expandedNode);  			
+			
+			$(collapseLink).click(function(e) {
+				var linkNode = $(e.target); 
+				$("#" + linkNode.attr('u-refId')).remove(); 
+			});	
+
+		};
+		
+		$(document).ready(function() {
+			$(".trimmed").click(function(e) { 
+				expandText(e.target);
+			})
+		}); 
+	</script>
+</head>
+<body>
+	<table border="1px">
+		<tbody>
+			<tr>
+				<td>row 1</td>
+				<td>123456</td>
+				<td><div class="trimmed">Raw field data/shot ordered|Raw stack|Raw migration|Processed migration|Stacking velocities (ASCII)|AVO attribute set (available for selected lines)|Dip Moveout Correction/CDP + NMO (available for selected AVO lines)|CDP gathers without NMO (available for selected AVO lines)|Post stack navigation - UKOOA|AGC stack, AGC migration, RAP stack, RAP migration films: full and half scale|AGC migration films: quarter scale|AVO film (RAP stack, normal incidence, normal incidence envelope plus gradient envelope, normalized normal incidence times AVO gradient)|Workstation-ready tapes available in SMT, Landmark, and Geoquest</div></td>
+				<td>some text</td>
+				<td>more 023892</td>
+			</tr>
+			<tr>
+				<td>row 1</td>
+				<td>123456</td>
+				<td><div class="trimmed">Raw field data/shot ordered|Raw stack|Raw migration|Processed migration|Stacking velocities (ASCII)|AVO attribute set (available for selected lines)|Dip Moveout Correction/CDP + NMO (available for selected AVO lines)|CDP gathers without NMO (available for selected AVO lines)|Post stack navigation - UKOOA|AGC stack, AGC migration, RAP stack, RAP migration films: full and half scale|AGC migration films: quarter scale|AVO film (RAP stack, normal incidence, normal incidence envelope plus gradient envelope, normalized normal incidence times AVO gradient)|Workstation-ready tapes available in SMT, Landmark, and Geoquest</div></td>
+				<td>some text</td>
+				<td>more 023892</td>
+			</tr>
+			<tr>
+				<td>row 1</td>
+				<td>123456</td>
+				<td><div class="trimmed">Raw field data/shot ordered|Raw stack|Raw migration|Processed migration|Stacking velocities (ASCII)|AVO attribute set (available for selected lines)|Dip Moveout Correction/CDP + NMO (available for selected AVO lines)|CDP gathers without NMO (available for selected AVO lines)|Post stack navigation - UKOOA|AGC stack, AGC migration, RAP stack, RAP migration films: full and half scale|AGC migration films: quarter scale|AVO film (RAP stack, normal incidence, normal incidence envelope plus gradient envelope, normalized normal incidence times AVO gradient)|Workstation-ready tapes available in SMT, Landmark, and Geoquest</div></td>
+				<td>some text</td>
+				<td>more 023892</td>
+			</tr>			
+		</tbody>
+	</table>
+	<!--
+	<div id="longText" class="trimmed">Raw field data/shot ordered|Raw stack|Raw migration|Processed migration|Stacking velocities (ASCII)|AVO attribute set (available for selected lines)|Dip Moveout Correction/CDP + NMO (available for selected AVO lines)|CDP gathers without NMO (available for selected AVO lines)|Post stack navigation - UKOOA|AGC stack, AGC migration, RAP stack, RAP migration films: full and half scale|AGC migration films: quarter scale|AVO film (RAP stack, normal incidence, normal incidence envelope plus gradient envelope, normalized normal incidence times AVO gradient)|Workstation-ready tapes available in SMT, Landmark, and Geoquest</div>
+	-->
+</body>
+</html>
