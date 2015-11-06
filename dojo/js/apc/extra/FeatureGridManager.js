@@ -214,7 +214,6 @@ define([
 
 	fgm.depthSeparator = "-0-"; 
 	fgm.column_oid = "OBJECTID";
-	fgm.searchParams = []; 
 	
 	fgm._resultWindow = null;
 	fgm._datagrid = null; 
@@ -299,7 +298,6 @@ define([
 	/* --------------------- */
 
 	fgm.buildFeatureGrid = function(searchParams, options) {
-		fgm.searchParams = searchParams; 
 		fgm._mixInOptions(options);
 		
 		// remove it if any
@@ -349,7 +347,7 @@ define([
 		fgm._buildResultWindow();
 		fgm._buildResultSplitter();
 		fgm._buildResultTools();
-		fgm._buildResultPanels();
+		fgm._buildResultPanels(searchParams);
 		
 		topic.publish("featureGrid/ready", "fgm ready"); 
 	};
@@ -586,12 +584,12 @@ define([
 		); 		
 	};
 	
-	fgm._buildResultPanels = function() {
+	fgm._buildResultPanels = function(searchParams) {
 		// build the panelbar UI
 		var layerPane = $("#fgm-layerPanelbar");
 		var groupIds = [], prevGrpName; 
 		var grpElement, listElement; 
-		$(fgm.searchParams).each(function(idx, item) {
+		$(searchParams).each(function(idx, item) {
 			if (prevGrpName !== item["name"]) {
 				groupIds.push("#"+fgm._normalize(item["name"])); 
 				prevGrpName = item["name"]; 
@@ -927,8 +925,8 @@ define([
 	/* ------------------------ */
 	
 	// query option 1 (START): parallel query - Queryllel
-	fgm._fireQueriesForOID = function() {
-		$(fgm.searchParams).each(function(idx, item) {
+	fgm._fireQueriesForOID = function(searchParams) {
+		$(searchParams).each(function(idx, item) {
 			$(item["queries"]).each(function(idx, qry) {
 				var queryName = item["name"]+fgm.depthSeparator+qry["name"]; 
 				var groupId = fgm._normalize(item["name"]),
@@ -1048,10 +1046,10 @@ define([
 	// query option 1 (END)
 	
 	// query option 2 (START): dojo.promise/all
-	fgm._queryForOID = function() {
+	fgm._queryForOID = function(searchParams) {
 		
 		var promiseDict = {}; 
-		$(fgm.searchParams).each(function(idx, item) {
+		$(searchParams).each(function(idx, item) {
 			$(item["queries"]).each(function(idx, qry) {
 				console.log("query [" + qry["where"] + "] on " + qry["serviceUrl"]); 
 				var queryName = item["name"]+fgm.depthSeparator+qry["name"]; 
