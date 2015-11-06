@@ -1473,7 +1473,7 @@ define([
 		return /*actionColumn*/ {
 			command: cmdColumns,
 			locked: true, 
-			width: 45 * cmdColumns.length + 6
+			width: 45 /*button width & padding*/ * cmdColumns.length + 6 /*column padding*/
 		};
 	}; 
 
