@@ -106,6 +106,9 @@ define([
         // connections/subscriptions will be cleaned up during the destroy() lifecycle phase
         destroy: function () {
             this.inherited(arguments);
+			// remove FeatureGrid
+			FeatureGridManager.removeFeatureGrid();
+			//
         }, 
 
         /* ------------------------- */

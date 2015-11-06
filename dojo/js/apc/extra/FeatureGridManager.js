@@ -105,6 +105,16 @@ define([
 			return this._queryName; 
 		}; 
 		
+		Queryllel.prototype.destroy = function() {
+			// nullify variables (esp. results & callbacks) to avoid memory leak
+			this._queryName = null;
+			this._elementId = null; 
+			this._results = []; 
+			this._done = false; 
+			this._callback = null; 
+			this._errback = null; 
+		}; 
+		
 		return Queryllel; 
 	})(); 
 	
@@ -293,7 +303,7 @@ define([
 		fgm._mixInOptions(options);
 		
 		// remove it if any
-		fgm._removeFeatureGrid(); 
+		fgm.removeFeatureGrid(); 
 
 		// prepare the graphic layers
 		if (!fgm._fgLayer) {
@@ -349,13 +359,20 @@ define([
 		var resultWin = $("#fgm-resultWindow"),
 			panelDock = $("#fgm-panelDock")
 					.bind("click", function() {
+						/*
+						// classic memory leak 
+						// - refer to an outside var of a DOM element in a handler
+						// - make var immune from garbage collection, even the handler is unbound
 						resultWin.data("kendoWindow").open();
 						panelDock.hide();
+						 */
+						$("#fgm-resultWindow").data("kendoWindow").open();
+						$("#fgm-panelDock").hide();
 					});
 
 		var onClose = function() {
 			//panelDock.show();
-			fgm._removeFeatureGrid();
+			fgm.removeFeatureGrid();
 		};
 		
 		var onOpen = function(e) {			
@@ -402,10 +419,19 @@ define([
 		
 	};
 	
-	fgm._removeFeatureGrid = function() {
+	fgm.removeFeatureGrid = function() {
 		
 		// reset all state variables
+		for(var ck in fgm.resultCache) {
+			var item = fgm.resultCache[ck];
+			for(var ik in item) {
+				var x = item[ik]; 
+				x = null; 
+			}
+			item = null; 
+		}
 		fgm.resultCache = {}; 
+		
 		fgm._currentPage = -1; 
 		fgm._currentQuery = null; 
 		fgm.selectedPanel = null; 
@@ -415,6 +441,7 @@ define([
 		// remove the graphic layer from map 
 		$([fgm._fgLayer, fgm._fhlgLayer]).each(function(idx, gLayer) {
 			if (gLayer) {
+				gLayer.clear(); 
 				fgm.options.map.removeLayer(gLayer);
 				gLayer = null; 
 			}
@@ -429,6 +456,11 @@ define([
 		
 		fgm._removeResultGrid(); 
 		fgm._removeResultPager(); 
+
+		var ctnrElement = $("#fgm-gridContainer"); 
+		if (ctnrElement) {
+			ctnrElement.remove();
+		}
 		
 		var toolbar = $("#fgm-layerToolbar");
 		if(toolbar) {
@@ -441,6 +473,11 @@ define([
 				kdoElement.data("kendoPanelBar").destroy();
 			}
 			kdoElement.empty();
+		}
+		
+		ctnrElement = $("#fgm-panelContainer"); 
+		if (ctnrElement) {
+			ctnrElement.remove();
 		}
 		
 		kdoElement = $("#fgm-kendoSplitter"); 
@@ -586,10 +623,14 @@ define([
 			panelBar.expand($(grpId), false); 
 		}); 
 		
+		// release the reference to a DOM element because it is used in the prev $.each function. 
+		// Otherwise, not necessary for a simple scope variable.
+		layerPane = null; 
+		
 		// initiate the async query
 		//fgm._queryForStats(); 
-		//fgm._queryForOID(); 		
-		fgm._fireQueriesForOID(); 
+		//fgm._queryForOID(searchParams); 		
+		fgm._fireQueriesForOID(searchParams); 
 	};
 	
 	fgm._buildResultGrid = function(resultData, resultColumns) {
@@ -616,8 +657,7 @@ define([
 			change: fgm.onRowSelect
 		});	
 
-		fgm._datagrid = dg.data("kendoGrid");
-		
+		fgm._datagrid = dg.data("kendoGrid");		
 	};
 	
 	fgm._removeResultGrid = function() {
@@ -685,6 +725,8 @@ define([
 			pgElement.empty(); 
 			//pgElement.remove();
 		}
+		
+		fgm._dataPager = null;
 	};
 	
 	/* ----------------------- */
@@ -991,10 +1033,15 @@ define([
 			}
 			// alert if there is no result at all
 			if (allGroupsEmpty === true) {
-				fgm._removeFeatureGrid(); 
+				fgm.removeFeatureGrid(); 
 				alert("no data found");
 			}
-			// clear the queryllel array
+			// clear the queryllel array 
+			$(fgm._queryllelArray).each(function(idx, q) {
+				if(q) {
+					q.destroy(); 
+				}
+			}); 
 			fgm._queryllelArray = []; 
 		}
 	};
@@ -1074,7 +1121,7 @@ define([
 		}
 		
 		if (allGroupsEmpty === true) {
-			fgm._removeFeatureGrid(); 
+			fgm.removeFeatureGrid(); 
 			alert("no data found");
 		}
 	};

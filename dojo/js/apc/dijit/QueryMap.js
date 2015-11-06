@@ -154,6 +154,8 @@ define([
 				this.map.removeLayer(this._queryLayer);
 				this._queryLayer = null; 
 			}
+			// remove FeatureGrid
+			FeatureGridManager.removeFeatureGrid();
 			// 
         }, 
 
