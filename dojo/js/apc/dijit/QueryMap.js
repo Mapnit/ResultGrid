@@ -285,26 +285,47 @@ define([
 
         _doQuery: function(queryGeometry) {
         	var searchParams = []; 
+			// get the current map scale
+			var mapScale = this.map.getScale(); 
         	// scan for the visible layers in map
         	var visibleMaps = this.map.getLayersVisibleAtScale(); 
         	array.forEach(visibleMaps, lang.hitch(this, function(item) {
-        		var tgtQueries = [];
-        		array.forEach(item.visibleLayers, lang.hitch(this, function(layerId) {
-        			var layerInfo = item.layerInfos[layerId]; 
-        			if (layerInfo.subLayerIds === null) {
-	        			tgtQueries.push({
-							"name": layerInfo.name, 
-							"serviceUrl": item.url + "/" + layerId, 
-							"geometry": queryGeometry
-						}); 
-        			}
-        		})); 
-        		// add to searchParam
-        		if (tgtQueries.length > 0) {
-					searchParams.push({
-						"name": item.title, 
-						"queries": tgtQueries
-					});
+				// getLayersVisibleAtScale returns the visible child layers 
+				// when the group or parent layer is turned off
+				if (item.visible === true) {
+					var tgtQueries = [];
+					array.forEach(item.visibleLayers, lang.hitch(this, function(layerId) {
+						// layerId could be -1 when a parent layer is turned off
+						var layerInfo = item.layerInfos[layerId]; 
+						// leaf layers only
+						if (layerInfo && layerInfo.subLayerIds === null) {
+							// check the scale ranges of this layer and all its ancestral layers
+							var scaleInRange, tvsLayerInfo, tvsLayerId = layerId;
+							while(tvsLayerId > -1) {
+								tvsLayerInfo = item.layerInfos[tvsLayerId]; 
+								scaleInRange = Math.min(Math.max(mapScale, tvsLayerInfo.maxScale), tvsLayerInfo.minScale);
+								if (scaleInRange !== mapScale && scaleInRange !== 0) {
+									break; 
+								}
+								tvsLayerId = tvsLayerInfo.parentLayerId;
+							}
+							// within the scale range only (visibleLayers ignores the scale range)
+							if (scaleInRange === mapScale || scaleInRange === 0) {
+								tgtQueries.push({
+									"name": layerInfo.name, 
+									"serviceUrl": item.url + "/" + layerId, 
+									"geometry": queryGeometry
+								});
+							}
+						}
+					})); 
+					// add to searchParam
+					if (tgtQueries.length > 0) {
+						searchParams.push({
+							"name": item.title, 
+							"queries": tgtQueries
+						});
+					}
 				}
         	})); 
 
@@ -317,8 +338,9 @@ define([
 					windowHeight: 500 /*px*/, 
 					columnTemplates: this.columnTemplates
 				}); 
+			} else {
+				console.log("no visible layer at this scale"); 
 			}
-
         },
 
         /* ---------------------- */
