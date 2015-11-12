@@ -302,7 +302,7 @@ define([
         		// add to searchParam
         		if (tgtQueries.length > 0) {
 					searchParams.push({
-						"name": item.id, 
+						"name": item.title, 
 						"queries": tgtQueries
 					});
 				}
