@@ -447,7 +447,7 @@ define([
 		
 		// remove the html skeleton
 		var panelDock = $("#fgm-panelDock"); 
-		if(panelDock) {
+		if(panelDock.length > 0) {
 			panelDock.unbind("click"); 
 			panelDock.remove(); 
 		}
@@ -456,38 +456,40 @@ define([
 		fgm._removeResultPager(); 
 
 		var ctnrElement = $("#fgm-gridContainer"); 
-		if (ctnrElement) {
+		if (ctnrElement.length > 0) {
 			ctnrElement.remove();
 		}
 		
 		var toolbar = $("#fgm-layerToolbar");
-		if(toolbar) {
+		if(toolbar.length > 0) {
 			toolbar.remove(); 
 		}
 		
 		var kdoElement = $("#fgm-layerPanelbar"); 
-		if (kdoElement) {
+		if (kdoElement.length > 0) {
 			if (kdoElement.data("kendoPanelBar")) {
 				kdoElement.data("kendoPanelBar").destroy();
 			}
 			kdoElement.empty();
+			kdoElement.remove(); 
 		}
 		
 		ctnrElement = $("#fgm-panelContainer"); 
-		if (ctnrElement) {
+		if (ctnrElement.length > 0) {
 			ctnrElement.remove();
 		}
 		
 		kdoElement = $("#fgm-kendoSplitter"); 
-		if (kdoElement) {
+		if (kdoElement.length > 0) {
 			if (kdoElement.data("kendoSplitter")) {
 				kdoElement.data("kendoSplitter").destroy();
 			}
 			kdoElement.empty();
+			kdoElement.remove(); 
 		}
 		
 		kdoElement = $("#fgm-resultWindow"); 
-		if (kdoElement) {
+		if (kdoElement.length > 0) {
 			if (kdoElement.data("kendoWindow")) {
 				kdoElement.data("kendoWindow").destroy();
 			}
@@ -668,7 +670,7 @@ define([
 		
 		// destroy the datagrid 
 		var dgElement = $("#fgm-datagrid"); 
-		if (dgElement) {
+		if (dgElement.length > 0) {
 			if ( dgElement.data("kendoGrid")) {
 				dgElement.data("kendoGrid").destroy();
 			}
@@ -716,7 +718,7 @@ define([
 	
 	fgm._removeResultPager = function() {
 		var pgElement = $("#fgm-datapager"); 
-		if (pgElement) {
+		if (pgElement.length > 0) {
 			if ( pgElement.data("kendoPager")) {
 				pgElement.data("kendoPager").destroy();
 			}
