@@ -1517,24 +1517,31 @@ define([
 		for(var f=0; f<results.features.length; f++) {
 			var feature = results.features[f]; 
 			var attributes = feature.attributes, 
+				geometry = feature.geometry,
+				geometryExtent = feature.geometry.getExtent();
 			
+			if (geometryExtent) {
+				if (!layerExtent) {
+					layerExtent = new Extent(geometryExtent.toJson());
 				} else {
-					if (!layerExtent) {
-						layerExtent = new Extent(geometry.x, geometry.y, geometry.x, geometry.y, geometry.spatialReference);
-					} else if (!layerExtent.contains(geometry)) {
-						if (layerExtent.xmax < geometry.x)
-							layerExtent.xmax = geometry.x;
-						if (layerExtent.ymax < geometry.y)
-							layerExtent.ymax = geometry.y;
-						if (layerExtent.xmin > geometry.x)
-							layerExtent.xmin = geometry.x;
-						if (layerExtent.ymin > geometry.y)
-							layerExtent.ymin = geometry.y;
-					}
+					layerExtent = layerExtent.union(geometryExtent);
 				}
-
-				fgm._fgLayer.add(new Graphic(geometry, symbol, attributes));
+			} else {
+				if (!layerExtent) {
+					layerExtent = new Extent(geometry.x, geometry.y, geometry.x, geometry.y, geometry.spatialReference);
+				} else if (!layerExtent.contains(geometry)) {
+					if (layerExtent.xmax < geometry.x)
+						layerExtent.xmax = geometry.x;
+					if (layerExtent.ymax < geometry.y)
+						layerExtent.ymax = geometry.y;
+					if (layerExtent.xmin > geometry.x)
+						layerExtent.xmin = geometry.x;
+					if (layerExtent.ymin > geometry.y)
+						layerExtent.ymin = geometry.y;
+				}
 			}
+
+			fgm._fgLayer.add(new Graphic(geometry, symbol, attributes));
 		}
 		
 		if (layerExtent.getHeight() * layerExtent.getWidth() === 0) {
