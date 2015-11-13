@@ -1712,12 +1712,24 @@ define([
 				var attributes = results.features[f].attributes; 
 				$(results.fields).each(function(idx, field) {
 					var attrValue = attributes[field.name]; 
-					if ((/^http:\/\/.+$/i).test(attrValue) === true) {
-						fgm._cxtMenuItems.push({
-							text: field.alias, 
-							cssClass: "fgm-cxtmenu-hyperlink",
-							hyperlink: attrValue
-						}); 
+					if (typeof attrValue === "string") {
+						var startIdx = attrValue.search(/http:\/\//i), urlString; 
+						if (startIdx === 0) {
+							// straight URL
+							urlString = attrValue;
+						} else if (startIdx > 0) {
+							// embedded URL
+							urlString = attrValue.substring(startIdx); 
+							var endIdx = urlString.search(/[>]/); 
+							urlString = urlString.substring(0, endIdx);
+						}
+						if (urlString) {
+							fgm._cxtMenuItems.push({
+								text: field.alias, 
+								cssClass: "fgm-cxtmenu-hyperlink",
+								hyperlink: urlString
+							}); 
+						}
 					}
 				}); 
 				break; 
