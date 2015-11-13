@@ -599,7 +599,7 @@ define([
 										   .attr("udata-grpname", item["name"])
 										   .html(item["name"]);
 				listElement = $("<ul></ul>"); 
-				layerPane.append(grpElement.append(listElement));
+				$("#fgm-layerPanelbar").append(grpElement.append(listElement));
 			}
 			if (listElement) {
 				$(item["queries"]).each(function(idx, qry) {
@@ -809,6 +809,7 @@ define([
 			if (fgm.selectedPanel) {
 				var panelBar = $("#fgm-layerPanelbar").data("kendoPanelBar"); 
 				panelBar.select(fgm.selectedPanel); 
+				panelBar = null; 
 			}
 		}
 	};
