@@ -124,8 +124,8 @@ define([
 
 	fgm.options = {
 		pageSize: 1000, 
-		minColumnWidth: 100, /*px*/
-		maxColumnWidth: 300, /*px*/
+		minColumnWidth: 50, /*px*/
+		maxColumnWidth: 140, /*px*/
 		columnTemplates: [], /*DEV: global column templates*/
 		title: "Query Results", 
 		map: null, 
