@@ -1,19 +1,38 @@
 <div>
-	<div><input type="radio" name="queryMethod" data-dojo-attach-event="onchange:_queryMethodChanged" value="rectangle" checked/>Draw a rectangle</div>
-	<div><input type="radio" name="queryMethod" data-dojo-attach-event="onchange:_queryMethodChanged" value="polygon" />Draw a polygon</div>
-	<div><input type="radio" name="queryMethod" data-dojo-attach-event="onchange:_queryMethodChanged" value="pointBuffer" />Distance around a point
-		<table class="${baseClass}BufferOptions" data-dojo-attach-point="_bufferOptions">
-			<tr>
-				<td>
-					<span>Distance: </span>
-					<input type="text" data-dojo-attach-point="_bufferDistance" size="6" />
-				</td>
-				<td>
-					<div><input type="radio" name="distanceUnit" data-dojo-attach-event="onchange:_distanceUnitChanged" value="foot" checked/>feet</div>
-					<div><input type="radio" name="distanceUnit" data-dojo-attach-event="onchange:_distanceUnitChanged" value="meter" />meters</div>				
-				</td>
-			</tr>
-		</table>
-	</div>
+	<table>
+		<tr>
+			<td class="${baseClass}Options">
+			<fieldset>
+				<legend>Options</legend>
+				<div>
+					<div><input type="radio" name="queryMethod" data-dojo-attach-event="onchange:_queryMethodChanged" value="rectangle" checked/>Draw a rectangle</div>
+					<div><input type="radio" name="queryMethod" data-dojo-attach-event="onchange:_queryMethodChanged" value="polygon" />Draw a polygon</div>
+					<div><input type="radio" name="queryMethod" data-dojo-attach-event="onchange:_queryMethodChanged" value="pointBuffer" />Distance around a point
+						<table class="${baseClass}BufferOptions" data-dojo-attach-point="_bufferOptions">
+							<tr>
+								<td>
+									<span>Distance: </span>
+									<input type="text" data-dojo-attach-point="_bufferDistance" size="6" />
+								</td>
+								<td>
+									<div><input type="radio" name="distanceUnit" data-dojo-attach-event="onchange:_distanceUnitChanged" value="foot" checked/>feet</div>
+									<div><input type="radio" name="distanceUnit" data-dojo-attach-event="onchange:_distanceUnitChanged" value="meter" />meters</div>
+								</td>
+							</tr>
+						</table>
+					</div>
+				</div>
+			</fieldset>
+			</td>
+			<td class="${baseClass}Switch">
+				<button data-dojo-type="dijit/form/ToggleButton" 
+						data-dojo-attach-point="_drawingModeSwitch"
+						data-dojo-props="iconClass:'dijitCheckBoxIcon', checked: false"
+						data-dojo-attach-event="onChange:_drawingModeChanged">
+					Off
+				</button>
+			</td>
+		</tr>
+	</table>
 	<span data-dojo-attach-point="_status" class="${baseClass}StatusMessage"></span>
 </div>

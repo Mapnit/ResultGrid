@@ -7,6 +7,7 @@ define([
 	"dojo/_base/array",
 	"dojo/parser",
 	"dijit/_TemplatedMixin",
+	"dijit/_WidgetsInTemplateMixin", 
 
     "dojo/on",
 	"dojo/dom",
@@ -14,6 +15,8 @@ define([
     "dojo/dom-class",
     "dojo/dom-style",
     "dojo/ready",
+	
+	"dijit/form/ToggleButton",
 
 	"esri/toolbars/draw", 
     "esri/layers/GraphicsLayer", 
@@ -30,14 +33,16 @@ define([
 ], function(
 	_WidgetBase,
     topic, Evented, declare, lang, array, 
-    parser, _TemplatedMixin,
+    parser, _TemplatedMixin, _WidgetsInTemplateMixin,
     on, dom, domConstruct, domClass, domStyle, ready, 
+	ToggleButton, 
     Draw, GraphicsLayer, Graphic, 
     SimpleMarkerSymbol, SimpleLineSymbol, SimpleFillSymbol, 
     dijitTemplate, FeatureGridManager
 ) {
 
-    var queryMap = declare("QueryMap", [_WidgetBase, _TemplatedMixin, Evented], {
+    var queryMap = declare("QueryMap", 
+			[_WidgetBase, _TemplatedMixin, _WidgetsInTemplateMixin, Evented], {
 
 		templateString: dijitTemplate,
 		baseClass: "QueryMap", // css base class
@@ -229,6 +234,7 @@ define([
 
         _prepareQueryDrawing: function() {
 			this.showMessage(""); 
+			this._drawingModeSwitch.set("checked", false); 
 			
 			// display the pointBuffer options
 			domStyle.set(this._bufferOptions, "display", (this._queryMethod === "pointBuffer"?'block':"none")); 
@@ -246,7 +252,7 @@ define([
 							this._doQuery(evt.geometry); 
 						}))
 					);
-					this._drawToolbar.activate(Draw.EXTENT);
+					//this._drawToolbar.activate(Draw.EXTENT);
 					break; 
 				case "polygon":
 					this._queryMapHandlers.push(
@@ -259,7 +265,7 @@ define([
 							this._doQuery(evt.geometry); 
 						}))
 					);
-					this._drawToolbar.activate(Draw.POLYGON);
+					//this._drawToolbar.activate(Draw.POLYGON);
 					break; 
 				case "pointBuffer":
 					this._queryMapHandlers.push(
@@ -279,7 +285,7 @@ define([
 								this._doQuery(queryGeometry); 
 						}))
 					);
-					this._drawToolbar.activate(Draw.POINT);
+					//this._drawToolbar.activate(Draw.POINT);
 			}
         }, 
 
@@ -346,6 +352,28 @@ define([
         /* ---------------------- */
         /* Private Event Handlers */
         /* ---------------------- */
+		
+		_drawingModeChanged: function(evt) {			 
+			if (evt === true) {
+				this._drawingModeSwitch.set("label", "On");
+				// activate the drawing toolbar
+				switch(this._queryMethod) {
+					case "rectangle":
+						this._drawToolbar.activate(Draw.EXTENT);
+						break;
+					case "polygon":
+						this._drawToolbar.activate(Draw.POLYGON);
+						break;
+					case "pointBuffer":
+						this._drawToolbar.activate(Draw.POINT);
+						break; 
+				}
+			} else {
+				this._drawingModeSwitch.set("label", "Off");
+				// reset the draw toolbar 
+				this._drawToolbar.deactivate(); 
+			}			
+		}, 
 
         _queryMethodChanged: function(evt) {
         	this._resetQueryDrawing();
