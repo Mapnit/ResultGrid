@@ -15,10 +15,10 @@ define([
     "dojo/dom-style",
     "dojo/ready",
 
-    "dojo/text!apc/dijit/templates/SearchData.html", // template html
+    "dojo/text!./templates/SearchData.html", // template html
 
     "apc/extra/FeatureGridManager", // 3rd-party lib
-	"xstyle/css!apc/dijit/css/SearchData.css" // widget style 
+	"xstyle/css!./css/SearchData.css" // widget style 
 ], function(
 	_WidgetBase,
     topic, Evented, declare, lang, array, 

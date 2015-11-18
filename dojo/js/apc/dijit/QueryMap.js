@@ -26,10 +26,10 @@ define([
     "esri/symbols/SimpleLineSymbol", 
     "esri/symbols/SimpleFillSymbol", 
 
-    "dojo/text!apc/dijit/templates/QueryMap.html", // template html
+    "dojo/text!./templates/QueryMap.html", // template html
 	
 	"apc/extra/FeatureGridManager", // 3rd-party lib
-	"xstyle/css!apc/dijit/css/QueryMap.css" // widget style 
+	"xstyle/css!./css/QueryMap.css" // widget style 
 ], function(
 	_WidgetBase,
     topic, Evented, declare, lang, array, 
