@@ -97,6 +97,13 @@
 /* keep everything (long text) on a single line */
 .k-grid td {
 	white-space:nowrap;
+	padding: 0em .6em .1em .2em;
+}
+
+.k-grouping-header {
+	padding-left: 1.286em; 
+	padding-top: 0em; 
+	padding-bottom: 0em; 
 }
 
 #fgm-datagrid span.k-icon {
