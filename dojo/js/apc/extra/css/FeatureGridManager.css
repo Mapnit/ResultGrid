@@ -94,6 +94,20 @@
 	font-family: arial;
 	font-size: 0.9em; 
 }
+
+.k-i-custom {
+	background-position: -80px -288px !important;
+}
+/*
+.k-link:not(.k-state-disabled):hover>.k-i-custom  {
+	background-position: -80px -288px;
+}
+
+.k-state-hover>.k-i-custom  {
+	background-position: -80px -288px;
+}
+ */
+
 /* keep everything (long text) on a single line */
 .k-grid td {
 	white-space:nowrap;
