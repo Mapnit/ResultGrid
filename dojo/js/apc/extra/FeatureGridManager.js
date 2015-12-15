@@ -1480,7 +1480,7 @@ define([
 		return /*actionColumn*/ {
 			command: cmdColumns,
 			locked: true, 
-			width: 35 /*button width & padding*/ * cmdColumns.length + 6 /*column padding*/
+			width: 32 /*button width & padding*/ * cmdColumns.length + 6 /*column padding*/
 		};
 	}; 
 
