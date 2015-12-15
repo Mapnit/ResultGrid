@@ -338,7 +338,7 @@ define([
 		winDiv.append(splitterDiv);
 		$("body").append(winDiv); 
 
-		var dockerDiv = $('<span id="fgm-panelDock">Show Results</span>'); 
+		var dockerDiv = $('<span id="fgm-panelDock">' + fgm.options.title + '</span>'); 
 		dockerDiv.addClass("k-button"); 
 		dockerDiv.hide(); 
 		$("body").append(dockerDiv);
@@ -364,7 +364,8 @@ define([
 						resultWin.data("kendoWindow").open();
 						panelDock.hide();
 						 */
-						$("#fgm-resultWindow").data("kendoWindow").open();
+						$("#fgm-resultWindow").data("kendoWindow").wrapper.show(); 
+						//$("#fgm-resultWindow").data("kendoWindow").open();
 						$("#fgm-panelDock").hide();
 					});
 
@@ -373,14 +374,14 @@ define([
 			fgm.removeFeatureGrid();
 		};
 		
-		var onOpen = function(e) {			
+		var onOpen = function(e) {	
 			var wndRefNode = $("#"+fgm.options.srcRefNode);
 			if (wndRefNode.length > 0) {
 				// align the window to the left/bottom corner
 				this.wrapper.css({ 
 					top: wndRefNode.height() - fgm.options.windowHeight - 50, 
 					left: 10 
-				});				
+				});	
 			} else {
 				// place at the center of the browser window
 				this.center(); 
@@ -399,14 +400,14 @@ define([
 				height: wndHeight + "px",
 				title: fgm.options.title,
 				actions: [
+					"Custom",
 					//"Pin",
-					"Minimize",
+					//"Minimize",
 					"Maximize",
 					"Close"
 				],
 				close: onClose,
 				open: onOpen,
-				//minimize: onMinimize,
 				resize: fgm.resizePanesInWnd, 
 				visible: false
 			});
@@ -414,6 +415,14 @@ define([
 			fgm._resultWindow = $("#fgm-resultWindow").data("kendoWindow");
 			fgm._resultWindow.open();
 		}
+		
+		// the handler on the custom button click event
+		resultWin.data("kendoWindow").wrapper.find(".k-i-custom").click(function(e){
+			console.log("minimize the window to a custom button"); 
+			$("#fgm-resultWindow").data("kendoWindow").wrapper.hide(); 
+			$("#fgm-panelDock").show();			
+			e.preventDefault();
+		});	
 		
 	};
 	
