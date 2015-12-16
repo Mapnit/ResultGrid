@@ -108,6 +108,10 @@
 }
  */
 
+.k-grid-header th.k-header {
+	padding: .3em .2em .3em .2em
+}
+
 /* keep everything (long text) on a single line */
 .k-grid td {
 	white-space:nowrap;
@@ -115,7 +119,7 @@
 }
 
 .k-grouping-header {
-	padding-left: 1.286em; 
+	padding-left: 1.2em; 
 	padding-top: 0em; 
 	padding-bottom: 0em; 
 }
