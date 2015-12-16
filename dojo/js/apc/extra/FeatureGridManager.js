@@ -1320,6 +1320,11 @@ define([
 						type: "date", 
 						parse: function(t) {
 							var d = new Date(t); 
+							// had to add 1 day on the parsed date to be correct
+							// - because Esri date is from the epoch time (1970/1/1)
+							// while the javascript date is from Wed Dec 31 1969 18:00:00 GMT-0600 (CST)
+							d.setDate(d.getDate() + 1); 
+							//
 							return d.toLocaleDateString(); 
 						}
 					}; 
