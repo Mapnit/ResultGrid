@@ -95,6 +95,10 @@
 	font-size: 0.9em; 
 }
 
+div.k-window-content {
+	padding: .2em; 
+}
+
 .k-i-custom {
 	background-position: -80px -288px !important;
 }
