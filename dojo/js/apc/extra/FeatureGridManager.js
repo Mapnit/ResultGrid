@@ -129,6 +129,7 @@ define([
 		columnTemplates: [], /*DEV: global column templates*/
 		title: "Query Results", 
 		map: null, 
+		minZomLevel: 12, 
 		srcRefNode: null, // refNode for window sizing and positioning
 		windowHeight: 500, /*default height in px*/
 		windowWidth: 1050, /*default width in px*/
@@ -1703,7 +1704,12 @@ define([
 			
 			if (geometryExtent.getHeight() === 0 && geometryExtent.getWidth() === 0) {
 				// zoom to a point
-				fgm.options.map.centerAndZoom(geometryExtent.getCenter(), 12);
+				var currentZoomLevel = fgm.options.map.getZoom(); 
+				if (currentZoomLevel < fgm.options.minZomLevel) {
+					fgm.options.map.centerAndZoom(geometryExtent.getCenter(), fgm.options.minZomLevel);
+				} else {
+					fgm.options.map.center(geometryExtent.getCenter());
+				}
 			} else {
 				fgm.options.map.setExtent(geometryExtent, true);
 			}
