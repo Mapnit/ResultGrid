@@ -1708,7 +1708,7 @@ define([
 				if (currentZoomLevel < fgm.options.minZomLevel) {
 					fgm.options.map.centerAndZoom(geometryExtent.getCenter(), fgm.options.minZomLevel);
 				} else {
-					fgm.options.map.center(geometryExtent.getCenter());
+					fgm.options.map.centerAt(geometryExtent.getCenter());
 				}
 			} else {
 				fgm.options.map.setExtent(geometryExtent, true);
