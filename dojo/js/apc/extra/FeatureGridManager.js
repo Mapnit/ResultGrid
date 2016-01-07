@@ -983,7 +983,12 @@ define([
 			queryElement.remove();
 		} else {
 			var itemElement = queryElement.children("span"); 
+			/*
+			// "addition" could produce duplication while "set" could avoid that. 
 			itemElement.html(itemElement.html().replace(fgm.loadingHtml, "") + " (" + results.length + ")");
+			 */
+			var qry = fgm._readFromCache(queryName, "query"); 
+			itemElement.html(qry["name"] + " (" + results.length + ")");
 
 			// remove the loading element
 			var loadingId = fgm._readFromCache(queryName, "loadingId"); 
@@ -997,6 +1002,8 @@ define([
 	// query option 1 (): check status & process results
 	fgm._checkOIDQueryStatus = function () {
 		console.log("query status checking ..."); 
+		if (fgm._queryllelArray.length === 0) return; 
+		
 		var allDone = true;
 		$(fgm._queryllelArray).each(function(idx, q) {
 			if (q.isDone() === true) {
@@ -1015,6 +1022,7 @@ define([
 			setTimeout(fgm._checkOIDQueryStatus, fgm._queryCheckInterval); 
 		} else {
 			console.log("all OID queries done");
+			if (fgm._queryllelArray.length === 0) return; 
 
 			// scan the groups in the panelbar 
 			var isGroupEmpty = {}, allGroupsEmpty = true; 
