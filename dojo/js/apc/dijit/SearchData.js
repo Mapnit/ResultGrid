@@ -228,11 +228,21 @@ define([
 							// pack the search text into the queries
 							var tgtQueries = []; 
 							array.forEach(tgt["queries"], lang.hitch(this, function(qry) {
-								tgtQueries.push({
-									"name": qry["name"], 
-									"serviceUrl": qry["serviceUrl"], 
-									"where": (isInputNumeric===false?qry["where"]:qry["numericWhere"]||qry["where"]).replace(/\{0\}/g, searchInput)
-								}); 
+									if (qry["serviceProvider"] === "Bing-Geocoder") {
+										tgtQueries.push({
+											"serviceProvider": qry["serviceProvider"], 
+											"serviceKey": qry["BingMapKey"], 
+											"name": qry["name"], 
+											"where": qry["where"].replace(/\{0\}/g, searchInput)
+										}); 
+									} else {
+										tgtQueries.push({
+											"serviceProvider": "Esri-Map", 
+											"name": qry["name"], 
+											"serviceUrl": qry["serviceUrl"]||null, 
+											"where": (isInputNumeric===false?qry["where"]:qry["numericWhere"]||qry["where"]).replace(/\{0\}/g, searchInput) 										
+										}); 
+									}
 							})); 
 							// add to searchParam
                             if (tgtQueries.length > 0) {

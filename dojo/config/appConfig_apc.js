@@ -243,6 +243,11 @@ var appConfig = {
                     "name": "APC Office Locations",
                     "serviceUrl": "http://gis/arcgis/rest/services/Basemap/basemap_query/MapServer/22",
                     "where": "(upper(descr) like '{0}%')"
+                }, {
+                    "name": "Address (Bing)",
+					"serviceProvider": "Bing-Geocoder",
+					"where": "{0}", 
+                    "BingMapKey": "AucS13UKT6Z3vdopT191o2GIGUcyZ5rnO5cvdY_Py01vancFOkFezw7K7XGeA8or"
                 }
             ]
         },
@@ -367,16 +372,6 @@ var appConfig = {
                     "name": "Offshore Vessels",
                     "serviceUrl": "http://gis/arcgis/rest/services/Basemap/basemap_query/MapServer/40",
                     "where": "(vessel like '{0}' or mmsi like '{0}')"
-                }
-            ]
-        },
-        {
-            "name": "Addresses",
-			"default": false, 
-            "queries": [
-                {
-                    "name": "Address",
-                    "BingMapKey": "AucS13UKT6Z3vdopT191o2GIGUcyZ5rnO5cvdY_Py01vancFOkFezw7K7XGeA8or."
                 }
             ]
         }
