@@ -1382,7 +1382,7 @@ define([
 			var columnWidth = fieldLength?Math.min(fieldLength*20, fgm.options.maxColumnWidth):fgm.options.minColumnWidth; 	
 			
 			// add tooltip to the header
-			var headerTemplate = '<span title="' + resultField["name"] + '">' + resultField["name"] + '</span>'; 
+			var headerTemplate = '<span title="' + resultField["alias"] + '">' + resultField["alias"] + '</span>'; 
 			
 			resultColumns.push({
 				"field": resultField["name"],
