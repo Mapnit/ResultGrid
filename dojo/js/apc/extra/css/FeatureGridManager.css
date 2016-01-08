@@ -112,6 +112,10 @@ div.k-window-content {
 }
  */
 
+.k-panelbar .k-header {
+	font-weight: bolder;
+}
+
 .k-grid-header th.k-header {
 	padding: .3em .2em .3em .2em
 }
