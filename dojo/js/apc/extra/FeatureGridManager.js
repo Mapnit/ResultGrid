@@ -574,7 +574,15 @@ define([
 			//$("<span></span>").addClass("fgm-layerTool-excel").click(fgm._exportAsExcel); 
 			$("<span></span>").addClass("fgm-layerTool-excel").click(function() {
 				if (fgm._currentQuery) {
-					fgm._exportAsExcel();  
+					var queryName = fgm._currentQuery; 
+					var qry = fgm._readFromCache(queryName, "query"); 
+					if (qry["serviceProvider"] === "Bing-Geocoder") {
+						if (fgm._datagrid) {
+							fgm._datagrid.saveAsExcel();
+						} 
+					} else { // qry["serviceProvider"] === "Esri-Map"
+						fgm._exportAsExcel(); 
+					} 
 				} else {
 					console.log("no query is selected"); 
 					fgm.showMessage("no data layer is selected"); 
@@ -672,7 +680,12 @@ define([
 			//width: gridContainerDiv.width() - 30, 
 			height: gridContainerDiv.height() - 50, 
 			//width: 818,
-			//height: 470,	height: 405, 
+			//height: 470,	height: 405,
+			excel: {
+				//fileName: "Location-Address.xlsx",
+				filterable:false,
+				allPages:true
+			},
 			dataSource: resultData,
 			columns: resultColumns, 
 			columnMenu: true,
