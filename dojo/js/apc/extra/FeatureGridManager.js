@@ -19,7 +19,7 @@ define([
     "esri/graphic",	
 	"esri/symbols/SimpleMarkerSymbol", 
     "esri/symbols/SimpleFillSymbol", 
-	"esri/symbols/SimpleLineSymbol",	
+	"esri/symbols/SimpleLineSymbol", 
 	
 	"jquery", "kendo", 
 	"xstyle/css!./css/FeatureGridManager.css"
@@ -27,7 +27,7 @@ define([
 	declare, lang, topic, all, xhr, 
 	QueryTask, Query, VEGeocoder, 
 	Point, Polyline, Polygon, Extent, webMercatorUtils, GraphicsLayer, Graphic,
-	SimpleMarkerSymbol, SimpleFillSymbol, SimpleLineSymbol
+	SimpleMarkerSymbol, SimpleFillSymbol, SimpleLineSymbol	
 ) {	
 	var fgm = declare("FeatureGridManager", null, {}); 
 	
@@ -699,7 +699,7 @@ define([
 			change: fgm.onRowSelect
 		});	
 
-		fgm._datagrid = dg.data("kendoGrid");		
+		fgm._datagrid = dg.data("kendoGrid");
 	};
 	
 	fgm._removeResultGrid = function() {
@@ -1062,7 +1062,7 @@ define([
 				
 				var rowCount = fgm._readFromCache(queryName, "rowCount");
 				if (groupId in isGroupEmpty) {
-					isGroupEmpty[groupId] = isGroupEmpty[groupId] && (rowCount === 0);					
+					isGroupEmpty[groupId] = isGroupEmpty[groupId] && (rowCount === 0); 
 				} else {
 					isGroupEmpty[groupId] = (rowCount === 0);
 				}
@@ -1558,7 +1558,6 @@ define([
 			}			
 		}
 	}; 
-	
 
 	fgm._composeActionColumn = function(results) {
 		var cmdColumns = []; 
@@ -1741,8 +1740,7 @@ define([
 	};
 	
 	fgm._removeFeature = function(OID) {
-		fgm.showMessage("removing row from datagrid..."); 
-			
+		fgm.showMessage("removing row from datagrid..."); 			
 		var queryName = fgm._currentQuery;
 		
 		// remove from the cached OID result
