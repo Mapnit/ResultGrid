@@ -945,6 +945,8 @@ define([
 				// cache query
 				fgm._writeIntoCache(queryName, qry, "query");
 				fgm._writeIntoCache(queryName, groupId, "groupId");
+				fgm._writeIntoCache(queryName, itemId, "itemId"); 
+				fgm._writeIntoCache(queryName, elementId, "panelId"); 
 				fgm._writeIntoCache(queryName, loadingId, "loadingId");
 				
 				// fire query
@@ -1048,6 +1050,26 @@ define([
 				//fgm._writeIntoCache(queryName, results, "OIDs"); 
 				//fgm._writeIntoCache(queryName, (!results)?0:results.length, "rowCount"); 
 				 */
+				 
+				/* (2016/1/11) added the auto-loading of the first returned results*/
+				if (fgm.selectedPanel === null && fgm._datagrid === null) {
+					var queryName = q.getQueryName(); 
+					var rowCount = fgm._readFromCache(queryName, "rowCount"); 
+					if (rowCount > 0) {
+						// find the corresponding item in the Panelbar
+						var panelId = fgm._readFromCache(queryName, "panelId"); 
+						var foundPanels = $("#"+panelId); 
+						if (foundPanels.length === 1) {
+							// set the selected panel 
+							fgm.selectedPanel = foundPanels[0]; 
+							var panelBar = $("#fgm-layerPanelbar").data("kendoPanelBar"); 
+							panelBar.select(fgm.selectedPanel); 
+							panelBar = null; 
+							// load the datagrid 
+							fgm._loadNewResultGrid(queryName); 
+						}
+					}
+				}
 			} else {
 				allDone = false; 
 			}
