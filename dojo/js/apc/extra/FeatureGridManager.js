@@ -1517,8 +1517,13 @@ define([
 			var results = fgm._readFromCache(queryName, "data"); 
 			fgm._prepareDataResults(results); 
 			
-			// the original results
-			var OIDArray = fgm._readFromCache(queryName, "OIDs"); 
+			// replace the original results with the OID Array
+			var OIDArray = []; 
+			$(results.features).each(function(idx, item) {
+				OIDArray.push(item.attributes[fgm.column_oid]);
+			}); 
+			// cache the OID Array
+			fgm._writeIntoCache(queryName, OIDArray, "OIDs");
 			// build the pager 
 			fgm._buildResultPager(OIDArray); 
 			
