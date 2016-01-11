@@ -952,7 +952,7 @@ define([
 				if (qry["serviceProvider"] === "Bing-Geocoder") {
 					qll = new Queryllel(queryName, elementId, fgm._showBingGCResults); 
 				} else if (qry["serviceProvider"] === "Esri-Map") {
-					qll = new Queryllel(queryName, elementId, fgm._showAgsResultCount); 
+					qll = new Queryllel(queryName, elementId, fgm._showResultCount); 
 				}
 				if (qll) {
 					fgm._queryllelArray.push(qll);
@@ -970,7 +970,7 @@ define([
 	
 	fgm._showBingGCResults = function(queryName, elementId, results) { 
 		// call a common function 
-		fgm._showAgsResultCount(queryName, elementId, results);
+		fgm._showResultCount(queryName, elementId, results);
 		
 		// translate the results to the ags format
 		var agsResults = {}; 
@@ -1002,7 +1002,7 @@ define([
 		fgm._writeIntoCache(queryName, agsResults, "data"); 
 	};
 
-	fgm._showAgsResultCount = function(queryName, elementId, results) {
+	fgm._showResultCount = function(queryName, elementId, results) {
 		// add the number of OIDs into the query element
 		var queryElement = $("#"+elementId); 
 		if (! results || results.length === 0) {
