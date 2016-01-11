@@ -1058,10 +1058,12 @@ define([
 							// set the selected panel 
 							fgm.selectedPanel = foundPanels[0]; 
 							var panelBar = $("#fgm-layerPanelbar").data("kendoPanelBar"); 
+							// (2016/1/11) note: this call will trigger the panelbar change event to fire
 							panelBar.select(fgm.selectedPanel); 
 							panelBar = null; 
 							// load the datagrid 
-							fgm._loadNewResultGrid(queryName); 
+							// (2016/1/11) commented out because the panelbar change event handler will call _loadNewResultGrid)
+							// fgm._loadNewResultGrid(queryName); 
 						}
 					}
 				}
