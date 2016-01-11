@@ -1026,7 +1026,10 @@ define([
 			if (loadingElement) {
 				loadingElement.remove(); 
 			}
-		}		
+		}
+		// cache the results 
+		fgm._writeIntoCache(queryName, results, "OIDs"); 
+		fgm._writeIntoCache(queryName, (!results)?0:results.length, "rowCount"); 
 	};
 	
 	// query option 1 (): check status & process results
@@ -1039,10 +1042,12 @@ define([
 			if (q.isDone() === true) {
 				// cache the query results 
 				// - one result could be cached more than once but the same content
-				var queryName = q.getQueryName(); 
-				var results = q.getResults(); 
-				fgm._writeIntoCache(queryName, results, "OIDs"); 
-				fgm._writeIntoCache(queryName, (!results)?0:results.length, "rowCount"); 
+				/* (2016/1/11) moved to the callback function to avoid duplicate writes
+				//var queryName = q.getQueryName(); 
+				//var results = q.getResults(); 
+				//fgm._writeIntoCache(queryName, results, "OIDs"); 
+				//fgm._writeIntoCache(queryName, (!results)?0:results.length, "rowCount"); 
+				 */
 			} else {
 				allDone = false; 
 			}
