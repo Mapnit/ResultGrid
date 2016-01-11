@@ -318,6 +318,7 @@ define([
 							// within the scale range only (visibleLayers ignores the scale range)
 							if (scaleInRange === mapScale || scaleInRange === 0) {
 								tgtQueries.push({
+									"serviceProvider": "Esri-Map", 
 									"name": layerInfo.name, 
 									"serviceUrl": item.url + "/" + layerId, 
 									"geometry": queryGeometry
