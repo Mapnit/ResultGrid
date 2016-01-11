@@ -47,7 +47,8 @@ define([
 		}
 		
 		Queryllel.prototype.query = function(qry) {
-			console.log("query [" + qry["where"] + "] on " + qry["serviceUrl"]||qry["serviceProvider"]); 
+			// (2016/1/11) note: logic operators are lower than arithmatic ones
+			console.log("query [" + qry["where"] + "] on " + (qry["serviceUrl"]||qry["serviceProvider"])); 
 			
 			if (qry["serviceProvider"] === "Bing-Geocoder") {
 				var query = qry["where"]; 
