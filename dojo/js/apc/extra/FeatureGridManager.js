@@ -49,7 +49,19 @@ define([
 		Queryllel.prototype.query = function(qry) {
 			console.log("query [" + qry["where"] + "] on " + qry["serviceUrl"]||qry["serviceProvider"]); 
 			
-			if (qry["serviceProvider"] === "Esri-Map") {
+			if (qry["serviceProvider"] === "Bing-Geocoder") {
+				var query = qry["where"]; 
+				
+				var geocoder = new VEGeocoder({
+					bingMapsKey: qry["serviceKey"]
+				}); 				
+				geocoder.addressToLocations(query, lang.hitch(this, function(results) {
+					this._processResults(results); 
+				}), lang.hitch(this, function(err) {
+					this._queryError(err); 
+				}));
+				
+			} else { // (qry["serviceProvider"] === "Esri-Map")		
 				var query = new Query();
 				query.where = qry["where"];
 				query.geometry = qry["geometry"]; 
@@ -60,20 +72,6 @@ define([
 				}), lang.hitch(this, function(err) {
 					this._queryError(err); 
 				}));
-			} else if (qry["serviceProvider"] === "Bing-Geocoder") {
-				var query = qry["where"]; 
-				
-				var geocoder = new VEGeocoder({
-					bingMapsKey: qry["serviceKey"]
-				}); 
-				
-				geocoder.addressToLocations(query, lang.hitch(this, function(results) {
-					this._processResults(results); 
-				}), lang.hitch(this, function(err) {
-					this._queryError(err); 
-				}));
-			} else {
-				console.log("unsupported query service provider: " + qry["serviceProvider"]); 
 			} 
 		};
 		
@@ -953,15 +951,11 @@ define([
 				var qll; 
 				if (qry["serviceProvider"] === "Bing-Geocoder") {
 					qll = new Queryllel(queryName, elementId, fgm._showBingGCResults); 
-				} else if (qry["serviceProvider"] === "Esri-Map") {
+				} else { // (qry["serviceProvider"] === "Esri-Map") 
 					qll = new Queryllel(queryName, elementId, fgm._showResultCount); 
 				}
-				if (qll) {
-					fgm._queryllelArray.push(qll);
-					qll.query(qry); 
-				} else {
-					console.log("unknown query service provider: " + qry["serviceProvider"]); 
-				}
+				fgm._queryllelArray.push(qll);
+				qll.query(qry); 
 			})
 		}); 
 		
