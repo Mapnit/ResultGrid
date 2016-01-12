@@ -1565,61 +1565,66 @@ define([
 		fgm._removeResultPager(); 
 		
 		var qry = fgm._readFromCache(queryName, "query"); 
-		if (qry["serviceProvider"] === "Bing-Geocoder") { 
-			// build the datagrid 
-			var results = fgm._readFromCache(queryName, "data"); 
-			fgm._prepareDataResults(results); 
-			
-			// replace the original results with the OID Array
-			var OIDArray = []; 
-			$(results.features).each(function(idx, item) {
-				OIDArray.push(item.attributes[fgm.column_oid]);
-			}); 
-			// cache the OID Array
-			fgm._writeIntoCache(queryName, OIDArray, "OIDs");
-			// build the pager 
-			fgm._buildResultPager(OIDArray); 
-			
-		} else { // qry["serviceProvider"] === "Esri-Map"
-			
-			var OIDArray = fgm._readFromCache(queryName, "OIDs"); 
-			var tdbField = fgm._readFromCache(queryName, "tdbField");
-			var toastField = fgm._readFromCache(queryName, "toastField");
-			
-			if (!tdbField) {
-				// retrieve the tdb field
-				fgm._checkTdbField(queryName, qry);
-			} else {
-				// show or hide the tdb launch button
-				if (tdbField === "none") {
-					fgm._hideTdbLink();
-				} else {
-					fgm._showTdbLink();
-				}
-			}
-			
-			if (!toastField) {
-				// retrieve the toast field
-				fgm._checkToastField(queryName, qry);
-			} else {
-				// show or hide the toast launch button
-				if (toastField === "none") {
-					fgm._hideToastLink();
-				} else {
-					fgm._showToastLink();
-				}
-			}				
-			
-			if (qry && OIDArray) {
-				// request data by OIDs
-				var OIDsForPage = OIDArray.slice(0, Math.min(OIDArray.length, fgm.options.pageSize));
-				fgm._queryForDataByOIDs(qry, OIDsForPage, false); 
+		if (qry) {
+			if (qry["serviceProvider"] === "Bing-Geocoder") { 
+				// build the datagrid 
+				var results = fgm._readFromCache(queryName, "data"); 
+				fgm._prepareDataResults(results); 
+				
+				// replace the original results with the OID Array
+				var OIDArray = []; 
+				$(results.features).each(function(idx, item) {
+					OIDArray.push(item.attributes[fgm.column_oid]);
+				}); 
+				// cache the OID Array
+				fgm._writeIntoCache(queryName, OIDArray, "OIDs");
 				// build the pager 
 				fgm._buildResultPager(OIDArray); 
-			} else {
-				console.log("error: no query for " + queryName); 
-			}			
-		}
+				
+			} else { // qry["serviceProvider"] === "Esri-Map"
+				
+				var OIDArray = fgm._readFromCache(queryName, "OIDs"); 
+				var tdbField = fgm._readFromCache(queryName, "tdbField");
+				var toastField = fgm._readFromCache(queryName, "toastField");
+				
+				if (!tdbField) {
+					// retrieve the tdb field
+					fgm._checkTdbField(queryName, qry);
+				} else {
+					// show or hide the tdb launch button
+					if (tdbField === "none") {
+						fgm._hideTdbLink();
+					} else {
+						fgm._showTdbLink();
+					}
+				}
+				
+				if (!toastField) {
+					// retrieve the toast field
+					fgm._checkToastField(queryName, qry);
+				} else {
+					// show or hide the toast launch button
+					if (toastField === "none") {
+						fgm._hideToastLink();
+					} else {
+						fgm._showToastLink();
+					}
+				} 
+				
+				if (OIDArray && OIDArray.length > 0) {
+					// request data by OIDs
+					var OIDsForPage = OIDArray.slice(0, Math.min(OIDArray.length, fgm.options.pageSize));
+					fgm._queryForDataByOIDs(qry, OIDsForPage, false); 
+					// build the pager 
+					fgm._buildResultPager(OIDArray); 	
+				} else {
+					console.log("warning: no data for " + queryName); 
+					fgm.showMessage("no data in datagrid");
+				}
+			}				
+		} else {
+			console.log("error: no query for " + queryName); 
+		} 
 	}; 
 
 	fgm._composeActionColumn = function(results) {
