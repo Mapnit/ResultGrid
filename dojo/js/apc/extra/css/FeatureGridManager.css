@@ -114,6 +114,7 @@ div.k-window-content {
 
 .k-panelbar .k-header {
 	font-weight: bolder;
+	background-color: #ccc;
 }
 
 .k-grid-header th.k-header {
