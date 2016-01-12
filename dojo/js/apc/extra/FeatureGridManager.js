@@ -1792,29 +1792,73 @@ define([
 		
 		// remove from the cached OID result
 		var OIDArray = fgm._readFromCache(queryName, "OIDs");
-		var f; 
+		var f, found = false; 
 		for(f=0; f<OIDArray.length; f++) {
 			if (OID === OIDArray[f]) {
 				OIDArray.splice(f, 1);
+				found = true; 
 				break;
 			}
 		}
 		
-		// change the row count
-		fgm._writeIntoCache(queryName, OIDArray.length, "rowCount"); 
-		
-		// reduce the count in the panel title
-		var qry = fgm._readFromCache(queryName, "query");
-		fgm.selectedPanel.children("span").text(qry["name"] + " (" + OIDArray.length + ")");
-		
-		// remove it from the pager datasource
-		var dataSource = fgm._dataPager.dataSource;
-		var dataItem = dataSource.at(f); 
-		dataSource.remove(dataItem); 
-		//dataSource.sync(); // nothing to be sent to the server side
-		
-		// reload the features for the current page 
-		fgm._queryForDataByPage(fgm._currentPage); 
+		if (found === false) {
+			fgm.showMessage("no such feature found to remove"); 
+		} else {
+			// change the row count
+			fgm._writeIntoCache(queryName, OIDArray.length, "rowCount"); 
+			
+			// nullify the cached extent 
+			fgm._writeIntoCache(queryName, null, "extent"); 
+			
+			// reduce the count in the panel title
+			var qry = fgm._readFromCache(queryName, "query");
+			fgm.selectedPanel.children("span").text(qry["name"] + " (" + OIDArray.length + ")");
+			
+			// remove it from the pager datasource
+			var dataSource = fgm._dataPager.dataSource;
+			var dataItem = dataSource.at(f); 
+			dataSource.remove(dataItem); 
+			//dataSource.sync(); // nothing to be sent to the server side
+			
+			if (qry["serviceProvider"] === "Bing-Geocoder") {
+				// remove it from the datagrid datasource
+				var dataSource = fgm._datagrid.dataSource;
+				var dataItem = dataSource.at(f); 
+				dataSource.remove(dataItem); 
+				//dataSource.read(); // grid auto refreshes
+				
+				// remove from the graphic layers
+				var i, l, g; 
+				for(i=0,l=fgm._fgLayer.graphics.length; i<l; i++) {
+					g = fgm._fgLayer.graphics[i]; 
+					if (OID === g.attributes[fgm.column_oid]) {
+						fgm._fgLayer.remove(g);
+						break; 
+					}
+				}
+				for(i=0,l=fgm._fhlgLayer.graphics.length; i<l; i++) {
+					g = fgm._fhlgLayer.graphics[i]; 
+					if (OID === g.attributes[fgm.column_oid]) {
+						fgm._fhlgLayer.remove(g);
+						break; 
+					} 
+				} 
+				
+				// remove from the cached data results
+				var results = fgm._readFromCache(queryName, "data"); 
+				results.features.splice(f, 1); 
+				
+				// nullify the cached feature extent to force recalculation
+				fgm._writeIntoCache(queryName, null, "extent");
+				
+				// clear the message
+				fgm.showMessage(""); 
+				
+			} else { // (qry["serviceProvider"] === "Esri-Map")
+				// reload the features for the current page 
+				fgm._queryForDataByPage(fgm._currentPage); 
+			}
+		}
 	};
 		
 	fgm._zoomToFeature = function(OID, highlighted) {
