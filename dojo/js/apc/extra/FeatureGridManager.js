@@ -142,7 +142,7 @@ define([
 
 	fgm.options = {
 		pageSize: 1000, 
-		minColumnWidth: 50, /*px*/
+		minColumnWidth: 60, /*px*/
 		maxColumnWidth: 140, /*px*/
 		columnTemplates: [], /*DEV: global column templates*/
 		title: "Query Results", 
@@ -1437,7 +1437,10 @@ define([
 			else if (isHyperlinkColumn === true)
 				fieldLength = 7; 
 			
-			var columnWidth = fieldLength?Math.min(fieldLength*20, fgm.options.maxColumnWidth):fgm.options.minColumnWidth; 	
+			var columnWidth = fgm.options.minColumnWidth; 
+			if (fieldLength) {
+				columnWidth = Math.max(columnWidth, Math.min(fieldLength*20, fgm.options.maxColumnWidth)); 
+			}
 			
 			// add tooltip to the header
 			var headerTemplate = '<span title="' + resultField["alias"] + '">' + resultField["alias"] + '</span>'; 
