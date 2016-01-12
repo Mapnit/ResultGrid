@@ -887,6 +887,40 @@ define([
 		}
 		return null; 
 	};	
+	
+	fgm._calculateExtent = function(features) {
+		var layerExtent = null; 
+		for(var f=0; f<features.length; f++) {
+			var feature = features[f]; 
+			var attributes = feature.attributes, 
+				geometry = feature.geometry;
+			
+			if (geometry) {
+				var geometryExtent = feature.geometry.getExtent();
+				if (geometryExtent) {
+					if (!layerExtent) {
+						layerExtent = new Extent(geometryExtent.toJson());
+					} else {
+						layerExtent = layerExtent.union(geometryExtent);
+					}
+				} else {
+					if (!layerExtent) {
+						layerExtent = new Extent(geometry.x, geometry.y, geometry.x, geometry.y, geometry.spatialReference);
+					} else if (!layerExtent.contains(geometry)) {
+						if (layerExtent.xmax < geometry.x)
+							layerExtent.xmax = geometry.x;
+						if (layerExtent.ymax < geometry.y)
+							layerExtent.ymax = geometry.y;
+						if (layerExtent.xmin > geometry.x)
+							layerExtent.xmin = geometry.x;
+						if (layerExtent.ymin > geometry.y)
+							layerExtent.ymin = geometry.y;
+					}
+				}
+			}
+		}
+		return layerExtent; 		
+	}; 	
 
 	/* --------------------------- */
 	/* Override Utility Functions  */
@@ -1661,47 +1695,27 @@ define([
 				break; 
 		}
 
-		var layerExtent = null; 
+		// add the features to the graphic layer
 		for(var f=0; f<results.features.length; f++) {
 			var feature = results.features[f]; 
 			var attributes = feature.attributes, 
 				geometry = feature.geometry;
 			
 			if (geometry) {
-				var geometryExtent = feature.geometry.getExtent();
-				if (geometryExtent) {
-					if (!layerExtent) {
-						layerExtent = new Extent(geometryExtent.toJson());
-					} else {
-						layerExtent = layerExtent.union(geometryExtent);
-					}
-				} else {
-					if (!layerExtent) {
-						layerExtent = new Extent(geometry.x, geometry.y, geometry.x, geometry.y, geometry.spatialReference);
-					} else if (!layerExtent.contains(geometry)) {
-						if (layerExtent.xmax < geometry.x)
-							layerExtent.xmax = geometry.x;
-						if (layerExtent.ymax < geometry.y)
-							layerExtent.ymax = geometry.y;
-						if (layerExtent.xmin > geometry.x)
-							layerExtent.xmin = geometry.x;
-						if (layerExtent.ymin > geometry.y)
-							layerExtent.ymin = geometry.y;
-					}
-				}
-
 				fgm._fgLayer.add(new Graphic(geometry, symbol, attributes));
 			}
 		}
 		
+		// calculate the extent of features 
+		var layerExtent = fgm._calculateExtent(results.features); 		
+		// cache the extent of features on the current page
+		fgm._writeIntoCache(fgm._currentQuery, layerExtent, "extent");
+		// zoom to the extent 
 		if (layerExtent.getHeight() * layerExtent.getWidth() === 0) {
 			fgm.options.map.centerAndZoom(layerExtent.getCenter(), 12);
 		} else {
 			fgm.options.map.setExtent(layerExtent, true);
-		}
-		
-		// cache the extent of features on the current page
-		fgm._writeIntoCache(fgm._currentQuery, layerExtent, "extent");
+		} 
 	};
 	
 	fgm._zoomToFeaturesInPage = function() {
@@ -1718,9 +1732,13 @@ define([
 			
 		var layerExtent = fgm._readFromCache(fgm._currentQuery, "extent"); 
 		if (!layerExtent) {
-			console.log("no extent is available"); 
-			fgm.showMessage("no data in datagrid");
-			return; 
+			var results = fgm._readFromCache(fgm._currentQuery, "data");
+			layerExtent = fgm._calculateExtent(results.features); 
+			if (!layerExtent) {
+				console.log("no extent is available"); 
+				fgm.showMessage("no data in datagrid");
+				return; 				
+			}
 		}
 		
 		if (layerExtent.getHeight() * layerExtent.getWidth() === 0) {
