@@ -305,7 +305,7 @@ define([
 				var dataItem = this.dataItem($(evt.currentTarget).closest("tr"));
 				console.log("create elevation: " + dataItem[fgm.column_oid]);
 				// find the feature by OID
-				var feature = fgm._findFeatureByOID(dataItem[fgm.column_oid]); 				
+				var feature = fgm._findFeatureByOID(dataItem[fgm.column_oid]); 	
 				// broadcast an event for any listener
 				topic.publish("featureGrid/feature", feature); 
 			}
@@ -919,7 +919,7 @@ define([
 				}
 			}
 		}
-		return layerExtent; 		
+		return layerExtent; 
 	}; 	
 
 	/* --------------------------- */
@@ -1517,14 +1517,14 @@ define([
 		
 		fgm._displayDataOnMap(results); 
 
-		fgm.showMessage("");		
+		fgm.showMessage(""); 
 	};
 	
 	/* DEV: 
 	 * data is loaded properly. 
 	 * However, sorting or grouping failed silently on the replaced data 
 	 */
-	fgm._replaceDataInResultGrid_OLD = function(results) {		
+	fgm._replaceDataInResultGrid_OLD = function(results) { 
 		// cache the query results (limited by fgm.options.pageSize)
 		var queryName = fgm._currentQuery; 
 		results.features = results.features.slice(0, fgm.options.pageSize); 
@@ -1616,12 +1616,12 @@ define([
 					var OIDsForPage = OIDArray.slice(0, Math.min(OIDArray.length, fgm.options.pageSize));
 					fgm._queryForDataByOIDs(qry, OIDsForPage, false); 
 					// build the pager 
-					fgm._buildResultPager(OIDArray); 	
+					fgm._buildResultPager(OIDArray); 
 				} else {
 					console.log("warning: no data for " + queryName); 
 					fgm.showMessage("no data in datagrid");
 				}
-			}				
+			} 
 		} else {
 			console.log("error: no query for " + queryName); 
 		} 
@@ -1792,7 +1792,7 @@ define([
 	};
 	
 	fgm._removeFeature = function(OID) {
-		fgm.showMessage("removing row from datagrid..."); 			
+		fgm.showMessage("removing row from datagrid..."); 
 		var queryName = fgm._currentQuery;
 		
 		// remove from the cached OID result
@@ -1998,7 +1998,7 @@ define([
 		
 		var resultCount = results.features.length;
 		for(var f=0; f<resultCount; f++) {
-			if (OID === results.features[f].attributes[fgm.column_oid]) {				
+			if (OID === results.features[f].attributes[fgm.column_oid]) { 
 				// return back to any widget caller
 				return results.features[f]; 
 			}
