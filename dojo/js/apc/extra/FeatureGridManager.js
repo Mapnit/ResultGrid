@@ -698,7 +698,7 @@ define([
 			change: fgm.onRowSelect
 		});	
 
-		fgm._datagrid = dg.data("kendoGrid");
+		fgm._datagrid = dg.data("kendoGrid"); 
 	};
 	
 	fgm._removeResultGrid = function() {
@@ -1302,7 +1302,7 @@ define([
 				var lastPageIdx = fgm._dataPager.totalPages() - 1; 
 				fgm._queryForDataByPage(lastPageIdx); 
 			}
-		}
+		} 
 	};
 	
 	fgm._prepareDataResults = function(results) {
@@ -1543,7 +1543,7 @@ define([
 		});
 		dataSource.read(); 
 		
-		fgm._datagrid.dataSource = dataSource; 		
+		fgm._datagrid.dataSource = dataSource; 
 		fgm._datagrid.refresh();
 		
 		fgm._displayDataOnMap(results);
