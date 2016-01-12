@@ -1812,7 +1812,7 @@ define([
 			// change the row count
 			fgm._writeIntoCache(queryName, OIDArray.length, "rowCount"); 
 			
-			// nullify the cached extent 
+			// nullify the cached extent to force recalculation
 			fgm._writeIntoCache(queryName, null, "extent"); 
 			
 			// reduce the count in the panel title
@@ -1852,9 +1852,6 @@ define([
 				// remove from the cached data results
 				var results = fgm._readFromCache(queryName, "data"); 
 				results.features.splice(f, 1); 
-				
-				// nullify the cached feature extent to force recalculation
-				fgm._writeIntoCache(queryName, null, "extent");
 				
 				// clear the message
 				fgm.showMessage(""); 
