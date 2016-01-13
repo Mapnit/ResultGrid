@@ -278,7 +278,7 @@ var appConfig = {
             ]
         },
         {
-            "name": "Geophysics_Seismic",
+            "name": "Geophysics/Seismic",
 			"default": true, 
             "queries": [
                 {
