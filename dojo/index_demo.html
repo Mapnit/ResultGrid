@@ -139,8 +139,19 @@
 				"id": "USA",
                 "opacity": 0.5
 			});
-            map.addLayers([censusLayer, usaLayer]);
-
+			var hazLayer = new ArcGISDynamicMapServiceLayer(
+				"https://nowcoast.noaa.gov/arcgis/rest/services/nowcoast/wwa_meteoceanhydro_longduration_hazards_time/MapServer", {
+				"id": "Hazards",
+                "opacity": 0.5
+			});
+			var radLayer = new ArcGISDynamicMapServiceLayer(
+				"https://nowcoast.noaa.gov/arcgis/rest/services/nowcoast/radar_meteo_imagery_nexrad_time/MapServer", {
+				"id": "Weather Radar",
+                "opacity": 0.5
+			});
+			
+            map.addLayers([/*censusLayer, usaLayer,*/ hazLayer, radLayer]);
+			
             map.on("load", function () {
                 //after map loads, connect to listen to mouse move & drag events
                 map.on("mouse-move", showCoordinates);
