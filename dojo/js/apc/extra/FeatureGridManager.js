@@ -1182,7 +1182,7 @@ define([
 			});
 		}); 
 		
-		all(promiseDict).then(fgm._prepareOIDResults, fgm._queryFailed);
+		all(promiseDict).then(fgm._prepareOIDResults, fgm._queryDataFailed);
 	};
 	
 	// query option 2 (): process results
@@ -1256,9 +1256,9 @@ define([
 		
 		var queryTask = new QueryTask(qry["serviceUrl"]); 
 		if (replaceDataOnly === true) {
-			queryTask.execute(query, fgm._replaceDataInResultGrid, fgm._queryFailed);
+			queryTask.execute(query, fgm._replaceDataInResultGrid, fgm._queryDataFailed);
 		} else {
-			queryTask.execute(query, fgm._prepareDataResults, fgm._queryFailed);
+			queryTask.execute(query, fgm._prepareDataResults, fgm._queryDataFailed);
 		}		
 	};
 	
@@ -1277,9 +1277,9 @@ define([
 		
 		var queryTask = new QueryTask(qry["serviceUrl"]); 
 		if (replaceDataOnly === true) {
-			queryTask.execute(query, fgm._replaceDataInResultGrid, fgm._queryFailed);
+			queryTask.execute(query, fgm._replaceDataInResultGrid, fgm._queryDataFailed);
 		} else {
-			queryTask.execute(query, fgm._prepareDataResults, fgm._queryFailed);
+			queryTask.execute(query, fgm._prepareDataResults, fgm._queryDataFailed);
 		}		
 	};
 	
@@ -1558,8 +1558,8 @@ define([
 		fgm._displayDataOnMap(results);
 	};
 	
-	fgm._queryFailed = function(err) {
-		console.log("query Failed: " + err); 
+	fgm._queryDataFailed = function(err) {
+		console.log("query data Failed: " + err); 
 		var errMsg = (err && err.message && err.message.length > 0)?err.message:""; 
 		fgm.showMessage("Failed to query data: " + errMsg);
 	};
