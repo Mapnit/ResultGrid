@@ -303,6 +303,7 @@ define([
 					array.forEach(item.visibleLayers, lang.hitch(this, function(layerId) {
 						// layerId could be -1 when a parent layer is turned off
 						var layerInfo = item.layerInfos[layerId]; 
+						var queryName = ""; 
 						// leaf layers only
 						if (layerInfo && layerInfo.subLayerIds === null) {
 							// check the scale ranges of this layer and all its ancestral layers
@@ -313,13 +314,16 @@ define([
 								if (scaleInRange !== mapScale && scaleInRange !== 0) {
 									break; 
 								}
+								// concatenate its name and all its ancestors' 
+								queryName = tvsLayerInfo.name + " - " + queryName; 
 								tvsLayerId = tvsLayerInfo.parentLayerId;
 							}
 							// within the scale range only (visibleLayers ignores the scale range)
 							if (scaleInRange === mapScale || scaleInRange === 0) {
 								tgtQueries.push({
 									"serviceProvider": "Esri-Map", 
-									"name": layerInfo.name, 
+									// use its name and all its ancestors' for readability and uniqueness
+									"name": queryName, 
 									"serviceUrl": item.url + "/" + layerId, 
 									"geometry": queryGeometry
 								});
@@ -328,6 +332,7 @@ define([
 					})); 
 					// add to searchParam
 					if (tgtQueries.length > 0) {
+						// one group for each map service
 						searchParams.push({
 							"name": item.title||item.id, 
 							"queries": tgtQueries
