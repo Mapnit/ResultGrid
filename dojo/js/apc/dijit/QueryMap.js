@@ -314,15 +314,19 @@ define([
 								if (scaleInRange !== mapScale && scaleInRange !== 0) {
 									break; 
 								}
-								// concatenate its name and all its ancestors' 
-								queryName = tvsLayerInfo.name + " - " + queryName; 
+								// (2016/2/3) concatenate its name and all its ancestors' 
+								if (queryName.length === 0) 
+									queryName = tvsLayerInfo.name; 
+								else
+									queryName = tvsLayerInfo.name + " - " + queryName; 
+								//
 								tvsLayerId = tvsLayerInfo.parentLayerId;
 							}
 							// within the scale range only (visibleLayers ignores the scale range)
 							if (scaleInRange === mapScale || scaleInRange === 0) {
 								tgtQueries.push({
 									"serviceProvider": "Esri-Map", 
-									// use its name and all its ancestors' for readability and uniqueness
+									// (2016/2/3) use its name and all its ancestors' for readability and uniqueness
 									"name": queryName, 
 									"serviceUrl": item.url + "/" + layerId, 
 									"geometry": queryGeometry
@@ -332,7 +336,7 @@ define([
 					})); 
 					// add to searchParam
 					if (tgtQueries.length > 0) {
-						// one group for each map service
+						// (2016/2/3) one group for each map service
 						searchParams.push({
 							"name": item.title||item.id, 
 							"queries": tgtQueries
