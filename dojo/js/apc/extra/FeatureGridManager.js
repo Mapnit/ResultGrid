@@ -1320,7 +1320,7 @@ define([
 			// filter out the shape column and any derived column, and other non-alphanumeric columns
 			var isBinaryColumn = (jQuery.inArray(resultField["type"], ["esriFieldTypeBlob", "esriFieldTypeRaster"]) > -1);
 			var isShapeColumn = (resultField["type"] === "esriFieldTypeGeometry");
-			var isDerivedColumn = (resultField["name"].indexOf(".") > -1); 
+			var isDerivedColumn = (resultField["name"].search(/(\.|\(|\))/) > -1); 
 			if (isBinaryColumn === true || isShapeColumn === true || isDerivedColumn === true) {
 				continue; 
 			} 
