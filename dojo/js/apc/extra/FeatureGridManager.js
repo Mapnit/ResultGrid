@@ -866,6 +866,12 @@ define([
 		}
 	};
 	
+	/* Not in use here, but keep for future reference */
+	fgm._uuid = function(prefix) {
+		var unid = (new Date()).getTime() * 1000 + Math.floor(Math.random() * 1000); 
+		return prefix + "_" + unid.toString(16);
+	}; 
+	
 	fgm._writeIntoCache = function(queryName, value, key) {
 		if (key) {
 			if (!fgm.resultCache[queryName]) {
