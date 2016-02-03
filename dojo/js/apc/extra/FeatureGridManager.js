@@ -43,6 +43,9 @@ define([
 			this._results = []; 
 			this._done = false; 
 			this._callback = callback; 
+			// (2016/2/3) add the error-out indicator
+			this._errOut = false; 
+			//
 			this._errback = errback; 
 		}
 		
@@ -105,6 +108,10 @@ define([
 		
 		Queryllel.prototype._queryError = function(err) {
 			console.log("query error [" + this._queryName + "]" + err);			
+			// (2016/2/3) mark it error-out 
+			this._errOut = true; 
+			// (2016/2/3) mark it done [aka., query is complete anyway]
+			this._done = true;
 			// call the user-defined error callback if any
 			if (this._errback) {
 				this._errback(this._queryName, this._elementId, err); 
@@ -113,6 +120,10 @@ define([
 		
 		Queryllel.prototype.isDone = function() {
 			return this._done;
+		};
+		
+		Queryllel.prototype.isErrOut = function() {
+			return this._errOut;
 		};
 		
 		Queryllel.prototype.getResults = function() {
@@ -130,6 +141,7 @@ define([
 			this._results = []; 
 			this._done = false; 
 			this._callback = null; 
+			this._errOut = false; 
 			this._errback = null; 
 		}; 
 		
@@ -991,9 +1003,9 @@ define([
 				// fire query
 				var qll; 
 				if (qry["serviceProvider"] === "Bing-Geocoder") {
-					qll = new Queryllel(queryName, elementId, fgm._showBingGCResults); 
+					qll = new Queryllel(queryName, elementId, fgm._showBingGCResults, fgm._queryOIDFailed); 
 				} else { // (qry["serviceProvider"] === "Esri-Map") 
-					qll = new Queryllel(queryName, elementId, fgm._showResultCount); 
+					qll = new Queryllel(queryName, elementId, fgm._showResultCount, fgm._queryOIDFailed); 
 				}
 				fgm._queryllelArray.push(qll);
 				qll.query(qry); 
@@ -1043,6 +1055,7 @@ define([
 		// add the number of OIDs into the query element
 		var queryElement = $("#"+elementId); 
 		if (! results || results.length === 0) {
+			console.log("remove panel with no data: " + queryName);
 			if (queryElement.data("kendoGrid")) {
 				queryElement.data("kendoGrid").destroy();
 			}
@@ -1240,6 +1253,16 @@ define([
 	};
 	// query option 2 (END)
 		
+	// (2016/2/3) add a specific handler for query OID error
+	fgm._queryOIDFailed = function(queryName, elementId, err) {
+		console.log("query OID Failed: " + err); 
+		var errMsg = (err && err.message && err.message.length > 0)?err.message:""; 
+		fgm.showMessage("Failed to query OID: " + errMsg);
+		
+		// pass empty result in order to remove the panel
+		fgm._showResultCount(queryName, elementId, []); 
+	}; 
+	
 	fgm._queryForDataByWhere = function(qry, replaceDataOnly) {
 
 		console.log("query [" + qry["where"] + "] on " + qry["serviceUrl"]); 
