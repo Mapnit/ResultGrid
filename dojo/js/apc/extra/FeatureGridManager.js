@@ -107,7 +107,7 @@ define([
 		};
 		
 		Queryllel.prototype._queryError = function(err) {
-			console.log("query error [" + this._queryName + "]" + err);			
+			console.error("query error [" + this._queryName + "]" + err);			
 			// (2016/2/3) mark it error-out 
 			this._errOut = true; 
 			// (2016/2/3) mark it done [aka., query is complete anyway]
@@ -567,7 +567,7 @@ define([
 				if (fgm._currentQuery) {
 					fgm._zoomToFeaturesInPage(); 
 				} else {
-					console.log("no query is selected"); 
+					console.warn("no query is selected"); 
 					fgm.showMessage("no data layer is selected");
 				}
 			})
@@ -595,7 +595,7 @@ define([
 						fgm._exportAsExcel(); 
 					} 
 				} else {
-					console.log("no query is selected"); 
+					console.warn("no query is selected"); 
 					fgm.showMessage("no data layer is selected"); 
 				}
 			})
@@ -611,7 +611,7 @@ define([
 				if (fgm._currentQuery) {
 					fgm._launchTdb(); 
 				} else {
-					console.log("no query is selected"); 
+					console.warn("no query is selected"); 
 					fgm.showMessage("no data layer is selected");
 				}
 			})
@@ -627,7 +627,7 @@ define([
 				if (fgm._currentQuery) {
 					fgm._launchToast(); 
 				} else {
-					console.log("no query is selected"); 
+					console.warn("no query is selected"); 
 					fgm.showMessage("no data layer is selected");
 				}
 			})
@@ -828,14 +828,14 @@ define([
 		var rowOID = rowData[fgm.column_oid]; 
 		
 		if (fgm.selectedRowOID !== rowOID) {
-			console.log("onRowSelect: " + rowOID); 
+			console.debug("onRowSelect: " + rowOID); 
 			
 			fgm._highlightFeature(rowOID, true); 
 		}
 	};
 	
 	fgm.onPageChanged = function(evt) {
-		console.log("onPageChanged: " + evt); 
+		console.debug("onPageChanged: " + evt); 
 		fgm._queryForDataByPage(evt.index - 1); 
 	};
 	
@@ -894,7 +894,7 @@ define([
 			fgm.resultCache[queryName] = value;
 		}
 	};
-	
+
 	fgm._readFromCache = function(queryName, key) {
 		if (fgm.resultCache[queryName]) {
 			if (key) {
@@ -1055,7 +1055,7 @@ define([
 		// add the number of OIDs into the query element
 		var queryElement = $("#"+elementId); 
 		if (! results || results.length === 0) {
-			console.log("remove panel with no data: " + queryName);
+			console.warn("remove panel with no data: " + queryName); 
 			if (queryElement.data("kendoGrid")) {
 				queryElement.data("kendoGrid").destroy();
 			}
@@ -1147,7 +1147,7 @@ define([
 			// remove any empty group panel 
 			for(var groupId in isGroupEmpty) {
 				if (isGroupEmpty[groupId] === true) {
-					console.log("delete an empty group: " + groupId); 
+					console.warn("delete an empty group: " + groupId); 
 					var groupElement = $("#"+groupId); 
 					if (groupElement) {
 						groupElement.empty(); 
@@ -1232,7 +1232,7 @@ define([
 			fgm._writeIntoCache(queryName, OIDResults[queryName], "OIDs"); 
 			fgm._writeIntoCache(queryName, OIDResults[queryName].length, "rowCount"); 
 		}
-		
+
 		for(groupId in isGroupEmpty) {
 			// remove any empty group panel 
 			if (isGroupEmpty[groupId] === true) {
@@ -1252,10 +1252,10 @@ define([
 		}
 	};
 	// query option 2 (END)
-		
+	
 	// (2016/2/3) add a specific handler for query OID error
 	fgm._queryOIDFailed = function(queryName, elementId, err) {
-		console.log("query OID Failed: " + err); 
+		console.error("query OID Failed: " + err); 
 		var errMsg = (err && err.message && err.message.length > 0)?err.message:""; 
 		fgm.showMessage("Failed to query OID: " + errMsg);
 		
@@ -1582,7 +1582,7 @@ define([
 	};
 	
 	fgm._queryDataFailed = function(err) {
-		console.log("query data Failed: " + err); 
+		console.error("query data Failed: " + err); 
 		var errMsg = (err && err.message && err.message.length > 0)?err.message:""; 
 		fgm.showMessage("Failed to query data: " + errMsg);
 	};
@@ -1650,12 +1650,12 @@ define([
 					// build the pager 
 					fgm._buildResultPager(OIDArray); 
 				} else {
-					console.log("warning: no data for " + queryName); 
+					console.warn("warning: no data for " + queryName); 
 					fgm.showMessage("no data in datagrid");
 				}
 			} 
 		} else {
-			console.log("error: no query for " + queryName); 
+			console.error("error: no query for " + queryName); 
 		} 
 	}; 
 
@@ -1707,7 +1707,7 @@ define([
 		console.log("display Data On Map");
 		
 		if (!fgm.options.map) {
-			console.log("no map available"); 
+			console.error("no map available"); 
 			return; 
 		} 
 		
@@ -1715,7 +1715,7 @@ define([
 		fgm._fgLayer.clear(); 
 		
 		if (! results || results.features.length === 0) {
-			console.log("empty results"); 
+			console.warn("empty results"); 
 			return; 
 		}
 		
@@ -1757,12 +1757,12 @@ define([
 	
 	fgm._zoomToFeaturesInPage = function() {
 		if (!fgm.options.map) {
-			console.log("no map available"); 
+			console.error("no map available"); 
 			return; 
 		} 
 
 		if (!fgm._currentQuery) {
-			console.log("no query is selected"); 
+			console.warn("no query is selected"); 
 			fgm.showMessage("no data layer is selected");
 			return; 
 		}
@@ -1772,7 +1772,7 @@ define([
 			var results = fgm._readFromCache(fgm._currentQuery, "data");
 			layerExtent = fgm._calculateExtent(results.features); 
 			if (!layerExtent) {
-				console.log("no extent is available"); 
+				console.warn("no extent is available"); 
 				fgm.showMessage("no data in datagrid");
 				return; 				
 			}
@@ -2074,7 +2074,7 @@ define([
 				fgm._showTdbLink();
 			}
 		}, function(err){
-			console.log("Error in isTdbAvailable: " + err.message);
+			console.error("Error in isTdbAvailable: " + err.message);
 		});
 	};
 
@@ -2117,7 +2117,7 @@ define([
 				fgm._showToastLink();
 			}
 		}, function(err){
-			console.log("Error in isToastAvailable: " + err.message);
+			console.error("Error in isToastAvailable: " + err.message);
 		});
 	};
 	
@@ -2133,7 +2133,7 @@ define([
 		if (extReqUrls && extReqUrls["excel"]){
 			var queryName = fgm._currentQuery; 
 			if (!queryName) {
-				console.log("no query is selected"); 
+				console.warn("no query is selected"); 
 				fgm.showMessage("no data layer is selected"); 
 				return; 
 			}
@@ -2142,7 +2142,7 @@ define([
 			var OIDArray = fgm._readFromCache(queryName, "OIDs"); 
 			var results = fgm._readFromCache(queryName, "data"); 
 			if (!results) {
-				console.log("no data in datagrid"); 
+				console.warn("no data in datagrid"); 
 				fgm.showMessage("no data in datagrid"); 
 				return; 
 			}
@@ -2201,7 +2201,7 @@ define([
 	}; 
 	
 	fgm._exportAsExcelFailed = function(err){
-		console.log("Error in exportAsExcel: " + err.message);
+		console.error("Error in exportAsExcel: " + err.message);
 		var errMsg = (err && err.message && err.message.length > 0)?err.message:""; 
 		fgm.showMessage("Failed to export data into Excel: " + errMsg);
 	}; 
@@ -2212,7 +2212,7 @@ define([
 		if (extReqUrls && extReqUrls["excel"]){
 			var queryName = fgm._currentQuery; 
 			if (!queryName) {
-				console.log("no query is available"); 
+				console.warn("no query is available"); 
 				return; 
 			}
 			
@@ -2245,7 +2245,7 @@ define([
 			}).then(function(data){
 				window.open(data["Url"]); 
 			}, function(err){
-				console.log("Error in exportAsExcel: " + err.message);
+				console.error("Error in exportAsExcel: " + err.message);
 			});
 		}
 	};
@@ -2257,13 +2257,13 @@ define([
 		if (extReqUrls && extReqUrls["tdb"]){
 			var queryName = fgm._currentQuery; 
 			if (!queryName) {
-				console.log("no query is available"); 
+				console.warn("no query is available"); 
 				return;
 			}
 			
 			var tdbField = fgm._readFromCache(queryName, "tdbField"); 
 			if (!tdbField || tdbField === "none") {
-				console.log("no tdb field defined"); 
+				console.warn("no tdb field defined"); 
 				return;
 			}
 			
@@ -2293,7 +2293,7 @@ define([
 	};
 	
 	fgm._launchTdbFailed = function(err){
-		console.log("Error in launchTdb: " + err.message);
+		console.error("Error in launchTdb: " + err.message);
 		var errMsg = (err && err.message && err.message.length > 0)?err.message:""; 
 		fgm.showMessage("failed to launch TDB: " + errMsg);
 	}; 
@@ -2305,13 +2305,13 @@ define([
 		if (extReqUrls && extReqUrls["toast"]){
 			var queryName = fgm._currentQuery; 
 			if (!queryName) {
-				console.log("no query is available"); 
+				console.warn("no query is available"); 
 				return;
 			}
 			
 			var toastField = fgm._readFromCache(queryName, "toastField"); 
 			if (!toastField || toastField === "none") {
-				console.log("no toast field defined"); 
+				console.warn("no toast field defined"); 
 				return;
 			}
 			
@@ -2351,12 +2351,13 @@ define([
 	};
 	
 	fgm._launchToastFailed = function(err){
-		console.log("Error in launchToast: " + err.message);
+		console.error("Error in launchToast: " + err.message);
 		var errMsg = (err && err.message && err.message.length > 0)?err.message:""; 
 		fgm.showMessage("Failed to launch Toast:" + errMsg);
 	}; 	
 	
 	fgm._openUrlInBrowser = function(data) {
+		console.log("Open url in new window: " + data["Url"]); 
 		window.open(data["Url"]); 
 		fgm.showMessage("");
 	}; 
