@@ -317,8 +317,12 @@ define([
 								// (2016/2/3) concatenate its name and all its ancestors' 
 								if (queryName.length === 0) 
 									queryName = tvsLayerInfo.name; 
-								else
-									queryName = tvsLayerInfo.name + " - " + queryName; 
+								else {
+									// (2016/2/4) ignore ancestral name if it offers no distinction
+									if (queryName.indexOf(tvsLayerInfo.name) === -1) {
+										queryName = tvsLayerInfo.name + " - " + queryName;
+									}
+								}
 								//
 								tvsLayerId = tvsLayerInfo.parentLayerId;
 							}
