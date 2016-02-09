@@ -449,11 +449,37 @@ define([
 		
 		// the handler on the custom button click event
 		resultWin.data("kendoWindow").wrapper.find(".k-i-custom").click(function(e){
-			console.log("minimize the window to a custom button"); 
+			console.log("minimize the window to a dock button"); 
 			$("#fgm-resultWindow").data("kendoWindow").wrapper.hide(); 
 			$("#fgm-panelDock").show();			
 			e.preventDefault();
 		});	
+		
+		//TODO: the handler to prevent the window from being dragged off the screen 
+		/* 
+		resultWin.data("kendoWindow").dragging._draggable.bind("drag", function(e) {
+			var winObject = $("#fgm-resultWindow").data("kendoWindow");
+			var windowWrapper = winObject.wrapper,
+				windowPosition = windowWrapper.offset(),
+				shouldOverridePosition = false, 
+				newTop = windowPosition.top, 
+				newLeft = windowPosition.left;
+
+			if (windowPosition.top > 200) {
+				shouldOverridePosition = true;
+				newTop = 200;
+			}
+
+			if (windowPosition.left > 200) {
+				shouldOverridePosition = true;
+				newLeft = 200;
+			}
+
+			if (shouldOverridePosition) {
+				windowWrapper.css({top: newTop, left: newLeft});
+			}
+		});	
+		 */
 		
 	};
 	
@@ -877,7 +903,7 @@ define([
 			return name; 
 		}
 	};
-	
+
 	/* Not in use here, but keep for future reference */
 	fgm._uuid = function(prefix) {
 		var unid = (new Date()).getTime() * 1000 + Math.floor(Math.random() * 1000); 
@@ -894,7 +920,7 @@ define([
 			fgm.resultCache[queryName] = value;
 		}
 	};
-
+	
 	fgm._readFromCache = function(queryName, key) {
 		if (fgm.resultCache[queryName]) {
 			if (key) {
@@ -1194,7 +1220,7 @@ define([
 				promiseDict[queryName] = queryTask.executeForIds(query); 
 			});
 		}); 
-		
+
 		all(promiseDict).then(fgm._prepareOIDResults, fgm._queryDataFailed);
 	};
 	
@@ -1232,7 +1258,7 @@ define([
 			fgm._writeIntoCache(queryName, OIDResults[queryName], "OIDs"); 
 			fgm._writeIntoCache(queryName, OIDResults[queryName].length, "rowCount"); 
 		}
-
+		
 		for(groupId in isGroupEmpty) {
 			// remove any empty group panel 
 			if (isGroupEmpty[groupId] === true) {
